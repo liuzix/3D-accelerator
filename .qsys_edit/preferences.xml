@@ -3,14 +3,15 @@
  <debug showDebugMenu="0" />
  <systemtable filter="All Interfaces">
   <columns>
-   <connections preferredWidth="111" />
+   <connections preferredWidth="159" />
    <irq preferredWidth="34" />
    <name preferredWidth="244" />
+   <inputclock preferredWidth="110" />
   </columns>
  </systemtable>
  <library
-   expandedCategories="Library,Library/Processors and Peripherals/Hard Processor Systems,Library/Processors and Peripherals,Library/Processors and Peripherals/Hard Processor Components,Project" />
- <window width="1100" height="800" x="201" y="193" />
- <generation path="system" block_symbol_file="0" />
+   expandedCategories="Library/Qsys Interconnect/Tri-State Components,Library/University Program/Generic IO,Library,Library/Qsys Interconnect,Project,Library/Tri-State Components,Library/University Program/Audio &amp; Video/Video,Library/Low Power,Library/University Program/Communications,Library/University Program,Library/University Program/Audio &amp; Video,Library/University Program/Clock,Library/University Program/Memory,Library/Qsys Interconnect/Interrupt,Library/Qsys Interconnect/Memory-Mapped,Library/University Program/Bridges,Library/Qsys Interconnect/Memory-Mapped Alpha" />
+ <window width="1940" height="2110" x="1910" y="0" />
+ <generation path="system" block_symbol_file="1" />
  <hdlexample language="VERILOG" />
 </preferences>

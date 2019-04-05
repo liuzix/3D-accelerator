@@ -41,6 +41,14 @@
          type = "String";
       }
    }
+   element sys_sdram_pll_0
+   {
+      datum _sortIndex
+      {
+         value = "3";
+         type = "int";
+      }
+   }
 }
 ]]></parameter>
  <parameter name="clockCrossingAdapter" value="HANDSHAKE" />
@@ -70,17 +78,21 @@ set_module_property COMPOSITION_CALLBACK compose
 proc compose {} {
     # manipulate parameters in here
     # Example: set_instance_parameter_value child0 param0 [ get_parameter_value new_parameter_0 ]
-}
-]]></instanceScript>
- <interface name="clk" internal="clk_0.clk_in" type="clock" dir="end" />
- <interface name="hps_ddr3" internal="hps_0.memory" type="conduit" dir="end" />
- <interface name="hps_io" internal="hps_0.hps_io" type="conduit" dir="end" />
- <interface name="reset" internal="clk_0.clk_in_reset" type="reset" dir="end" />
+}]]></instanceScript>
+ <interface name="clock_50" internal="clk_0.clk_in" type="clock" dir="end" />
  <interface
-   name="sdram"
+   name="dram"
    internal="new_sdram_controller_0.wire"
    type="conduit"
    dir="end" />
+ <interface
+   name="dram_clk"
+   internal="sys_sdram_pll_0.sdram_clk"
+   type="clock"
+   dir="start" />
+ <interface name="hps" internal="hps_0.hps_io" type="conduit" dir="end" />
+ <interface name="hps_ddr3" internal="hps_0.memory" type="conduit" dir="end" />
+ <interface name="reset" internal="clk_0.clk_in_reset" type="reset" dir="end" />
  <module name="clk_0" kind="clock_source" version="18.1" enabled="1">
   <parameter name="clockFrequency" value="50000000" />
   <parameter name="clockFrequencyKnown" value="true" />
@@ -164,9 +176,9 @@ proc compose {} {
   <parameter name="EMAC0_Mode" value="N/A" />
   <parameter name="EMAC0_PTP" value="false" />
   <parameter name="EMAC0_PinMuxing" value="Unused" />
-  <parameter name="EMAC1_Mode" value="N/A" />
+  <parameter name="EMAC1_Mode" value="RGMII" />
   <parameter name="EMAC1_PTP" value="false" />
-  <parameter name="EMAC1_PinMuxing" value="Unused" />
+  <parameter name="EMAC1_PinMuxing" value="HPS I/O Set 0" />
   <parameter name="ENABLE_ABS_RAM_MEM_INIT" value="false" />
   <parameter name="ENABLE_BONDING" value="false" />
   <parameter name="ENABLE_BURST_MERGE" value="false" />
@@ -536,7 +548,7 @@ proc compose {} {
   <parameter name="USB0_Mode" value="N/A" />
   <parameter name="USB0_PinMuxing" value="Unused" />
   <parameter name="USB1_Mode" value="SDR" />
-  <parameter name="USB1_PinMuxing" value="HPS I/O Set 1" />
+  <parameter name="USB1_PinMuxing" value="HPS I/O Set 0" />
   <parameter name="USER_DEBUG_LEVEL" value="1" />
   <parameter name="USE_AXI_ADAPTOR" value="false" />
   <parameter name="USE_FAKE_PHY" value="false" />
@@ -646,6 +658,22 @@ proc compose {} {
   <parameter name="registerDataIn" value="true" />
   <parameter name="rowWidth" value="13" />
  </module>
+ <module
+   name="sys_sdram_pll_0"
+   kind="altera_up_avalon_sys_sdram_pll"
+   version="18.0"
+   enabled="1">
+  <parameter name="AUTO_DEVICE" value="5CSEMA5F31C6" />
+  <parameter name="AUTO_DEVICE_SPEEDGRADE" value="6" />
+  <parameter name="CIII_boards" value="DE0" />
+  <parameter name="CIV_boards" value="DE2-115" />
+  <parameter name="CV_boards" value="DE1-SoC" />
+  <parameter name="MAX10_boards" value="DE10-Lite" />
+  <parameter name="device_family" value="Cyclone V" />
+  <parameter name="gui_outclk" value="50.0" />
+  <parameter name="gui_refclk" value="50.0" />
+  <parameter name="other_boards" value="None" />
+ </module>
  <connection
    kind="avalon"
    version="18.1"
@@ -659,17 +687,27 @@ proc compose {} {
    kind="clock"
    version="18.1"
    start="clk_0.clk"
+   end="sys_sdram_pll_0.ref_clk" />
+ <connection
+   kind="clock"
+   version="18.1"
+   start="sys_sdram_pll_0.sys_clk"
    end="new_sdram_controller_0.clk" />
  <connection
    kind="clock"
    version="18.1"
-   start="clk_0.clk"
+   start="sys_sdram_pll_0.sys_clk"
    end="hps_0.h2f_axi_clock" />
  <connection
    kind="clock"
    version="18.1"
-   start="clk_0.clk"
+   start="sys_sdram_pll_0.sys_clk"
    end="hps_0.h2f_lw_axi_clock" />
+ <connection
+   kind="reset"
+   version="18.1"
+   start="clk_0.clk_reset"
+   end="sys_sdram_pll_0.ref_reset" />
  <connection
    kind="reset"
    version="18.1"

@@ -98,11 +98,7 @@ proc compose {} {
    internal="sys_sdram_pll_0.sdram_clk"
    type="clock"
    dir="start" />
- <interface
-   name="hex"
-   internal="test_master_0.conduit_end"
-   type="conduit"
-   dir="end" />
+ <interface name="hex" internal="test_master_0.conduit_end" />
  <interface name="hps" internal="hps_0.hps_io" type="conduit" dir="end" />
  <interface name="hps_ddr3" internal="hps_0.memory" type="conduit" dir="end" />
  <interface name="reset" internal="clk_0.clk_in_reset" type="reset" dir="end" />

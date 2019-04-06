@@ -17,7 +17,7 @@ preplace inst system.hps_0.gpio0 -pg 1
 preplace inst system.hps_0.timer2 -pg 1
 preplace inst system.hps_0.clkmgr -pg 1
 preplace inst system.hps_0.eosc2 -pg 1
-preplace inst system.sys_sdram_pll_0 -pg 1 -lvl 2 -y 110
+preplace inst system.sys_sdram_pll_0 -pg 1 -lvl 2 -y 50
 preplace inst system.hps_0.dcan1 -pg 1
 preplace inst system.hps_0.qspi -pg 1
 preplace inst system.hps_0.gpio1 -pg 1
@@ -56,15 +56,16 @@ preplace inst system.hps_0.wd_timer1 -pg 1
 preplace inst system.hps_0.dma -pg 1
 preplace inst system.hps_0.arm_a9_1 -pg 1
 preplace inst system.hps_0 -pg 1 -lvl 3 -y 120
-preplace inst system.clk_0 -pg 1 -lvl 1 -y 110
+preplace inst system.clk_0 -pg 1 -lvl 1 -y 50
+preplace netloc EXPORT<net_container>system</net_container>(SLAVE)hps_0.hps_io,(SLAVE)system.hps) 1 0 3 NJ 170 NJ 170 NJ
 preplace netloc EXPORT<net_container>system</net_container>(SLAVE)system.reset,(SLAVE)clk_0.clk_in_reset) 1 0 1 NJ
-preplace netloc FAN_OUT<net_container>system</net_container>(SLAVE)new_sdram_controller_0.reset,(SLAVE)sys_sdram_pll_0.ref_reset,(MASTER)clk_0.clk_reset) 1 1 3 290 240 NJ 240 940
+preplace netloc EXPORT<net_container>system</net_container>(MASTER)system.dram_clk,(MASTER)sys_sdram_pll_0.sdram_clk) 1 2 3 NJ 40 NJ 140 NJ
 preplace netloc EXPORT<net_container>system</net_container>(SLAVE)system.dram,(SLAVE)new_sdram_controller_0.wire) 1 0 4 NJ 260 NJ 260 NJ 260 NJ
-preplace netloc EXPORT<net_container>system</net_container>(MASTER)sys_sdram_pll_0.sdram_clk,(MASTER)system.dram_clk) 1 2 3 NJ 300 NJ 300 NJ
-preplace netloc FAN_OUT<net_container>system</net_container>(SLAVE)hps_0.h2f_lw_axi_clock,(SLAVE)hps_0.h2f_axi_clock,(SLAVE)new_sdram_controller_0.clk,(MASTER)sys_sdram_pll_0.sys_clk) 1 2 2 630 280 980
-preplace netloc POINT_TO_POINT<net_container>system</net_container>(MASTER)hps_0.h2f_axi_master,(SLAVE)new_sdram_controller_0.s1) 1 3 1 960
-preplace netloc POINT_TO_POINT<net_container>system</net_container>(SLAVE)sys_sdram_pll_0.ref_clk,(MASTER)clk_0.clk) 1 1 1 N
-preplace netloc EXPORT<net_container>system</net_container>(SLAVE)hps_0.memory,(SLAVE)system.hps_ddr3) 1 0 3 NJ 190 NJ 210 NJ
+preplace netloc POINT_TO_POINT<net_container>system</net_container>(MASTER)clk_0.clk,(SLAVE)sys_sdram_pll_0.ref_clk) 1 1 1 N
+preplace netloc POINT_TO_POINT<net_container>system</net_container>(SLAVE)new_sdram_controller_0.s1,(MASTER)hps_0.h2f_axi_master) 1 3 1 1000
+preplace netloc FAN_OUT<net_container>system</net_container>(SLAVE)sys_sdram_pll_0.ref_reset,(MASTER)clk_0.clk_reset,(SLAVE)new_sdram_controller_0.reset) 1 1 3 270 150 NJ 80 980
 preplace netloc EXPORT<net_container>system</net_container>(SLAVE)clk_0.clk_in,(SLAVE)system.clock_50) 1 0 1 NJ
-levelinfo -pg 1 0 60 1280
-levelinfo -hier system 70 100 430 750 1070 1200
+preplace netloc EXPORT<net_container>system</net_container>(SLAVE)system.hps_ddr3,(SLAVE)hps_0.memory) 1 0 3 NJ 190 NJ 190 NJ
+preplace netloc FAN_OUT<net_container>system</net_container>(SLAVE)hps_0.h2f_lw_axi_clock,(SLAVE)new_sdram_controller_0.clk,(MASTER)sys_sdram_pll_0.sys_clk,(SLAVE)hps_0.h2f_axi_clock) 1 2 2 630 60 960
+levelinfo -pg 1 0 60 1300
+levelinfo -hier system 70 100 430 750 1090 1220

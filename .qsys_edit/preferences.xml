@@ -9,8 +9,7 @@
    <inputclock preferredWidth="110" />
   </columns>
  </systemtable>
- <library
-   expandedCategories="Library/Qsys Interconnect/Tri-State Components,Library/University Program/Generic IO,Library,Library/Qsys Interconnect,Project,Library/Tri-State Components,Library/University Program/Audio &amp; Video/Video,Library/Low Power,Library/University Program/Communications,Library/University Program,Library/University Program/Audio &amp; Video,Library/University Program/Clock,Library/University Program/Memory,Library/Qsys Interconnect/Interrupt,Library/Qsys Interconnect/Memory-Mapped,Library/University Program/Bridges,Library/Qsys Interconnect/Memory-Mapped Alpha" />
+ <library expandedCategories="Project,Library" />
  <window width="1940" height="2110" x="1910" y="0" />
  <generation path="system" block_symbol_file="1" />
  <hdlexample language="VERILOG" />

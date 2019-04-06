@@ -210,14 +210,14 @@ system system0 (
 	.hps_hps_io_usb1_inst_NXT(HPS_USB_NXT),
 	.hps_hps_io_spim1_inst_CLK(HPS_SPIM_CLK),
 	.hps_hps_io_spim1_inst_MOSI(HPS_SPIM_MOSI),
-	.hps_hps_io_spim1_inst_MISO(HPS_SPIM_MOSI),
+	.hps_hps_io_spim1_inst_MISO(HPS_SPIM_MISO),
 	.hps_hps_io_spim1_inst_SS0(HPS_SPIM_SSO),
 	.hps_hps_io_uart0_inst_RX(HPS_UART_RX),
 	.hps_hps_io_uart0_inst_TX(HPS_UART_TX),
 	.hps_hps_io_i2c0_inst_SDA(HPS_I2C1_SDAT),
 	.hps_hps_io_i2c0_inst_SCL(HPS_I2C1_SCLK),
 	.hps_hps_io_i2c1_inst_SDA(HPS_I2C2_SDAT),
-	.hps_hps_io_i2c1_inst_SCL(HPS_I2C2_SDAT));
+	.hps_hps_io_i2c1_inst_SCL(HPS_I2C2_SCLK));
 	
 	
 

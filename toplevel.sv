@@ -217,7 +217,11 @@ system system0 (
 	.hps_hps_io_i2c0_inst_SDA(HPS_I2C1_SDAT),
 	.hps_hps_io_i2c0_inst_SCL(HPS_I2C1_SCLK),
 	.hps_hps_io_i2c1_inst_SDA(HPS_I2C2_SDAT),
-	.hps_hps_io_i2c1_inst_SCL(HPS_I2C2_SCLK));
+	.hps_hps_io_i2c1_inst_SCL(HPS_I2C2_SCLK),
+	.hex_hex0(HEX0),
+   .hex_hex1(HEX1),
+   .hex_hex2(HEX2),
+   .hex_hex3(HEX3));
 	
 	
 

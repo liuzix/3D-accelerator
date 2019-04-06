@@ -3,14 +3,15 @@
  <debug showDebugMenu="0" />
  <systemtable filter="All Interfaces">
   <columns>
-   <connections preferredWidth="159" />
+   <connections preferredWidth="175" />
    <irq preferredWidth="34" />
    <name preferredWidth="244" />
    <inputclock preferredWidth="110" />
   </columns>
  </systemtable>
- <library expandedCategories="Project,Library" />
- <window width="1940" height="2110" x="1910" y="0" />
+ <library
+   expandedCategories="Project,Library/Memory Interfaces and Controllers/Memory Interfaces with ALTMEMPHY,Library/Memory Interfaces and Controllers/Memory Interfaces with UniPHY,Library/Memory Interfaces and Controllers,Library/Memory Interfaces and Controllers/SDRAM,Library/University Program,Library/University Program/Clock,Library" />
+ <window width="1940" height="2100" x="1900" y="0" />
  <generation path="system" block_symbol_file="1" />
  <hdlexample language="VERILOG" />
 </preferences>

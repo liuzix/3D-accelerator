@@ -34,23 +34,21 @@ module fifo (
     //DBITS: # of address bits
 	//SIZE: 2^SZIE elements in buffer
     parameter DBITS = 26,
-	          SIZE = 4;
-
-    logic [25:0] out;
-
-	//16 element fifo, eahc element is 26 bis
+              SIZE = 4;
+    
+	//16 element fifo, each element is 26 bis
     logic [25:0] buffer[3:0];
-	//write pointer
-	logic [3:0] wr_ptr;
-	//read pointer
-	logic [3:0] rd_ptr;
-	logic isFull, isEmpty;
+    //write pointer
+    logic [3:0] wr_ptr;
+    //read pointer
+    logic [3:0] rd_ptr;
+    logic isFull, isEmpty;
 
     assign wr_ptr = 4'b0000;
-	assign rd_ptr = 4'b0000;
-	//counter keeps track of number of elements in buffer
-	assign counter = 0;
-	assign empty = (counter == 0) ? 1'b1 : 1'b0;
+    assign rd_ptr = 4'b0000;
+    //counter keeps track of number of elements in buffer
+    assign counter = 0;
+    assign empty = (counter == 0) ? 1'b1 : 1'b0;
     assign full = (counter == 2**SIZE) ? 1'b1 : 1'b0;
 
 	always @(posedge clk)
@@ -59,7 +57,7 @@ module fifo (
         if (en) begin
             if (reset) begin
                 wr_ptr <= 4'b0000;
-				rd_ptr <= 4'b0000;
+                rd_ptr <= 4'b0000;
                 counter <= 0;
 		    end 
 		    else if (rd == 1'b1 && ~empty) begin
@@ -68,12 +66,12 @@ module fifo (
                 counter <= counter - 1;
 			end
             else if (wr == 1'b1 && ~full) begin
-				buffer[wr_ptr] = din;
+                buffer[wr_ptr] = din;
                 wr_ptr = rd_ptr + 1;
                 counter <= counter + 1;
             end 
  
-	        if (wr_ptr == 4'd16)
+            if (wr_ptr == 4'd16)
                 wr_ptr = 4'b0000;
 	
             if (rd_ptr == 4'd16)

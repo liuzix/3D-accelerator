@@ -12,11 +12,11 @@ module fifo (
     output logic [95:0] dout);
 
     //DBITS: # of address bits
-	//SIZE: 2^SZIE elements in buffer
+    //SIZE: 2^SZIE elements in buffer
     parameter DBITS = 26,
               SIZE = 4;
     
-	//16 element fifo, each element is 26 bis
+    //16 element fifo, each element is 26 bis
     logic [95:0] buffer[15:0];
     //write pointer
     logic [3:0] wr_ptr;
@@ -30,38 +30,35 @@ module fifo (
     assign almost_full = counter >= (2**SIZE - 2);
     assign almost_empty = counter <= 2;
 
-    assign wr_ptr = 4'b0000;
-    assign rd_ptr = 4'b0000;
     //counter keeps track of number of elements in buffer
-    assign counter = 0;
     assign empty = (counter == 0); 
     assign full = (counter == 2**SIZE);
 
-	always @(posedge clk or negedge reset)
-	begin
-            $display("counter: %d", counter);
-            if (!reset) begin
-                $display("reset");
-                wr_ptr <= 4'b0000;
-                rd_ptr <= 4'b0000;
-                counter <= 0;
-		    end 
-		    if (rd == 1'b1 && ~empty) begin
-                $display("read");
-                dout <= buffer[rd_ptr];
-                rd_ptr <= rd_ptr + 1;
-                counter <= counter - 1;
-			end
-            else if (wr == 1'b1 && ~full) begin
-                $display("write");
-                buffer[wr_ptr] <= din;
-                wr_ptr <= wr_ptr + 1;
-                counter <= counter + 1;
-            end 
+    always @(posedge clk or negedge reset)
+    begin
+        $display("counter: %d", counter);
+        if (!reset) begin
+            $display("reset");
+            wr_ptr <= 4'b0000;
+            rd_ptr <= 4'b0000;
+            counter <= 0;
+        end 
+        if (rd == 1'b1 && ~empty) begin
+            $display("read");
+            dout <= buffer[rd_ptr];
+            rd_ptr <= rd_ptr + 1;
+            counter <= counter - 1;
+            end
+        else if (wr == 1'b1 && ~full) begin
+            $display("write");
+            buffer[wr_ptr] <= din;
+            wr_ptr <= wr_ptr + 1;
+            counter <= counter + 1;
+        end 
  
             //if (wr_ptr == 4'd16)
              //   wr_ptr = 4'b0000;
-	
+    
             //if (rd_ptr == 4'd16)
               //  rd_ptr = 4'b0000);
 

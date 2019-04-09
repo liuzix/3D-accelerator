@@ -1,7 +1,7 @@
-#include "Vfifo.h"      // From Verilating "top.v"
-#include <iostream>    // Need std::cout
-#include <verilated.h> // Defines common routines
+#include "Vfifo.h"  // From Verilating "top.v"
+#include <iostream> // Need std::cout
 #include <string.h>
+#include <verilated.h> // Defines common routines
 
 using namespace std;
 Vfifo *top; // Instantiation of module
@@ -15,10 +15,10 @@ double sc_time_stamp() { // Called by $time in Verilog
                          // what SystemC does
 }
 
-void feed(Vfifo *top, bool wr, bool rd, int* din) {
-    top->wr = wr;
-    top->rd = rd;
-    memcpy(top->din, din, 3 * sizeof(int));
+void feed(Vfifo *top, bool wr, bool rd, int *din) {
+  top->wr = wr;
+  top->rd = rd;
+  memcpy(top->din, din, 3 * sizeof(int));
 }
 
 int main(int argc, char **argv) {
@@ -33,26 +33,25 @@ int main(int argc, char **argv) {
   top->eval();
   top->reset = 1;
 
-  int i[3] = {0,0,0};
+  int i[3] = {0, 0, 0};
   while (!Verilated::gotFinish()) {
-    feed(top, 1, 0, i);
     i[0] += 1;
     i[1] += 2;
     i[2] += 3;
+    feed(top, 1, 0, i);
     top->clk = 1;
     if (!top->empty)
-        top->rd = 1;        
-    else{
-        top->rd = 0;
-        cout << "empty!" << endl;
+      top->rd = 1;
+    else {
+      top->rd = 0;
+      cout << "empty!" << endl;
     }
     top->eval();
 
     cout << top->dout[0] << endl; // Read a output
     cout << top->dout[1] << endl; // Read a output
     cout << top->dout[2] << endl; // Read a output
- 
- 
+
     top->clk = 0;
     top->eval();
   }

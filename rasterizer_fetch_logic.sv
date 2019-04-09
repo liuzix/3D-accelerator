@@ -36,7 +36,7 @@ logic empty;
 reg [95:0] fifo_out_reg;
 reg fifo_out_reg_valid;
 
-reg [32:0] sdram_out_reg;
+reg [31:0] sdram_out_reg;
 reg sdram_out_reg_valid;
 
 assign data_in[25:0] = addr_in;
@@ -54,7 +54,11 @@ fifo fifo(
     .wr(wrreq),
     .rd(rdreq),
     .reset(reset),
-    .clk(clock)
+    .clk(clock),
+    .full(full),
+    .empty(empty),
+    .almost_full(almost_full),
+    .almost_empty(almost_empty)
 );
 
 always_ff @(posedge clock or negedge reset) begin
@@ -74,7 +78,7 @@ always_ff @(posedge clock or negedge reset) begin
             master_address <= addr_in;
             master_read <= 1;
             master_write <= 0;
-            master_byteenable <= 2'b11;
+            master_byteenable <= 4'b11;
             wait_request <= almost_full;
         end
         if (wait_request && !full)

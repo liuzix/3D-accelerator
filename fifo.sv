@@ -27,8 +27,8 @@ module fifo (
     wire almost_full;
     wire almost_empty;
 
-    assign almost_full = counter >= (2**SIZE - 2);
-    assign almost_empty = counter <= 2;
+    assign almost_full = counter >= (2**SIZE - 1);
+    assign almost_empty = counter < 2;
 
     //counter keeps track of number of elements in buffer
     assign empty = (counter == 0); 
@@ -55,13 +55,6 @@ module fifo (
             wr_ptr <= wr_ptr + 1;
             counter <= counter + 1;
         end 
- 
-            //if (wr_ptr == 4'd16)
-             //   wr_ptr = 4'b0000;
-    
-            //if (rd_ptr == 4'd16)
-              //  rd_ptr = 4'b0000);
-
     end 
 
 endmodule;  

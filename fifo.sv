@@ -22,7 +22,6 @@ module fifo (
     logic [3:0] wr_ptr;
     //read pointer
     logic [3:0] rd_ptr;
-    logic isFull, isEmpty;
     logic [3:0] counter;
 
     wire almost_full;
@@ -35,25 +34,28 @@ module fifo (
     assign rd_ptr = 4'b0000;
     //counter keeps track of number of elements in buffer
     assign counter = 0;
-    assign empty = (counter == 0) ? 1'b1 : 1'b0;
-    assign full = (counter == 2**SIZE) ? 1'b1 : 1'b0;
+    assign empty = (counter == 0); 
+    assign full = (counter == 2**SIZE);
 
-	always @(posedge clk)
+	always @(posedge clk or negedge reset)
 	begin
-	    //en is 1 if buffer not full 
-            if (reset) begin
+            $display("counter: %d", counter);
+            if (!reset) begin
+                $display("reset");
                 wr_ptr <= 4'b0000;
                 rd_ptr <= 4'b0000;
                 counter <= 0;
 		    end 
-		    else if (rd == 1'b1 && ~empty) begin
-                dout = buffer[rd_ptr];
-                rd_ptr = rd_ptr + 1;
+		    if (rd == 1'b1 && ~empty) begin
+                $display("read");
+                dout <= buffer[rd_ptr];
+                rd_ptr <= rd_ptr + 1;
                 counter <= counter - 1;
 			end
             else if (wr == 1'b1 && ~full) begin
-                buffer[wr_ptr] = din;
-                wr_ptr = rd_ptr + 1;
+                $display("write");
+                buffer[wr_ptr] <= din;
+                wr_ptr <= wr_ptr + 1;
                 counter <= counter + 1;
             end 
  

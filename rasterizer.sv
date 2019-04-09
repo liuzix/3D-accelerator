@@ -1,17 +1,15 @@
-interface avalon_bus_32;
-    output [25:0] master_address;
-    output master_read;
-    output master_write;
-    output [3:0] master_byteenable;
-    input [31:0] master_readdata;
-    input master_readdatavalid;
-    output [31:0]master_writedata;
-    input master_waitrequest;
-endinterface
-
 module rasterizer_fetch_logic (
     input clock,
     input reset,
+	 
+	 output [25:0] master_address,
+    output master_read,
+    output master_write,
+    output [3:0] master_byteenable,
+    input [31:0] master_readdata,
+    input master_readdatavalid,
+    output [31:0]master_writedata,
+    input master_waitrequest,
 
     input input_valid,
     input [25:0] addr_in,
@@ -23,9 +21,7 @@ module rasterizer_fetch_logic (
     output [31:0] old_depth_out,
     output [31:0] new_depth_out,
     output [23:0] color_out,
-    output wait_request,
-
-    avalon_bus_32 sdram
+    output wait_request
 );
 
 logic [95:0] data_in;
@@ -63,10 +59,8 @@ always_ff @(posedge clock or negedge reset) begin
     if (!reset) begin
         rdreq <= 0;
         wrreq <= 0;
-        data_valid <= 0;
+        output_valid <= 0;
         wait_request <= 0;
-        in_state <= IN_IDLE;
-        read_request_state <= 0;
         fifo_out_reg_valid <= 0;
         sdram_out_reg_valid <= 0;
     end else begin
@@ -75,14 +69,14 @@ always_ff @(posedge clock or negedge reset) begin
         begin
             // enqueue the fetch request
             wrreq <= 1;
-            sdram.master_address <= addr_in;
-            sdram.master_read <= 1;
-            sdram.master_write <= 0;
-            sdram.master_byteenable <= 2'b11;
+            master_address <= addr_in;
+            master_read <= 1;
+            master_write <= 0;
+            master_byteenable <= 2'b11;
             wait_request <= almost_full;
         end
         if (wait_request && !full)
-            wait_requeset <= 0;
+            wait_request <= 0;
 
         // pop one from fifo by default
         if (!fifo_out_reg_valid && !empty)
@@ -95,16 +89,16 @@ always_ff @(posedge clock or negedge reset) begin
         end
 
         // check if there is any output from sdram
-        if (sdram.master_readdatavalid) begin
+        if (master_readdatavalid) begin
             if (fifo_out_reg_valid) begin
                 output_valid <= 1;
-                old_depth_out <= sdram.master_readdata;
+                old_depth_out <= master_readdata;
                 fifo_out_reg_valid <= 0;
 				end
             else begin
                 output_valid <= 0;
                 rdreq = 0;
-                sdram_out_reg <= sdram.master_readdata;
+                sdram_out_reg <= master_readdata;
                 sdram_out_reg_valid <= 1;
             end
         end else

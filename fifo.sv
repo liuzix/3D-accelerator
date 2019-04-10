@@ -13,11 +13,11 @@ module fifo (
 
     //DBITS: # of address bits
     //SIZE: 2^SZIE elements in buffer
-    parameter DBITS = 26,
+    parameter DBITS = 96,
               SIZE = 4;
     
     //16 element fifo, each element is 26 bis
-    logic [95:0] buffer[15:0];
+    logic [DBITS-1:0] buffer[15:0];
     //write pointer
     logic [3:0] wr_ptr;
     //read pointer

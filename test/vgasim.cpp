@@ -43,10 +43,4 @@ void VGASimulator::tick(uint8_t r, uint8_t g, uint8_t b,
     }
 }
 
-int main()
-{
-    VGASimulator vsim;
-    for (;;) {
-        vsim.poll();
-    }
-}
+//vsim.poll();

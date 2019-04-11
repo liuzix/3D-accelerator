@@ -122,7 +122,7 @@ module vga_buffer(
 	vga_counters counters(.clk50(clk50), .reset(!reset), .*);		
 	
 	always_ff @(posedge clk)
-		if (reset) begin
+		if (!reset) begin
 			{VGA_R, VGA_G, VGA_B} = {8'h0, 8'h0, 8'h0};
 			cur_vga_addr = frame_buffer_ptr;
 			pixel_read = 0;

@@ -10,11 +10,12 @@ private:
     SDL_Event event;
 
     int hcount, vcount;
+    bool prevClock = 0;
 public:
     VGASimulator();
     
     void poll();
 
-    void tick(uint8_t r, uint8_t g, uint8_t b,
+    void tick(bool clk, uint8_t r, uint8_t g, uint8_t b,
             bool hsync, bool vsync);
 };

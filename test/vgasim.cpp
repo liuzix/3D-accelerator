@@ -25,9 +25,14 @@ void VGASimulator::poll()
         exit(0);
 }
     
-void VGASimulator::tick(uint8_t r, uint8_t g, uint8_t b,
+void VGASimulator::tick(bool clk, uint8_t r, uint8_t g, uint8_t b,
             bool, bool)
 {
+    if (!(clk && !prevClock)) {
+        prevClock = clk;
+        return;
+    }
+    prevClock = clk;
     if (hcount < 640 && vcount < 480) {
         SDL_SetRenderDrawColor(renderer, r, g, b, 255);
         SDL_RenderDrawPoint(renderer, hcount, vcount);
@@ -42,6 +47,7 @@ void VGASimulator::tick(uint8_t r, uint8_t g, uint8_t b,
             vcount = 0;
     }
 }
+
 
 int main()
 {

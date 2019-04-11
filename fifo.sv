@@ -4,12 +4,12 @@ module fifo (
     input logic reset,
     input logic wr,
     input logic rd,
-    input logic [95:0] din,
+    input logic [DBITS-1:0] din,
     output logic empty,
     output logic full,
     output logic almost_full,
     output logic almost_empty,
-    output logic [95:0] dout);
+    output logic [DBITS-1:0] dout);
 
     //DBITS: # of address bits
     //SIZE: 2^SZIE elements in buffer

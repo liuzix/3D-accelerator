@@ -119,7 +119,7 @@ module vga_buffer(
 	assign pixel_read = (clk_counter == 3);	
 	assign clk50 = (clk_counter == 0); 	
  
-	vga_counters counters(.clk50(clk50), .*);		
+	vga_counters counters(.clk50(clk50), .reset(!reset), .*);		
 	
 	always_ff @(posedge clk)
 		if (reset) begin
@@ -175,10 +175,13 @@ module vga_counters(
 
    logic endOfLine;
 
-   always_ff @(posedge clk50 or posedge reset)
+   always_ff @(posedge clk50 or posedge reset) begin
      if (reset)          hcount <= 0;
      else if (endOfLine) hcount <= 0;
-     else  	         hcount <= hcount + 11'd 1;
+     else begin
+         hcount <= hcount + 11'd 1;
+     end
+   end
 
    assign endOfLine = hcount == HTOTAL - 1;
 

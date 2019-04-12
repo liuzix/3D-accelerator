@@ -28,12 +28,16 @@ void VGASimulator::poll()
 void VGASimulator::tick(bool clk, uint8_t r, uint8_t g, uint8_t b,
             bool, bool)
 {
-    if (!(clk && !prevClock)) {
+	cout << "vga clock: " << clk << endl;
+	if (!(clk && !prevClock)) {
         prevClock = clk;
         return;
     }
     prevClock = clk;
-    if (hcount < 640 && vcount < 480) {
+    cout << "vgasim:  r " << (int)r << " g " << (int)g << " b " << (int)b << endl;
+	cout << "vgasim: hcount: " << dec << hcount << endl;
+	cout << "vgasim :vcount: " << dec << vcount << endl;
+	if (hcount < 640 && vcount < 480) {
         SDL_SetRenderDrawColor(renderer, r, g, b, 255);
         SDL_RenderDrawPoint(renderer, hcount, vcount);
     } 

@@ -3,6 +3,8 @@
 #include <list>
 #include <iostream>
 #include <cstdint>
+#include <cstdlib>
+#include <ctime>
 #include <cstring>
 
 using namespace std;
@@ -38,6 +40,7 @@ public:
              << hex << memSize << endl;
         cout << "SDRAM controller word size = "
              << sizeof(Value) << endl;
+        srand(time(NULL));
     }
 
     void tick(int port, uint32_t addr, bool read, bool write,
@@ -48,11 +51,15 @@ public:
         if (!readRequests.empty()
             && readRequests.front().targetTick <= tickCount
             && readRequests.front().port == port) {
-            
-            Value v = memory[readRequests.front().address / sizeof(Value)];
-            memcpy(readdata, &v, sizeof(Value));
-            readRequests.pop_front();
-            readvalid = true;
+           
+            if (rand() % 3 == 0) {
+                Value v = memory[readRequests.front().address / sizeof(Value)];
+                memcpy(readdata, &v, sizeof(Value));
+                readRequests.pop_front();
+                readvalid = true;
+            } else {
+                readvalid = false;
+            }
         } else {
             readvalid = false;
         }

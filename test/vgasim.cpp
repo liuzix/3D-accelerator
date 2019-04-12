@@ -10,9 +10,6 @@ VGASimulator::VGASimulator()
     
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
     SDL_RenderClear(renderer);
-    //SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-    //for (int i = 0; i < 640; ++i)
-    //    SDL_RenderDrawPoint(renderer, i, i);
     SDL_RenderPresent(renderer);
    
     hcount = vcount = 0;
@@ -40,16 +37,19 @@ void VGASimulator::tick(bool clk, uint8_t r, uint8_t g, uint8_t b,
 	if (hcount < 640 && vcount < 480) {
         SDL_SetRenderDrawColor(renderer, r, g, b, 255);
         SDL_RenderDrawPoint(renderer, hcount, vcount);
-        SDL_RenderPresent(renderer);
+        //SDL_RenderPresent(renderer);
     } 
     if (hcount < 799)
         hcount ++;
     else {
         hcount = 0;
-        if (vcount < 524)
+        if (vcount < 524) {
             vcount ++;
-        else
+        }
+        else {
             vcount = 0;
+            SDL_RenderPresent(renderer);
+        }
     }
 }
 

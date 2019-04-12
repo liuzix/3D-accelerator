@@ -1,25 +1,25 @@
 module bus_adapter (
-        input clk,
-	input reset,
-	//connect to upper master
-	output logic valid,
-	output logic wait,
-	input logic write,//write enable signal
-	input logic read,//read enable signal
-	input logic [31:0]write_data,
-        output logic [31:0] read_data,
-	input logic[25:0]address,	
-	//connect to sram controller 
-	//read from sram
-	input [15:0] master_readdata,
-	input master_readdatavalid,
-	input master_waitrequest, 
-	//to sram
-	output [25:0] master_address,
-	output master_read,
-	output master_write,
-	output [1:0] master_byteenable,	
-	output [15:0]master_writedata);// write to sram
+    input clk,
+    input reset,
+    //connect to upper master
+    output logic valid,
+    output logic wait,
+    input logic write,//write enable signal
+    input logic read,//read enable signal
+    input logic [31:0]write_data,
+    output logic [31:0] read_data,
+    input logic[25:0]address,   
+    //connect to sram controller 
+    //read from sram
+    input [15:0] master_readdata,
+    input master_readdatavalid,
+    input master_waitrequest, 
+    //to sram
+    output [25:0] master_address,
+    output master_read,
+    output master_write,
+    output [1:0] master_byteenable, 
+    output [15:0]master_writedata);// write to sram
 //three states: IDLE, read data, write data,WAIT
 parameter IDLE=2'b00;
 parameter READ_DATA=2'b01;
@@ -41,34 +41,34 @@ end
 always_comb
 begin
    case(state)
-	  WAIT:begin
+      WAIT:begin
                 if(master_waitrequest==0)nextstate=IDLE;
                 else nextstate=WAIT;
                end
-	  IDLE: begin 
+      IDLE: begin 
                 if(master_waitrequest)nextstate=WAIT;
                 else begin
                   if(write)nextstate=WRITE_DATA;//if write=1, write data to sram
-	          else if(read)nextstate=READ_DATA;
-	        end
+              else if(read)nextstate=READ_DATA;
+            end
                 end
-	  WRITE_DATA:begin 	       
+      WRITE_DATA:begin         
                 if(master_waitrequest)next_state=WAIT;
-	        else begin 
+            else begin 
                 if(write|flag==1)nextstate=WRITE;
                 else if(write==0&&read==1)nextstate=READ;
                 else if(write==0&&read==0)nextstate=IDLE;
                 end
-	        end
-	  READ_DATA:begin 
+            end
+      READ_DATA:begin 
                 if(master_waitrequest)next_state=WAIT;
-	        else begin 
+            else begin 
                   if(read)nextstate=READ;
                   else if(write==1&&read==0)nextstate=WRITE;
                   else if(write==0&&read==0)nextstate=IDLE;
                 end
-	        end
-	endcase
+            end
+    endcase
 end
 //computation in each state
 logic[31:0]buffer[2:0];
@@ -78,13 +78,13 @@ logic read_request_flag;
 always_ff@(posedge clk)
 begin
    case(state)
-	  S3: begin end
-	  IDLE: begin 
-	          flag<=0;
+      S3: begin end
+      IDLE: begin 
+              flag<=0;
                   readflag<=0;
-	        end
-	  WRITE_DATA:begin
-	                master_read<=0;
+            end
+      WRITE_DATA:begin
+                    master_read<=0;
                         master_write<=1;
                         buffer[31:0]<=write_data[31:0];
                         wait<=1;
@@ -101,16 +101,16 @@ begin
                            wait<=0;
                            master_address<=master_address+1;
                            end
-	              end
-	  READ_DATA:begin
-	              master_read<=1;
+                  end
+      READ_DATA:begin
+                  master_read<=1;
                       master_write<=0;
                       wait<=1;
                       master_address<=address;//send data to sram controller
                       
                         
-		    end
-	endcase
+            end
+    endcase
 end
 //go up
 logic [31:0]read_data_buffer;

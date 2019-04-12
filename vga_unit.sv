@@ -23,6 +23,7 @@ module vga_unit(input clk,
 					   .bus_data(bus_data),
 					   .master_readdatavalid(master_readdatavalid),
 					   .master_waitrequest(master_waitrequest),
+                       .base(frame_buffer_ptr),
 					   .*);
 
 	vga_buffer buffer (.clk(clk),

@@ -2,6 +2,7 @@ module vga_master(
     input clk,
     input reset,
 	input pixel_read,
+    input [25:0] base,
 	input [25:0] cur_vga_addr,
 	input [31:0] bus_data, //data returned by bus
 	input master_readdatavalid, 
@@ -24,7 +25,7 @@ module vga_master(
     reg [25:0] down_addr_next;
     reg addr_invalid;
 
-	logic [31:0] pixel_buffer[4:0];
+	logic [31:0] pixel_buffer[32];
 	logic [3:0] pixel_rd_ptr;
 	logic [3:0] pixel_wr_ptr;
 	logic [4:0] pixel_in_progress;
@@ -46,6 +47,39 @@ module vga_master(
 				.*);
     
     reg sync;
+
+    function logic [25:0] addr_offset_add;
+        input logic [25:0] first;
+        input logic [25:0] second;
+
+        return ((first - base + second) % (640 * 480 * 8)) + base;
+    endfunction
+
+    function bit addr_in_range;
+        input logic [25:0] addr;
+        input logic [25:0] up;
+        input logic [25:0] down;
+        
+        if (up > down) begin
+            $display("ha?");
+            return up > addr && addr >= down;
+        end
+        else if (up < down) begin
+            $display("gwa?");
+            return addr >= down || addr < up;
+        end
+        else
+            return 0;
+    endfunction
+
+    function bit addr_lt;
+        input logic [25:0] first;
+        input logic [25:0] second;
+    
+        if (first < second) return 1;
+        else if ((first - base) + 32 * 8 > (second - base) + 640 * 480 * 8) return 1;
+        else return 0;
+    endfunction
       
 	always_ff @(posedge clk or negedge reset)
 	begin
@@ -77,7 +111,7 @@ module vga_master(
                 din <= cur_addr;
                 master_read <= 1;
                 master_address <= cur_addr;
-                cur_addr <= cur_addr + 8;
+                cur_addr <= addr_offset_add(cur_addr, 8);
                 pixel_in_progress_next = pixel_in_progress_next + 1;
             end
             else begin
@@ -86,9 +120,9 @@ module vga_master(
             end
 
             if (pixel_read) begin
-                if (up_addr > cur_vga_addr && cur_vga_addr >= down_addr) begin
+                if (addr_in_range(cur_vga_addr, up_addr, down_addr)) begin
                     pixel_in_progress_next = pixel_in_progress_next - 1;
-                    pixel_data <= pixel_buffer[cur_vga_addr % 32];
+                    pixel_data <= pixel_buffer[(cur_vga_addr / 8) % 32];
                     pixel_valid <= 1;
                 end
                 else begin 
@@ -97,12 +131,13 @@ module vga_master(
             
                 $display("vga_master: pixel_read cur_vga_addr = %d", cur_vga_addr);
 
-                if (cur_vga_addr >= down_addr)
-                    down_addr_next = cur_vga_addr + 26'd8;
+                if (!addr_lt(cur_vga_addr,down_addr))
+                    down_addr_next = addr_offset_add(cur_vga_addr, 8);
 
-                if (cur_vga_addr >= up_addr) begin
+                if (!addr_lt(cur_vga_addr, up_addr)) begin
                     sync = 1;
-                    down_addr_next = cur_vga_addr + 128;
+                    $display("vga_master: syncing!");
+                    down_addr_next = addr_offset_add(cur_vga_addr, 128);
                     up_addr_next = down_addr_next;
                 end
 
@@ -114,14 +149,14 @@ module vga_master(
                 
                 $display("vga_master: pixel data at %d: %d", dout, bus_data);
                 if (addr_invalid) begin
-                    pixel_buffer[dout % 32] <= bus_data;
-                    up_addr_next = dout + 8;
-                    down_addr_next = dout + 8;
+                    pixel_buffer[(dout / 8) % 32] <= bus_data;
+                    up_addr_next = addr_offset_add(dout, 8);
+                    down_addr_next = up_addr_next;
                     addr_invalid <= 0;
                 end else
                 if (dout == up_addr) begin 
-                    pixel_buffer[up_addr % 32] <= bus_data;
-                    up_addr_next = dout + 8;
+                    pixel_buffer[(up_addr / 8) % 32] <= bus_data;
+                    up_addr_next = addr_offset_add(dout, 8);
                 end
             end
 

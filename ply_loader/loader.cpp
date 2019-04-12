@@ -61,10 +61,10 @@ int main() {
 
 	// fixed point test
 	uint64_t u;
-	memcpy(&u, &vPos[1][0], sizeof(vPos[1][0]));
-	std::cout << "before conversion: " << vPos[1][0] << " " << std::hex << u << std::endl;
+	memcpy(&u, &vPos[0][0], sizeof(vPos[0][0]));
+	std::cout << "before conversion: " << vPos[0][0] << " " << std::hex << u << std::endl;
 
-	std::cout << "after conversion: " << std::bitset<32>(float2fixed(vPos[1][0])) << std::endl;
+	std::cout << "after conversion: " << std::bitset<32>(float2fixed(vPos[0][0])) << std::endl;
 
 
 	/* data_out: X|Y|Z--X|Y|Z--X|Y|Z--NX|NY|NZ
@@ -105,30 +105,45 @@ int main() {
 
 	std::cout << std::dec << data_out.size() << " triangles loaded in total" << std::endl;
 
-	std::ofstream file_out("data.binary", ios::out | ios::binary);
+	std::ofstream file_out("data.binary", std::ios_base::out | std::ios_base::binary);
 
 	/* output file layout:
 	 * X|Y|Z|R|G|B--X|Y|Z|R|G|B--X|Y|Z|R|G|B--NX|NY|NZ for each triangle
 	 */
 	for (int i = 0; i < data_out.size(); i++) {
 		for (int j = 0; j < 3; j++) {
-			file_out << data_out[i][0 + 3*j];
-			file_out << data_out[i][1 + 3*j];
-			file_out << data_out[i][2 + 3*j];
+			file_out.write((char*)&data_out[i][0 + 3*j], sizeof(fixed_point_t));
+			file_out.write((char*)&data_out[i][1 + 3*j], sizeof(fixed_point_t));
+			file_out.write((char*)&data_out[i][2 + 3*j], sizeof(fixed_point_t));
 
 			file_out << color_out[i][0 + 3*j];
 			file_out << color_out[i][1 + 3*j];
 			file_out << color_out[i][2 + 3*j];
 		}
 
-		file_out << data_out[i][9];
-		file_out << data_out[i][10];
-		file_out << data_out[i][11];
+		file_out.write((char*)&data_out[i][9], sizeof(fixed_point_t));
+		file_out.write((char*)&data_out[i][10], sizeof(fixed_point_t));
+		file_out.write((char*)&data_out[i][11], sizeof(fixed_point_t));
 	}
 	file_out.close();
 
 	std::cout << "output file generated" << std::endl;
 
+	std::ifstream file_in("data.binary", std::ios_base::in | std::ios_base::binary);
+
+	fixed_point_t buffer[3];
+	file_in.read((char*)buffer, 3 * sizeof(fixed_point_t));
+
+	for (int i = 0; i < 3; i++) {
+		std::cout << std::bitset<32>(data_out[0][i]) << " ";
+	}
+
+	std::cout << std::endl;
+	for (int i = 0; i < 3; i++) {
+		std::cout << std::bitset<32>(buffer[i]) << " ";
+	}
+
+	file_in.close();
 
 	return 0;
 

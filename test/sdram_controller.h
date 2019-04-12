@@ -59,12 +59,14 @@ public:
 
         // handle input
         if (read) {
+            cout << "sdram: read " << dec << addr << endl;
             ReadRequest req;
             req.address = addr;
             req.port = port;
             req.targetTick = tickCount + MEMORY_LATENCY;
             readRequests.push_back(req);
         } else if (write) {
+            cout << "sdram: write " << dec << addr << endl;
             WriteRequest req;
             req.address = addr;
             memcpy(&req.value, writedata, sizeof(Value));

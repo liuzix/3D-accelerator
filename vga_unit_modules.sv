@@ -11,8 +11,6 @@ module vga_master(
     output [31:0] pixel_data,
 	output pixel_valid);
 
-	logic sync_valid;
-	logic [25:0] sync_addr;
 	reg [25:0] cur_addr; 
 
 	reg wr;
@@ -20,17 +18,17 @@ module vga_master(
 	reg [25:0] din;
 	wire [25:0] dout;
 
-	reg signed [31:0] signed_addr;
+	reg [25:0] up_addr;
+    reg [25:0] up_addr_next;
+	reg [25:0] down_addr;
+    reg [25:0] down_addr_next;
+    reg addr_invalid;
 
-	assign signed_addr[25:0] = cur_vga_addr;
-	assign signed_addr[31:26] = 0;
-
-	integer up_addr;
-	integer down_addr;
 	logic [31:0] pixel_buffer[4:0];
 	logic [3:0] pixel_rd_ptr;
 	logic [3:0] pixel_wr_ptr;
-	logic [3:0] pixel_in_progress;
+	logic [4:0] pixel_in_progress;
+    logic [4:0] pixel_in_progress_next;
     assign rd = master_readdatavalid; 
 
 	//fifo
@@ -47,47 +45,90 @@ module vga_master(
 				.din(din),
 				.*);
     
-	always_ff @(posedge clk)
+    reg sync;
+      
+	always_ff @(posedge clk or negedge reset)
 	begin
-		if (!reset) begin
-			cur_addr <= cur_vga_addr + 128;
-			pixel_in_progress <= 0;
-			pixel_valid <= 0;
-			up_addr <= 0;
-			down_addr = 0;
-		end
+        if (!reset) begin
+            cur_addr <= cur_vga_addr + 128;
+            pixel_in_progress <= 0;
+            pixel_in_progress_next = 0;
+            pixel_valid <= 0;
+            up_addr <= 0;
+            down_addr <= 0;
+            addr_invalid <= 1;
+        end
+        else begin
+            $display("vga_master: -------------------------");
+            $display("vga_master: up_addr = %d, down_addr = %d", up_addr, down_addr);
+            pixel_in_progress_next = pixel_in_progress;
+            up_addr_next = up_addr;
+            down_addr_next = down_addr;
+            sync = 0;
 
-		if (!master_waitrequest) begin	
-			wr <= 1;
-			din <= cur_addr;
-			master_read <= 1;
-			master_address <= cur_addr;
-			cur_addr <= cur_addr + 8;
-			pixel_in_progress = pixel_in_progress + 1;
-		end
-		else begin
-			wr <= 0;
-			master_read <= 0;
-		end
+            if (pixel_in_progress == 16)
+                $display("vga_master: pixel buffer full");
+            if (master_waitrequest)
+                $display("vga_master: sdram asks us to wait");
 
-		if (pixel_read) begin
-			pixel_in_progress = pixel_in_progress - 1;
-			if (up_addr - signed_addr > 0 && signed_addr - down_addr > 0) begin
-				pixel_data <= pixel_buffer[cur_vga_addr % 32];
-				down_addr[25:0] = cur_vga_addr + 26'd8;
-				pixel_valid <= 1;
-			end
-			else 
-				pixel_valid <= 0;
-		end
+            if (!master_waitrequest && pixel_in_progress < 16) begin	
+                $display("vga_master: sending request cur_addr = %d", cur_addr);
+                wr <= 1;
+                din <= cur_addr;
+                master_read <= 1;
+                master_address <= cur_addr;
+                cur_addr <= cur_addr + 8;
+                pixel_in_progress_next = pixel_in_progress_next + 1;
+            end
+            else begin
+                wr <= 0;
+                master_read <= 0;
+            end
 
-		if (master_readdatavalid) begin
-			if (empty)
-				$fatal("fifo empty");
+            if (pixel_read) begin
+                if (up_addr > cur_vga_addr && cur_vga_addr >= down_addr) begin
+                    pixel_in_progress_next = pixel_in_progress_next - 1;
+                    pixel_data <= pixel_buffer[cur_vga_addr % 32];
+                    pixel_valid <= 1;
+                end
+                else begin 
+                    pixel_valid <= 0;
+                end
+            
+                $display("vga_master: pixel_read cur_vga_addr = %d", cur_vga_addr);
 
-			if (dout == up_addr[25:0] + 8) 
-				pixel_buffer[up_addr % 32] <= bus_data;
-		end
+                if (cur_vga_addr >= down_addr)
+                    down_addr_next = cur_vga_addr + 26'd8;
+
+                if (cur_vga_addr >= up_addr) begin
+                    sync = 1;
+                    down_addr_next = cur_vga_addr + 128;
+                    up_addr_next = down_addr_next;
+                end
+
+            end
+
+            if (master_readdatavalid && !sync) begin
+                if (empty)
+                    $fatal("fifo empty");
+                
+                $display("vga_master: pixel data at %d: %d", dout, bus_data);
+                if (addr_invalid) begin
+                    pixel_buffer[dout % 32] <= bus_data;
+                    up_addr_next = dout + 8;
+                    down_addr_next = dout + 8;
+                    addr_invalid <= 0;
+                end else
+                if (dout == up_addr) begin 
+                    pixel_buffer[up_addr % 32] <= bus_data;
+                    up_addr_next = dout + 8;
+                end
+            end
+
+            pixel_in_progress <= pixel_in_progress_next;
+            up_addr <= up_addr_next;
+            down_addr <= down_addr_next;
+        end
 	end
 endmodule
 
@@ -111,29 +152,67 @@ module vga_buffer(
 
 	logic clk50;
 	logic [1:0] clk_counter;
+    
+    wire VGA_CLK_PRE;
+    reg [3:0] vga_clk_high_count;
 
-	always_ff @(posedge clk)
-		clk_counter = clk_counter + 1;
+	always_ff @(posedge clk or negedge reset)
+        if (!reset)
+            clk_counter <= 0;
+        else
+		    clk_counter <= clk_counter + 1;
 	
 
-	assign pixel_read = (clk_counter == 3);	
-	assign clk50 = (clk_counter == 0); 	
+	//assign pixel_read = (clk_counter == 4);	
+	assign clk50 = (clk_counter > 1); 	
+    assign cur_vga_addr = frame_buffer_ptr + (hcount[10:1] + 640 * vcount) * 8;
  
-	vga_counters counters(.clk50(clk50), .reset(!reset), .*);		
+	vga_counters counters(.clk50(clk50), .reset(!reset),.VGA_CLK(VGA_CLK_PRE), .*);		
 	
-	always_ff @(posedge clk)
+    typedef enum { R_REQUEST, R_CLOCK, R_IDLE } read_state_t;
+    read_state_t read_state;
+	
+    always_ff @(posedge clk or negedge reset)
 		if (!reset) begin
-			{VGA_R, VGA_G, VGA_B} = {8'h0, 8'h0, 8'h0};
+			{VGA_R, VGA_G, VGA_B} <= {8'h0, 8'h0, 8'h0};
 			cur_vga_addr = frame_buffer_ptr;
-			pixel_read = 0;
-		end 
-	
-	always_comb begin
-		if (pixel_valid) begin
-			{VGA_R, VGA_G, VGA_B} = {pixel_data[31:24], pixel_data[23:16], pixel_data[15:8]};
-			cur_vga_addr = frame_buffer_ptr + (hcount + 640) * vcount;
-		end
-	end
+			pixel_read <= 0;
+            vga_clk_high_count <= 0;
+            read_state <= R_IDLE;
+        end else begin
+            case (read_state)
+                R_IDLE: begin
+                    if (VGA_CLK_PRE) begin
+                        $display("vga_buffer: hcount = %d", hcount[10:1]);
+                        if (hcount[10:1] < 640 && vcount < 480)
+                            pixel_read <= 1;
+                        read_state <= R_REQUEST;
+                    end
+                end
+
+                R_REQUEST: begin
+                    pixel_read <= 0;
+                    if (pixel_valid)
+                        {VGA_B, VGA_G, VGA_R} <= {pixel_data[23:16], pixel_data[15:8], pixel_data[7:0]};
+                    else begin
+                        {VGA_B, VGA_G, VGA_R} <= {8'h0, 8'h0, 8'h0};
+                        $display("vga_buffer: no pixel");
+                    end
+                    VGA_CLK <= 1; 
+                    read_state <= R_CLOCK;
+                end
+
+                R_CLOCK: begin
+                    if (vga_clk_high_count < 3)
+                        vga_clk_high_count <= vga_clk_high_count + 1;
+                    else begin
+                        vga_clk_high_count <= 0;
+                        VGA_CLK <= 0;
+                        read_state <= R_IDLE;
+                    end
+                end
+            endcase
+        end
 endmodule
 
 

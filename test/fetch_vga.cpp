@@ -49,12 +49,10 @@ int main(int argc, char** argv) {
                              top->master_write, &top->bus_data,
                              top->master_readdatavalid, &top->master_writedata,
                              top->master_waitrequest);
-		vgasim.tick(top->VGA_CLK, top->VGA_R, top->VGA_G, top->VGA_B, top->VGA_HS, top->VGA_VS);
 		top->eval();
         vgasim.tick(top->VGA_CLK, top->VGA_R, top->VGA_G, top->VGA_B, top->VGA_HS, top->VGA_VS);
 
 		top->clk = 0;
-		vgasim.tick(top->VGA_CLK, top->VGA_R, top->VGA_G, top->VGA_B, top->VGA_HS, top->VGA_VS);
 		top->eval();
 
         main_time++;

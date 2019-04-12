@@ -40,29 +40,23 @@ module fifo (
     always @(posedge clk or negedge reset)
     begin
         if (!reset) begin
-            $display("reset");
             wr_ptr <= 4'b0000;
             rd_ptr <= 4'b0000;
             counter <= 0;
             new_counter = 0;
         end 
         new_counter = counter;
-        $display("new_counter = %d", new_counter);
         if (rd == 1'b1 && ~empty) begin
-            $display("fifo pop");
             rd_ptr <= rd_ptr + 1;
             new_counter = new_counter - 1;
         end
         
         if (wr == 1'b1 && ~full) begin
-            $display("fifo write");
             buffer[wr_ptr] <= din;
             wr_ptr <= wr_ptr + 1;
             new_counter = new_counter + 1;
         end 
         counter <= new_counter;
-        $display("new_counter = %d", new_counter);
-        $display("counter = %d", counter);
     end 
 
 endmodule;  

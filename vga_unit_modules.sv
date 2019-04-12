@@ -110,12 +110,13 @@ module vga_master(
                 wr <= 1;
                 din <= cur_addr;
                 master_read <= 1;
-                master_address <= cur_addr;
+                master_address <= addr_offset_add(cur_addr, 8);;
                 cur_addr <= addr_offset_add(cur_addr, 8);
                 pixel_in_progress_next = pixel_in_progress_next + 1;
             end
             else begin
                 wr <= 0;
+                master_address <= cur_addr;
                 master_read <= 0;
             end
 
@@ -144,10 +145,10 @@ module vga_master(
             end
 
             if (master_readdatavalid && !sync) begin
+                $display("vga_master: pixel data at %d: %d", dout, bus_data);
                 if (empty)
                     $fatal("fifo empty");
                 
-                $display("vga_master: pixel data at %d: %d", dout, bus_data);
                 if (addr_invalid) begin
                     pixel_buffer[(dout / 8) % 32] <= bus_data;
                     up_addr_next = addr_offset_add(dout, 8);

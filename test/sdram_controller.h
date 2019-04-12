@@ -47,6 +47,8 @@ public:
               Value *readdata, unsigned char &readvalid, Value *writedata,
               unsigned char &waitrequest)
     {
+        tickCount++; 
+        
         // handle output
         if (!readRequests.empty()
             && readRequests.front().targetTick <= tickCount
@@ -62,6 +64,25 @@ public:
             }
         } else {
             readvalid = false;
+        }
+        
+        // handle write queue
+        if (!writeRequests.empty()
+            && writeRequests.front().targetTick <= tickCount) {
+            
+            WriteRequest &req = writeRequests.front();
+            memory[req.address / sizeof(Value)] = req.value;
+            writeRequests.pop_front();
+        }
+
+        // check of any queue is full
+        if (readRequests.size() >= MAX_QUEUE_LENGTH
+            || writeRequests.size() >= MAX_QUEUE_LENGTH) {
+            
+            waitrequest = true;
+            return;
+        } else {
+            waitrequest = false;
         }
 
         // handle input
@@ -81,24 +102,5 @@ public:
             writeRequests.push_back(req);
         }
 
-        // handle write queue
-        if (!writeRequests.empty()
-            && writeRequests.front().targetTick <= tickCount) {
-            
-            WriteRequest &req = writeRequests.front();
-            memory[req.address / sizeof(Value)] = req.value;
-            writeRequests.pop_front();
-        }
-
-        // check of any queue is full
-        if (readRequests.size() >= MAX_QUEUE_LENGTH
-            || writeRequests.size() >= MAX_QUEUE_LENGTH) {
-            
-            waitrequest = true;
-        } else {
-            waitrequest = false;
-        }
-        
-        tickCount++; 
     }
 };

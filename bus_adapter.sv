@@ -1,14 +1,14 @@
 module bus_adapter (
-    input clk,
+    input clock,
     input reset,
     //connect to upper master
-    output logic valid,
-    output logic wait,
-    input logic write,//write enable signal
-    input logic read,//read enable signal
-    input logic [31:0]write_data,
-    output logic [31:0] read_data,
-    input logic[25:0]address,
+    output slave_readdatavalid,
+    output slave_waitrequest,
+    input slave_write,//write enable signal
+    input slave_read,//read enable signal
+    input [31:0] slave_writedata,
+    output [31:0] slave_readdata,
+    input [25:0] slave_address,
     //connect to sram controller
     //read from sram
     input [15:0] master_readdata,
@@ -23,110 +23,96 @@ module bus_adapter (
 );
 // write to sram
 //three states: IDLE, read data, write data,WAIT
-    parameter IDLE=2'b00;
-    parameter READ_DATA=2'b01;
-    parameter WRITE_DATA=2'b10;
-    parameter WAIT=2'b11;
-    logic[1:0] state,
-        logic[1:0] nextstate,
-            logic flag;
-    logic readflag;
-//state register
-    always_ff@(posedge clk or posedge rst)
-        begin
-            if(rst)state<=IDLE;
-            else state<=nextstate;
 
+    typedef enum logic[1:0] {IDLE_R, READ1, READ2} read_t;
+    read_t read_state;
+
+    typedef enum logic[1:0] {IDLE_REC, DONE} rec_t;
+    rec_t rec_state;
+
+    typedef enum logic[1:0] {IDLE_W, WRITE1, WRITE2} write_t;
+    write_t write_state;
+
+
+    logic read_busy;
+    logic write_busy;
+    logic[25:0] read_addr_cache;
+
+    assign slave_waitrequest = read_busy | write_busy;
+
+    always_ff @(posedge clock or negedge reset) begin
+        if (!reset) begin
+            read_state <= IDLE_R;
+            master_read <= 0;
+            read_busy <= 0;
         end
-//next_state logic
+        else begin
+            case(read_state)
+                IDLE_R: begin
+                    if (slave_read) begin
+                        read_busy <= 1;
+                        if (!master_waitrequest) begin
+                            master_address <= slave_address;
+                            master_read <= 1;
+                            read_addr_cache <= slave_address + 2;
+                            read_state <= READ2;
+                        end else begin
+                            master_read <= 0;
+                            read_addr_cache <= slave_address;
+                            read_state <= READ1;
+                        end
+                    end else
+                        master_read <= 0;
+                end
+                READ1: begin
+                    if (!master_waitrequest) begin
+                        master_address <= read_addr_cache;
+                        master_read <= 1;
+                        read_addr_cache <= read_addr_cache + 2;
+                        read_state <= READ2;
+                    end else
+                        master_read <= 0;
+                end
+                READ2: begin
+                    if (!master_waitrequest) begin
+                        master_address <= read_addr_cache;
+                        master_read <= 1;
 
-    always_comb
-        begin
-            case(state)
-                WAIT:begin
-                    if(master_waitrequest==0)nextstate=IDLE;
-                    else nextstate=WAIT;
+                        read_busy <= 0;
+                        read_state <= IDLE_R;
+                    end else
+                        master_read <= 0;
                 end
-                IDLE: begin
-                    if(master_waitrequest)nextstate=WAIT;
-                    else begin
-                        if(write)nextstate=WRITE_DATA;//if write=1, write data to sram
-                        else if(read)nextstate=READ_DATA;
-                    end
-                end
-                WRITE_DATA:begin
-                    if(master_waitrequest)next_state=WAIT;
-                    else begin
-                        if(write|flag==1)nextstate=WRITE;
-                        else if(write==0&&read==1)nextstate=READ;
-                        else if(write==0&&read==0)nextstate=IDLE;
-                    end
-                end
-                READ_DATA:begin
-                    if(master_waitrequest)next_state=WAIT;
-                    else begin
-                        if(read)nextstate=READ;
-                        else if(write==1&&read==0)nextstate=WRITE;
-                        else if(write==0&&read==0)nextstate=IDLE;
-                    end
-                end
+                default: begin end
             endcase
         end
-//computation in each state
-    logic[31:0]buffer[2:0];
-    logic[25:0] addressbuffer;
+    end
 
-    logic read_request_flag;
-    always_ff@(posedge clk)
-        begin
-            case(state)
-                S3: begin end
-                IDLE: begin
-                    flag<=0;
-                    readflag<=0;
-                end
-                WRITE_DATA:begin
-                    master_read<=0;
-                    master_write<=1;
-                    buffer[31:0]<=write_data[31:0];
-                    wait<=1;
-                    flag<=1;
-                    master_writedata[15:0]<=write_data[31:16];
-                    master_address<=address;
-                    if(read==1)begin
-                        addressbuffer<=address;
-                        read_request_flag<=1;
-                    end
-                    if(flag==1)begin
-                        master_writedata[15:0]<=buffer[15:0];
-                        flag<=0;
-                        wait<=0;
-                        master_address<=master_address+1;
+    logic[15:0] read_data_cache;
+    always_ff @(posedge clock or negedge reset) begin
+        if (!reset) begin
+            rec_state <= IDLE_REC;
+            slave_readdatavalid <= 0;
+        end else begin
+            case(rec_state)
+                IDLE_REC: begin
+                    slave_readdatavalid <= 0;
+                    if (master_readdatavalid) begin
+                        read_data_cache <= master_readdata;
+                        rec_state <= DONE;
                     end
                 end
-                READ_DATA:begin
-                    master_read<=1;
-                    master_write<=0;
-                    wait<=1;
-                    master_address<=address;//send data to sram controller
-
-
+                DONE: begin
+                    if (master_readdatavalid) begin
+                        slave_readdata[15:0] <= master_readdata;
+                        slave_readdata[31:16] <= read_data_cache;
+                        slave_readdatavalid <= 1;
+                        rec_state <= IDLE_REC;
+                    end
                 end
+                default: begin end
             endcase
         end
-//go up
-    logic [31:0]read_data_buffer;
-    always_ff@(posedge clk)
-        begin
-            if(master_readdatavalid)
-                if(readflag==0)begin
-                    read_data_buffer[31:16]<=master_readdata[15:0];
-                    readflag=!readflag;
-                end
-            else begin
-                read_data[31:0]<={read_data_buffer[31:16],master_readdata[15:0]};
-                readflag=!readflag;
-            end
+    end
 
-        end
 endmodule

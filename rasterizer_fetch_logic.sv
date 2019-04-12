@@ -38,7 +38,7 @@ assign addr_out = data_out_reg[25:0];
 assign color_out = data_out_reg[49:26];
 assign new_depth_out = data_out_reg[81:50];
 
-assign wait_request = almost_full;
+assign wait_request = full || master_waitrequest;
 assign rdreq = master_readdatavalid;
 
 fifo fifo(
@@ -54,15 +54,45 @@ fifo fifo(
     .almost_empty(almost_empty)
 );
 
+typedef enum { S_IDLE,  S_HOLD } state_t;
+state_t state;
+state_t next_state;
+
+logic enqueue;
+
 always_ff @(posedge clock or negedge reset) begin
     if (!reset) begin
         wrreq <= 0;
         output_valid <= 0;
+        state <= S_IDLE;
     end else begin
+        enqueue = 0;
+        case (state)
+            S_IDLE: begin
+                if (full) begin
+                    next_state = S_IDLE;
+                end
+                else if (input_valid) begin
+                    next_state = S_HOLD;
+                    enqueue = 1;
+                end
+            end
+
+            S_HOLD: begin
+                if (!master_waitrequest) begin
+                    if (!full && input_valid) begin
+                        next_state = S_HOLD;
+                        enqueue = 1;
+                    end else
+                        next_state = S_IDLE;
+                end else
+                    next_state = S_HOLD;
+            end
+        endcase
         if (full)
             $display("fifo is full");
         // deal with input port
-        if (input_valid && !full)
+        if (enqueue)
         begin
             // enqueue the fetch request
             $display("enqueue fetch request addr = %x", addr_in);
@@ -77,10 +107,13 @@ always_ff @(posedge clock or negedge reset) begin
             master_write <= 0;
             master_byteenable <= 4'b11;
         end
-        else begin
+        else
             wrreq <= 0;
+
+        if (next_state == S_IDLE)
             master_read <= 0;
-        end
+        
+        state <= next_state;
        
         // check if there is any output from sdram
         if (master_readdatavalid) begin

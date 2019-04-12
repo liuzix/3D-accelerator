@@ -1,9 +1,10 @@
 #include "happly.h"
 #include "loader.h"
 #include <tgmath.h>
+#include <fstream>
 
-typedef uint16_t fixed_point_t;
-#define FIXED_POINT_FRACTIONAL_BITS 8
+typedef uint32_t fixed_point_t;
+#define FIXED_POINT_FRACTIONAL_BITS 16
 
 /* calculate normal vector for each triangle */
 Vec3 calcFaceNormal(Vec3 vpos[3], Vec3 vnormal[3]) {
@@ -37,6 +38,10 @@ int main() {
 
 	std::vector<std::array<double, 3>> fNormal(fInd.size(), {0,0,0});
 
+
+	std::cout << vPos.size() << " vectex in total" << std::endl;
+	std::cout << fInd.size() << " triangles in total" << std::endl;
+
 	for (int i = 0; i < fInd.size(); i++) {
 		Vec3 vpos[3];
 		Vec3 vnormal[3];
@@ -56,10 +61,10 @@ int main() {
 
 	// fixed point test
 	uint64_t u;
-	memcpy(&u, &vPos[0][0], sizeof(vPos[0][0]));
-	std::cout << "before conversion: " << vPos[0][0] << " " << u << std::endl;
+	memcpy(&u, &vPos[1][0], sizeof(vPos[1][0]));
+	std::cout << "before conversion: " << vPos[1][0] << " " << std::hex << u << std::endl;
 
-	std::cout << "after conversion: " << std::bitset<16>(float2fixed(vPos[0][0])) << std::endl;
+	std::cout << "after conversion: " << std::bitset<32>(float2fixed(vPos[1][0])) << std::endl;
 
 
 	/* data_out: X|Y|Z--X|Y|Z--X|Y|Z--NX|NY|NZ
@@ -98,7 +103,31 @@ int main() {
 		color_out.emplace_back(col_tmp);
 	}
 
-	std::cout << data_out.size() << " triangles in total" << std::endl;
+	std::cout << std::dec << data_out.size() << " triangles loaded in total" << std::endl;
+
+	std::ofstream file_out("data.binary", ios::out | ios::binary);
+
+	/* output file layout:
+	 * X|Y|Z|R|G|B--X|Y|Z|R|G|B--X|Y|Z|R|G|B--NX|NY|NZ for each triangle
+	 */
+	for (int i = 0; i < data_out.size(); i++) {
+		for (int j = 0; j < 3; j++) {
+			file_out << data_out[i][0 + 3*j];
+			file_out << data_out[i][1 + 3*j];
+			file_out << data_out[i][2 + 3*j];
+
+			file_out << color_out[i][0 + 3*j];
+			file_out << color_out[i][1 + 3*j];
+			file_out << color_out[i][2 + 3*j];
+		}
+
+		file_out << data_out[i][9];
+		file_out << data_out[i][10];
+		file_out << data_out[i][11];
+	}
+	file_out.close();
+
+	std::cout << "output file generated" << std::endl;
 
 
 	return 0;

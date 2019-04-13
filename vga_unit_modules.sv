@@ -61,11 +61,9 @@ module vga_master(
         input logic [25:0] down;
         
         if (up > down) begin
-            $display("ha?");
             return up > addr && addr >= down;
         end
         else if (up < down) begin
-            $display("gwa?");
             return addr >= down || addr < up;
         end
         else
@@ -108,7 +106,7 @@ module vga_master(
             if (!master_waitrequest && pixel_in_progress < 16) begin	
                 $display("vga_master: sending request cur_addr = %d", cur_addr);
                 wr <= 1;
-                din <= cur_addr;
+                din <= addr_offset_add(cur_addr, 8);
                 master_read <= 1;
                 master_address <= addr_offset_add(cur_addr, 8);;
                 cur_addr <= addr_offset_add(cur_addr, 8);
@@ -117,7 +115,8 @@ module vga_master(
             else begin
                 wr <= 0;
                 master_address <= cur_addr;
-                master_read <= 0;
+                if (!master_waitrequest) 
+                    master_read <= 0;
             end
 
             if (pixel_read) begin

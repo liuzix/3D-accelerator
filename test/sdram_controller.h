@@ -76,7 +76,7 @@ public:
         }
 
         // check of any queue is full
-        if (readRequests.size() >= MAX_QUEUE_LENGTH
+        if (rand() % 4 == 0 || readRequests.size() >= MAX_QUEUE_LENGTH
             || writeRequests.size() >= MAX_QUEUE_LENGTH) {
             
             waitrequest = true;

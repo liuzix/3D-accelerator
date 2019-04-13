@@ -37,7 +37,7 @@ void VGASimulator::tick(bool clk, uint8_t r, uint8_t g, uint8_t b,
 	if (hcount < 640 && vcount < 480) {
         SDL_SetRenderDrawColor(renderer, r, g, b, 255);
         SDL_RenderDrawPoint(renderer, hcount, vcount);
-        //SDL_RenderPresent(renderer);
+        SDL_RenderPresent(renderer);
     } 
     if (hcount < 799)
         hcount ++;

@@ -4,6 +4,7 @@
 #include <iostream>                   // Need std::cout
 #include "Vbus_adapter.h"  // From Verilating "top.v"
 #include "sdram_controller.h"
+#include  <iomanip>
 
 using namespace std;
 using Vtop = Vbus_adapter;
@@ -38,26 +39,40 @@ int main(int argc, char** argv) {
     top->reset = 1;
 
 
+    int counter = 0;
+
     uint32_t addr = 0;
     for (;;) {
+        uint32_t data;
         sdramController.tick(0, top->master_address, top->master_read,
                              top->master_write, &top->master_readdata,
                              top->master_readdatavalid, &top->master_writedata,
                              top->master_waitrequest);
         if (addr < 640 * 480 * 8) {
-			if (!top->slave_waitrequest) {
-				top->slave_address = addr;
-                top->slave_read = 1;
+			// if (!top->slave_waitrequest) {
+			// 	top->slave_address = addr;
+   //              top->slave_read = 1;
+   //              addr += 4;
+			// } else
+   //              top->slave_read = 0;
+
+            if (!top->slave_waitrequest) {
+                top->slave_address = addr;
+                data = ((counter * 2) << 16) + (counter * 2 + 1);
+                cout << "write data: " << hex << setfill('0') << setw(8) <<data << endl;
+                top->slave_writedata = data;
+                top->slave_write = 1;
                 addr += 4;
-			} else
-                top->slave_read = 0;
+                counter++;
+            } else
+                top->slave_write = 0;
 		}
         top->clock = 1;
         top->eval();
 
-        if (top->slave_readdatavalid) {
-            cout << top->slave_readdata << endl;
-        }
+        // if (top->slave_readdatavalid) {
+        //     cout << top->slave_readdata << endl;
+        // }
         cout << "-----------------------" << endl;
         top->clock = 0;
         top->eval();

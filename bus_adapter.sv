@@ -33,13 +33,14 @@ module bus_adapter (
     typedef enum logic[1:0] {IDLE_W, WRITE1, WRITE2} write_t;
     write_t write_state;
 
+    assign master_byteenable = 2'b11;
 
     logic read_busy;
     logic write_busy;
-    logic[25:0] read_addr_cache;
 
     assign slave_waitrequest = read_busy | write_busy;
 
+    logic[25:0] read_addr_cache;
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
             read_state <= IDLE_R;
@@ -109,6 +110,59 @@ module bus_adapter (
                         slave_readdatavalid <= 1;
                         rec_state <= IDLE_REC;
                     end
+                end
+                default: begin end
+            endcase
+        end
+    end
+
+    logic[31:0] write_data_cache;
+    logic[25:0] write_addr_cache;
+    always_ff @(posedge clock or negedge reset) begin
+        if (!reset) begin
+            write_state <= IDLE_W;
+            master_write <= 0;
+            write_busy <= 0;
+        end else begin
+            case(write_state)
+                IDLE_W: begin
+                    if (slave_write) begin
+                        write_busy <= 1;
+                        if (!master_waitrequest) begin
+                            master_address <= slave_address;
+                            master_writedata <= slave_writedata[31:16];
+                            master_write <= 1;
+                            write_data_cache[15:0] <= slave_writedata[15:0];
+                            write_addr_cache <= slave_address + 2;
+                            write_state <= WRITE2;
+                        end else begin
+                            master_write <= 0;
+                            write_data_cache <= slave_writedata;
+                            write_addr_cache <= slave_address;
+                            write_state <= WRITE1;
+                        end
+                    end else
+                        master_write <= 0;
+                end
+                WRITE1: begin
+                    if (!master_waitrequest) begin
+                        master_address <= write_addr_cache;
+                        master_writedata <= write_data_cache[31:16];
+                        master_write <= 1;
+                        write_addr_cache <= write_addr_cache + 2;
+                        write_state <= WRITE2;
+                    end else
+                        master_write <= 0;
+                end
+                WRITE2: begin
+                    if (!master_waitrequest) begin
+                        master_address <= write_addr_cache;
+                        master_writedata <= slave_writedata[15:0];
+                        master_write <= 1;
+                        write_busy <= 0;
+                        write_state <= IDLE_W;
+                    end else
+                        master_write <= 0;
                 end
                 default: begin end
             endcase

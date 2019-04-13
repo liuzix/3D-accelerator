@@ -94,7 +94,7 @@ public:
             req.targetTick = tickCount + MEMORY_LATENCY;
             readRequests.push_back(req);
         } else if (write) {
-            cout << "sdram: write " << dec << addr << endl;
+            cout << "sdram: write " << dec << addr <<  "with " << hex << *writedata << endl;
             WriteRequest req;
             req.address = addr;
             memcpy(&req.value, writedata, sizeof(Value));

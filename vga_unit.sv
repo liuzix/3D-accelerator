@@ -31,22 +31,28 @@ module vga_unit(input clk,
    logic slave_read;
    logic [31:0] slave_writedata;
    logic [25:0] slave_address;
+   logic [15:0] master_readdata;
    //------------------------//
 
-
-   bus_adapter bus_adp(.clk(clk),
+   bus_adapter bus_adp(.clock(clk),
    .reset(reset),
    .master_readdatavalid(master_readdatavalid),
    .master_waitrequest(master_waitrequest), 
    .master_read(master_read),
    .master_write(master_write),
+   .slave_readdatavalid(slave_readdatavalid),
+   .slave_waitrequest(slave_waitrequest),
+   .slave_readdata(slave_readdata),
    .*);
-
+    
    vga_master master (.clk(clk),
    .reset(reset),
-   .bus_data(bus_data),
-   .master_readdatavalid(master_readdatavalid),
-   .master_waitrequest(master_waitrequest),
+   .bus_data(slave_readdata),
+   .pixel_data(slave_writedata),
+   .master_readdatavalid(slave_readdatavalid),
+   .master_waitrequest(slave_waitrequest),
+   .master_read(slave_read),
+   .master_write(slave_write),.
    .base(frame_buffer_ptr),
    .*);
 

@@ -59,6 +59,7 @@ public:
                 memcpy(readdata, &v, sizeof(Value));
                 readRequests.pop_front();
                 readvalid = true;
+                cout << "read data: " << *readdata << endl;
             } else {
                 readvalid = false;
             }

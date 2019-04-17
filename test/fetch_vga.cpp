@@ -10,7 +10,7 @@ using namespace std;
 using Vtop = Vvga_unit;
 Vtop* top;  // Instantiation of module
 
-void loadFrameBuffer(uint32_t *buf, const string &file);
+void loadFrameBuffer(void *buf, const string &file);
 
 vluint64_t main_time = 0;  // Current simulation time
 // This is a 64-bit integer to reduce wrap over issues and
@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 		
 
     // simulate a 64M sdram block
-    SDRAMController<uint32_t> sdramController(64 * 1024 * 1024);
+    SDRAMController<uint16_t> sdramController(64 * 1024 * 1024);
 
 	//copy bitmap 
 	loadFrameBuffer(sdramController.memory.data(), "puppy.jpg");

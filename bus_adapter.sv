@@ -24,13 +24,13 @@ module bus_adapter (
 // write to sram
 //three states: IDLE, read data, write data,WAIT
 
-    typedef enum logic[1:0] {IDLE_R, READ1, READ2} read_t;
+    typedef enum logic[1:0] {IDLE_R, READ1, READ2, CHECK} read_t;
     read_t read_state;
 
     typedef enum logic[1:0] {IDLE_REC, DONE} rec_t;
     rec_t rec_state;
 
-    typedef enum logic[1:0] {IDLE_W, WRITE1, WRITE2} write_t;
+    typedef enum logic[1:0] {IDLE_W, WRITE1, WRITE2, CHECK_W} write_t;
     write_t write_state;
 
     assign master_byteenable = 2'b11;
@@ -41,11 +41,15 @@ module bus_adapter (
     assign slave_waitrequest = read_busy | write_busy;
 
     logic[25:0] read_addr_cache;
+    logic[1:0] prev_state;
+    logic[1:0] next_state;
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
             read_state <= IDLE_R;
             master_read <= 0;
             read_busy <= 0;
+            prev_state <= IDLE_R;
+            next_state <= IDLE_R;
         end
         else begin
             case(read_state)
@@ -55,8 +59,10 @@ module bus_adapter (
                         if (!master_waitrequest) begin
                             master_address <= slave_address;
                             master_read <= 1;
-                            read_addr_cache <= slave_address + 2;
-                            read_state <= READ2;
+                            read_addr_cache <= slave_address;
+                            prev_state <= READ1;
+                            next_state <= READ2;
+                            read_state <= CHECK;
                         end else begin
                             master_read <= 0;
                             read_addr_cache <= slave_address;
@@ -69,8 +75,9 @@ module bus_adapter (
                     if (!master_waitrequest) begin
                         master_address <= read_addr_cache;
                         master_read <= 1;
-                        read_addr_cache <= read_addr_cache + 2;
-                        read_state <= READ2;
+                        prev_state <= READ1;
+                        next_state <= READ2;
+                        read_state <= CHECK;
                     end else
                         master_read <= 0;
                 end
@@ -79,10 +86,22 @@ module bus_adapter (
                         master_address <= read_addr_cache;
                         master_read <= 1;
 
-                        read_busy <= 0;
-                        read_state <= IDLE_R;
+                        prev_state <= READ2;
+                        next_state <= IDLE_R;
+                        read_state <= CHECK;
                     end else
                         master_read <= 0;
+                end
+                CHECK: begin
+                    master_read <= 0;
+                    if (master_waitrequest) begin
+                        read_state <= prev_state;
+                    end else begin
+                        read_addr_cache <= read_addr_cache + 2;
+                        if (next_state == IDLE_R)
+                            read_busy <= 0;
+                        read_state <= next_state;
+                    end
                 end
                 default: begin end
             endcase

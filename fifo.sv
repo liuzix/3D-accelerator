@@ -24,8 +24,8 @@ module fifo (
     logic [3:0] rd_ptr;
     logic [3:0] counter;
 
-    wire almost_full;
-    wire almost_empty;
+    //wire almost_full;
+    //wire almost_empty;
 
     assign almost_full = counter >= (2**SIZE - 1);
     assign almost_empty = counter < 2;
@@ -37,27 +37,29 @@ module fifo (
     assign dout = buffer[rd_ptr];
 
     logic [3:0] new_counter;
-    always @(posedge clk or negedge reset)
+    always_ff @(posedge clk or negedge reset)
     begin
         if (!reset) begin
             wr_ptr <= 4'b0000;
             rd_ptr <= 4'b0000;
             counter <= 0;
             new_counter = 0;
-        end 
-        new_counter = counter;
-        if (rd == 1'b1 && ~empty) begin
-            rd_ptr <= rd_ptr + 1;
-            new_counter = new_counter - 1;
         end
-        
-        if (wr == 1'b1 && ~full) begin
-            buffer[wr_ptr] <= din;
-            wr_ptr <= wr_ptr + 1;
-            new_counter = new_counter + 1;
-        end 
-        counter <= new_counter;
+		  else begin 
+			  new_counter = counter;
+			  if (rd == 1'b1 && ~empty) begin
+					rd_ptr <= rd_ptr + 1;
+					new_counter = new_counter - 1;
+			  end
+			  
+			  if (wr == 1'b1 && ~full) begin
+					buffer[wr_ptr] <= din;
+					wr_ptr <= wr_ptr + 1;
+					new_counter = new_counter + 1;
+			  end 
+			  counter <= new_counter;
+		  end
     end 
 
-endmodule;  
+endmodule 
 

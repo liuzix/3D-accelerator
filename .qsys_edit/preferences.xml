@@ -9,8 +9,7 @@
    <inputclock preferredWidth="110" />
   </columns>
  </systemtable>
- <library
-   expandedCategories="Library/Memory Interfaces and Controllers/SDRAM,Library/University Program,Library/University Program/Clock,Library/Memory Interfaces and Controllers/Memory Interfaces with UniPHY,Project,Library/Memory Interfaces and Controllers,Library,Library/Memory Interfaces and Controllers/Memory Interfaces with ALTMEMPHY" />
+ <library expandedCategories="Library,Project" />
  <window width="1940" height="2100" x="1900" y="0" />
  <generation path="system" block_symbol_file="1" greybox="1" simulation="VERILOG" />
  <hdlexample language="VERILOG" />

@@ -218,10 +218,15 @@ system system0 (
 	.hps_hps_io_i2c0_inst_SCL(HPS_I2C1_SCLK),
 	.hps_hps_io_i2c1_inst_SDA(HPS_I2C2_SDAT),
 	.hps_hps_io_i2c1_inst_SCL(HPS_I2C2_SCLK),
-	.hex_hex0(HEX0),
-   .hex_hex1(HEX1),
-   .hex_hex2(HEX2),
-   .hex_hex3(HEX3));
+	.vga_unit_0_frame_buffer_frame_buffer_ptr (0), 
+   .vga_unit_0_vga_display_vga_b              (VGA_B),       
+   .vga_unit_0_vga_display_vga_blank          (VGA_BLANK),    
+   .vga_unit_0_vga_display_vga_clk            (VGA_CLK),     
+   .vga_unit_0_vga_display_vga_g              (VGA_G),        
+   .vga_unit_0_vga_display_vga_hs             (VGA_HS),    
+   .vga_unit_0_vga_display_vga_r              (VGA_R),                           
+   .vga_unit_0_vga_display_vga_sync           (VGA_SYNC),          
+   .vga_unit_0_vga_display_vga_vs             (VGA_VS));
 	
 	
 

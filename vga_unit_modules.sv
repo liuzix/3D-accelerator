@@ -210,7 +210,6 @@ module vga_buffer(
     always_ff @(posedge clk or negedge reset)
 		if (!reset) begin
 			{VGA_R, VGA_G, VGA_B} <= {8'h0, 8'h0, 8'h0};
-			cur_vga_addr = frame_buffer_ptr;
 			pixel_read <= 0;
             vga_clk_high_count <= 0;
             read_state <= R_IDLE;

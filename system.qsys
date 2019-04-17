@@ -49,7 +49,7 @@
          type = "int";
       }
    }
-   element test_master_0
+   element vga_unit_0
    {
       datum _sortIndex
       {
@@ -98,14 +98,19 @@ proc compose {} {
    internal="sys_sdram_pll_0.sdram_clk"
    type="clock"
    dir="start" />
- <interface
-   name="hex"
-   internal="test_master_0.conduit_end"
-   type="conduit"
-   dir="end" />
  <interface name="hps" internal="hps_0.hps_io" type="conduit" dir="end" />
  <interface name="hps_ddr3" internal="hps_0.memory" type="conduit" dir="end" />
  <interface name="reset" internal="clk_0.clk_in_reset" type="reset" dir="end" />
+ <interface
+   name="vga_unit_0_frame_buffer"
+   internal="vga_unit_0.frame_buffer"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="vga_unit_0_vga_display"
+   internal="vga_unit_0.VGA_display"
+   type="conduit"
+   dir="end" />
  <module name="clk_0" kind="clock_source" version="18.1" enabled="1">
   <parameter name="clockFrequency" value="50000000" />
   <parameter name="clockFrequencyKnown" value="true" />
@@ -687,11 +692,11 @@ proc compose {} {
   <parameter name="gui_refclk" value="50.0" />
   <parameter name="other_boards" value="None" />
  </module>
- <module name="test_master_0" kind="test_master" version="1.0" enabled="1" />
+ <module name="vga_unit_0" kind="vga_unit" version="1.0" enabled="1" />
  <connection
    kind="avalon"
    version="18.1"
-   start="test_master_0.avalon_master"
+   start="vga_unit_0.avalon_master"
    end="new_sdram_controller_0.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0000" />
@@ -706,6 +711,7 @@ proc compose {} {
   <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
+ <connection kind="clock" version="18.1" start="clk_0.clk" end="vga_unit_0.clock" />
  <connection
    kind="clock"
    version="18.1"
@@ -716,11 +722,6 @@ proc compose {} {
    version="18.1"
    start="sys_sdram_pll_0.sys_clk"
    end="new_sdram_controller_0.clk" />
- <connection
-   kind="clock"
-   version="18.1"
-   start="sys_sdram_pll_0.sys_clk"
-   end="test_master_0.clock" />
  <connection
    kind="clock"
    version="18.1"
@@ -740,12 +741,12 @@ proc compose {} {
    kind="reset"
    version="18.1"
    start="sys_sdram_pll_0.reset_source"
-   end="test_master_0.reset" />
+   end="new_sdram_controller_0.reset" />
  <connection
    kind="reset"
    version="18.1"
    start="sys_sdram_pll_0.reset_source"
-   end="new_sdram_controller_0.reset" />
+   end="vga_unit_0.reset" />
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
  <interconnectRequirement for="$system" name="qsys_mm.enableEccProtection" value="FALSE" />
  <interconnectRequirement for="$system" name="qsys_mm.insertDefaultSlave" value="FALSE" />

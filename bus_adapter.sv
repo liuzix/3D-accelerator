@@ -35,13 +35,23 @@ module bus_adapter (
 
     assign master_byteenable = 2'b11;
 
+	 logic [25:0] master_address_r;
+	 logic [25:0] master_address_w;
+	 always_comb begin
+		if (read_busy)
+			master_address = master_address_r;
+		else
+		   master_address = master_address_w;
+	 end
+	 
+	 
     logic read_busy;
     logic write_busy;
 
     assign slave_waitrequest = read_busy | write_busy;
 
     logic[25:0] read_addr_cache;
-    logic[2:0] prev_state;
+    read_t prev_state;
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
             read_state <= IDLE_R;
@@ -55,7 +65,7 @@ module bus_adapter (
                     if (slave_read) begin
                         read_busy <= 1;
                         if (!master_waitrequest) begin
-                            master_address <= slave_address;
+                            master_address_r <= slave_address;
                             master_read <= 1;
                             read_addr_cache <= slave_address;
                             prev_state <= READ1;
@@ -70,7 +80,7 @@ module bus_adapter (
                 end
                 READ1: begin
                     if (!master_waitrequest) begin
-                        master_address <= read_addr_cache;
+                        master_address_r <= read_addr_cache;
                         master_read <= 1;
                         prev_state <= READ1;
                         read_state <= CHECK1;
@@ -79,20 +89,21 @@ module bus_adapter (
                 end
                 READ2: begin
                     if (!master_waitrequest) begin
-                        master_address <= read_addr_cache;
+                        master_address_r <= read_addr_cache;
                         master_read <= 1;
 
                         prev_state <= READ2;
                         read_state <= CHECK2;
                     end else
                         master_read <= 0;
-                end
+                end            
+
                 CHECK1: begin
                     if (master_waitrequest) begin
                         master_read <= 0;
                         read_state <= prev_state;
                     end else begin
-                        master_address <= read_addr_cache + 2;
+                        master_address_r	<= read_addr_cache + 2;
                         master_read <= 1;
                         read_addr_cache <= read_addr_cache + 2;
                         prev_state <= READ2;
@@ -143,7 +154,7 @@ module bus_adapter (
 
     logic[31:0] write_data_cache;
     logic[25:0] write_addr_cache;
-    logic[2:0] prev_state_w;
+    write_t prev_state_w;
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
             write_state <= IDLE_W;
@@ -156,7 +167,7 @@ module bus_adapter (
                     if (slave_write) begin
                         write_busy <= 1;
                         if (!master_waitrequest) begin
-                            master_address <= slave_address;
+                            master_address_w <= slave_address;
                             master_writedata <= slave_writedata[31:16];
                             master_write <= 1;
                             write_data_cache <= slave_writedata;
@@ -175,7 +186,7 @@ module bus_adapter (
                 end
                 WRITE1: begin
                     if (!master_waitrequest) begin
-                        master_address <= write_addr_cache;
+                        master_address_w <= write_addr_cache;
                         master_writedata <= write_data_cache[31:16];
                         master_write <= 1;
                         
@@ -186,7 +197,7 @@ module bus_adapter (
                 end
                 WRITE2: begin
                     if (!master_waitrequest) begin
-                        master_address <= write_addr_cache;
+                        master_address_w <= write_addr_cache;
                         master_writedata <= slave_writedata[15:0];
                         master_write <= 1;
                         
@@ -195,12 +206,13 @@ module bus_adapter (
                     end else
                         master_write <= 0;
                 end
-                CHECK_W1: begin
+                CHECK_W1: begin            
+
                     if (master_waitrequest) begin
                         master_write <= 0;
                         write_state <= prev_state_w;
                     end else begin
-                        master_address <= write_addr_cache + 2;
+                        master_address_w <= write_addr_cache + 2;
                         master_writedata <= slave_writedata[15:0];
                         master_write <= 1;
                         

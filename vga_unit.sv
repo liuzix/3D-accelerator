@@ -24,7 +24,7 @@ module vga_unit(input clk,
    logic slave_waitrequest;
    logic [31:0] slave_readdata;
    logic [1:0] master_byteenable;
-   logic [15:0] master_writedata;
+   //logic [15:0] master_writedata;
 
    //input
    logic slave_write;

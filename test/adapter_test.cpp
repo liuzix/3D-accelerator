@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
     SDRAMController<uint16_t> sdramController(64 * 1024 * 1024);
 
     for (int i = 0; i < 640 * 480; i++) {
-        sdramController.memory[i] = i;
+        sdramController.memory[2*i + 1] = i;
     }
 
     top = new Vtop;  // Create instance
@@ -40,6 +40,8 @@ int main(int argc, char** argv) {
 
 
     int counter = 0;
+    int read = 0;
+    int res = 0;
 
     uint32_t addr = 0;
     for (;;) {
@@ -49,30 +51,39 @@ int main(int argc, char** argv) {
                              top->master_readdatavalid, &top->master_writedata,
                              top->master_waitrequest);
         if (addr < 640 * 480 * 8) {
+            if (read % 2) {
 			if (!top->slave_waitrequest) {
 				top->slave_address = addr;
                 top->slave_read = 1;
+                read++;
                 addr += 4;
-			} else
+			} else {
                 top->slave_read = 0;
-
-            // if (!top->slave_waitrequest) {
-            //     top->slave_address = addr;
-            //     data = ((counter * 2) << 16) + (counter * 2 + 1);
-            //     cout << "write data: " << hex << setfill('0') << setw(8) <<data << endl;
-            //     top->slave_writedata = data;
-            //     top->slave_write = 1;
-            //     addr += 4;
-            //     counter++;
-            // } else
-            //     top->slave_write = 0;
+                top->slave_write = 0;
+            }
+            } else {
+            if (!top->slave_waitrequest) {
+                top->slave_address = addr;
+                data = counter;
+                // cout << "write data: " << hex << setfill('0') << setw(8) <<data << endl;
+                top->slave_writedata = data;
+                top->slave_write = 1;
+                counter++;
+                read++;
+            } else {
+                top->slave_read = 0;
+                top->slave_write = 0;
+            }
+            }
 		}
         top->clock = 1;
         top->eval();
 
-        // if (top->slave_readdatavalid) {
-        //     cout << top->slave_readdata << endl;
-        // }
+        if (top->slave_readdatavalid) {
+            // cout << top->slave_readdata << endl;
+            assert(top->slave_readdata == res);
+            res++;
+        }
         cout << "-----------------------" << endl;
         top->clock = 0;
         top->eval();

@@ -30,7 +30,7 @@ module bus_adapter (
     typedef enum logic[1:0] {IDLE_REC, DONE} rec_t;
     rec_t rec_state;
 
-    typedef enum logic[1:0] {IDLE_W, WRITE1, WRITE2, CHECK_W} write_t;
+    typedef enum logic[2:0] {IDLE_W, WRITE1, WRITE2, CHECK_W1, CHECK_W2} write_t;
     write_t write_state;
 
     assign master_byteenable = 2'b11;
@@ -41,15 +41,13 @@ module bus_adapter (
     assign slave_waitrequest = read_busy | write_busy;
 
     logic[25:0] read_addr_cache;
-    logic[1:0] prev_state;
-    logic[1:0] next_state;
+    logic[2:0] prev_state;
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
             read_state <= IDLE_R;
             master_read <= 0;
             read_busy <= 0;
             prev_state <= IDLE_R;
-            next_state <= IDLE_R;
         end
         else begin
             case(read_state)
@@ -61,8 +59,7 @@ module bus_adapter (
                             master_read <= 1;
                             read_addr_cache <= slave_address;
                             prev_state <= READ1;
-                            next_state <= READ2;
-                            read_state <= CHECK;
+                            read_state <= CHECK1;
                         end else begin
                             master_read <= 0;
                             read_addr_cache <= slave_address;
@@ -76,8 +73,7 @@ module bus_adapter (
                         master_address <= read_addr_cache;
                         master_read <= 1;
                         prev_state <= READ1;
-                        next_state <= READ2;
-                        read_state <= CHECK;
+                        read_state <= CHECK1;
                     end else
                         master_read <= 0;
                 end
@@ -87,31 +83,30 @@ module bus_adapter (
                         master_read <= 1;
 
                         prev_state <= READ2;
-                        next_state <= IDLE_R;
-                        read_state <= CHECK;
+                        read_state <= CHECK2;
                     end else
                         master_read <= 0;
                 end
-                // CHECK1: begin
-                //     if (master_waitrequest) begin
-                //         master_read <= 0;
-                //         read_state <= prev_state;
-                //     end else begin
-                //         master_address <= read_addr_cache + 2;
-                //         master_read <= 1;
-                //         read_addr_cache <= read_addr_cache + 2;
-                //         read_state <= CHECK2;
-                //     end
-                // end
-                CHECK: begin
-                    master_read <= 0;
+                CHECK1: begin
                     if (master_waitrequest) begin
+                        master_read <= 0;
                         read_state <= prev_state;
                     end else begin
+                        master_address <= read_addr_cache + 2;
+                        master_read <= 1;
                         read_addr_cache <= read_addr_cache + 2;
-                        if (next_state == IDLE_R)
-                            read_busy <= 0;
-                        read_state <= next_state;
+                        prev_state <= READ2;
+                        read_state <= CHECK2;
+                    end
+                end
+                CHECK2: begin
+                    if (master_waitrequest) begin
+                        master_read <= 0;
+                        read_state <= prev_state;
+                    end else begin
+                        master_read <= 0;
+                        read_busy <= 0;
+                        read_state <= IDLE_R;
                     end
                 end
                 default: begin end
@@ -148,15 +143,13 @@ module bus_adapter (
 
     logic[31:0] write_data_cache;
     logic[25:0] write_addr_cache;
-    logic[1:0] prev_state_w;
-    logic[1:0] next_state_w;
+    logic[2:0] prev_state_w;
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
             write_state <= IDLE_W;
             master_write <= 0;
             write_busy <= 0;
             prev_state_w <= IDLE_W;
-            next_state_w <= IDLE_W;
         end else begin
             case(write_state)
                 IDLE_W: begin
@@ -170,8 +163,7 @@ module bus_adapter (
                             write_addr_cache <= slave_address;
 
                             prev_state_w <= WRITE1;
-                            next_state_w <= WRITE2;
-                            write_state <= CHECK_W;
+                            write_state <= CHECK_W1;
                         end else begin
                             master_write <= 0;
                             write_data_cache <= slave_writedata;
@@ -188,8 +180,7 @@ module bus_adapter (
                         master_write <= 1;
                         
                         prev_state_w <= WRITE1;
-                        next_state_w <= WRITE2;
-                        write_state <= CHECK_W;
+                        write_state <= CHECK_W1;
                     end else
                         master_write <= 0;
                 end
@@ -200,22 +191,33 @@ module bus_adapter (
                         master_write <= 1;
                         
                         prev_state_w <= WRITE2;
-                        next_state_w <= IDLE_W;
-                        write_state <= CHECK_W;
+                        write_state <= CHECK_W2;
                     end else
                         master_write <= 0;
                 end
-                CHECK_W: begin
-                    master_write <= 0;
+                CHECK_W1: begin
                     if (master_waitrequest) begin
+                        master_write <= 0;
                         write_state <= prev_state_w;
                     end else begin
+                        master_address <= write_addr_cache + 2;
+                        master_writedata <= slave_writedata[15:0];
+                        master_write <= 1;
+                        
                         write_addr_cache <= write_addr_cache + 2;
-                        if (next_state_w == IDLE_W)
-                            write_busy <= 0;
-                        write_state <= next_state_w;
+                        prev_state_w <= WRITE2;
+                        write_state <= CHECK_W2;
                     end
-
+                end
+                CHECK_W2: begin
+                    if (master_waitrequest) begin
+                        master_write <= 0;
+                        write_state <= prev_state_w;
+                    end else begin
+                        master_write <= 0;
+                        write_busy <= 0;
+                        write_state <= IDLE_W;
+                    end
                 end
                 default: begin end
             endcase

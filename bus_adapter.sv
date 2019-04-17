@@ -130,8 +130,8 @@ module bus_adapter (
                 end
                 DONE: begin
                     if (master_readdatavalid) begin
-                        slave_readdata[15:0] <= master_readdata;
-                        slave_readdata[31:16] <= read_data_cache;
+                        slave_readdata[31:16] <= master_readdata;
+                        slave_readdata[15:0] <= read_data_cache;
                         slave_readdatavalid <= 1;
                         rec_state <= IDLE_REC;
                     end

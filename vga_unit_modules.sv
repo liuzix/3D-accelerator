@@ -104,7 +104,7 @@ module vga_master(
                 $display("vga_master: sdram asks us to wait");
 
             if (!master_waitrequest && pixel_in_progress < 16) begin	
-                $display("vga_master: sending request cur_addr = %d", cur_addr);
+                $display("vga_master: sending request %d", addr_offset_add(cur_addr, 8));
                 wr <= 1;
                 din <= addr_offset_add(cur_addr, 8);
                 master_read <= 1;

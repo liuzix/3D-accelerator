@@ -33,12 +33,13 @@ module vga_unit(input clk,
    logic [25:0] slave_address;
    logic [15:0] master_readdata;
    //------------------------//
-   //
+   
    bus_adapter bus_adp(.clock(clk),
    .reset(reset),
    .master_readdatavalid(master_readdatavalid),
    .master_waitrequest(master_waitrequest), 
    .master_read(master_read),
+   .master_readdata(bus_data),
    .master_write(master_write),
    .slave_readdatavalid(slave_readdatavalid),
    .slave_waitrequest(slave_waitrequest),
@@ -48,8 +49,8 @@ module vga_unit(input clk,
     
    vga_master master (.clk(clk),
    .reset(reset),
-   .bus_data(slave_writedata),
-   .pixel_data(slave_readdata),
+   .bus_data(slave_readdata),
+   .pixel_data(pixel_data),
    .master_readdatavalid(slave_readdatavalid),
    .master_waitrequest(slave_waitrequest),
    .master_read(slave_read),

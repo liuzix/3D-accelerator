@@ -186,9 +186,10 @@ module vga_buffer(
 	logic [9:0]     vcount;
 
 	logic clk50;
-	logic [1:0] clk_counter;
+	logic clk_counter;
     
     wire VGA_CLK_PRE;
+	 assign VGA_CLK = VGA_CLK_PRE;
     reg [3:0] vga_clk_high_count;
 
 	always_ff @(posedge clk or negedge reset)
@@ -199,7 +200,7 @@ module vga_buffer(
 	
 
 	//assign pixel_read = (clk_counter == 4);	
-	assign clk50 = (clk_counter > 1); 	
+	assign clk50 = (clk_counter == 0); 	
     assign cur_vga_addr = frame_buffer_ptr + (hcount[10:1] + 640 * vcount) * 8;
  
 	vga_counters counters(.clk50(clk50), .reset(!reset),.VGA_CLK(VGA_CLK_PRE), .*);		
@@ -209,7 +210,7 @@ module vga_buffer(
 	
     always_ff @(posedge clk or negedge reset)
 		if (!reset) begin
-			{VGA_R, VGA_G, VGA_B} <= {8'h0, 8'h0, 8'h0};
+			{VGA_R, VGA_G, VGA_B} <= {8'hFF, 8'hFF, 8'hFF};
 			pixel_read <= 0;
             vga_clk_high_count <= 0;
             read_state <= R_IDLE;
@@ -226,13 +227,13 @@ module vga_buffer(
 
                 R_REQUEST: begin
                     pixel_read <= 0;
-                    if (pixel_valid)
-                        {VGA_B, VGA_G, VGA_R} <= {pixel_data[23:16], pixel_data[15:8], pixel_data[7:0]};
-                    else begin
-                        {VGA_B, VGA_G, VGA_R} <= {8'h0, 8'h0, 8'h0};
-                        $display("vga_buffer: no pixel");
-                    end
-                    VGA_CLK <= 1; 
+                    //if (pixel_valid)
+                    //    {VGA_B, VGA_G, VGA_R} <= {pixel_data[23:16], pixel_data[15:8], pixel_data[7:0]};
+                    //else begin
+                        {VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'hFF, 8'hFF};
+                     //   $display("vga_buffer: no pixel");
+                    //end
+                    //VGA_CLK <= 1; 
                     read_state <= R_CLOCK;
                 end
 
@@ -241,7 +242,7 @@ module vga_buffer(
                         vga_clk_high_count <= vga_clk_high_count + 1;
                     else begin
                         vga_clk_high_count <= 0;
-                        VGA_CLK <= 0;
+                        //VGA_CLK <= 0;
                         read_state <= R_IDLE;
                     end
                 end

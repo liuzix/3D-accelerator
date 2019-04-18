@@ -711,7 +711,6 @@ proc compose {} {
   <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
- <connection kind="clock" version="18.1" start="clk_0.clk" end="vga_unit_0.clock" />
  <connection
    kind="clock"
    version="18.1"
@@ -722,6 +721,11 @@ proc compose {} {
    version="18.1"
    start="sys_sdram_pll_0.sys_clk"
    end="new_sdram_controller_0.clk" />
+ <connection
+   kind="clock"
+   version="18.1"
+   start="sys_sdram_pll_0.sys_clk"
+   end="vga_unit_0.clock" />
  <connection
    kind="clock"
    version="18.1"

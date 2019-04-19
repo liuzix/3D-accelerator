@@ -47,13 +47,35 @@ module vga_master(
 				.*);
     
     reg sync;
-
-    function logic [25:0] addr_offset_add;
-        input logic [25:0] first;
-        input logic [25:0] second;
-
-        return ((first - base + second) % (640 * 480 * 8)) + base;
-    endfunction
+	 
+	 logic [25:0] offset_addr, offset128_addr;
+	 
+    always_comb begin
+	  if (cur_addr- base + 4'd8 > 640 * 480 * 8)
+	      offset_addr = cur_addr- base + 4'd8 - 640 * 480 * 8;
+	  else
+			offset_addr = cur_addr- base + 4'd8;
+	 end
+	 
+	 always_comb begin
+	  if (cur_addr- base + 7'd128 > 640 * 480 * 8)
+	      offset128_addr = cur_addr- base + 7'd128 - 640 * 480 * 8;
+	  else
+			offset128_addr = cur_addr- base + 7'd128;
+	 end
+	 
+//    function logic [25:0] addr_offset_add;
+//        input logic [25:0] first;
+//        input logic [25:0] second;
+////% (640 * 480 * 8)
+//		  logic [25:0] res, tmp;
+//		  tmp = first - base + second;
+//		  if (tmp > 640 * 480 * 8)
+//	         res = tmp - 640 * 480 * 8;
+//		  else
+//				res = tmp;
+//        return res + base;
+//    endfunction
 
     function bit addr_in_range;
         input logic [25:0] addr;
@@ -104,12 +126,12 @@ module vga_master(
                 $display("vga_master: sdram asks us to wait");
 
             if (!master_waitrequest && pixel_in_progress < 16) begin	
-                $display("vga_master: sending request %d", addr_offset_add(cur_addr, 8));
+                $display("vga_master: sending request %d", offset_addr);
                 wr <= 1;
-                din <= addr_offset_add(cur_addr, 8);
+                din <= offset_addr;
                 master_read <= 1;
-                master_address <= addr_offset_add(cur_addr, 8);;
-                cur_addr <= addr_offset_add(cur_addr, 8);
+                master_address <= offset_addr;
+                cur_addr <= offset_addr;
                 pixel_in_progress_next = pixel_in_progress_next + 1;
             end
             else begin
@@ -132,12 +154,12 @@ module vga_master(
                 $display("vga_master: pixel_read cur_vga_addr = %d", cur_vga_addr);
 
                 if (!addr_lt(cur_vga_addr,down_addr))
-                    down_addr_next = addr_offset_add(cur_vga_addr, 8);
+                    down_addr_next = offset_addr;
 
                 if (!addr_lt(cur_vga_addr, up_addr)) begin
                     sync = 1;
                     $display("vga_master: syncing!");
-                    down_addr_next = addr_offset_add(cur_vga_addr, 128);
+                    down_addr_next = offset128_addr;
                     up_addr_next = down_addr_next;
                 end
 
@@ -150,13 +172,13 @@ module vga_master(
                 
                 if (addr_invalid) begin
                     pixel_buffer[(dout / 8) % 32] <= bus_data;
-                    up_addr_next = addr_offset_add(dout, 8);
+                    up_addr_next = offset_addr;
                     down_addr_next = up_addr_next;
                     addr_invalid <= 0;
                 end else
                 if (dout == up_addr) begin 
                     pixel_buffer[(up_addr / 8) % 32] <= bus_data;
-                    up_addr_next = addr_offset_add(dout, 8);
+                    up_addr_next = offset_addr;
                 end
             end
 
@@ -253,7 +275,7 @@ endmodule
 
 module vga_counters(
  input logic 	     clk50, reset, clk100,
- output logic [10:0] hcount,  //clk hcount[10:1] is pixel column
+ output logic [10:0] hcount,  // hcount[10:1] is pixel column
  output logic [9:0]  vcount,  // vcount[9:0] is pixel row
  output logic 	     VGA_CLK, VGA_HS, VGA_VS, VGA_BLANK_n, VGA_SYNC_n);
 
@@ -286,6 +308,7 @@ module vga_counters(
                             VBACK_PORCH; // 525
 
    logic endOfLine;
+
 	logic counter;
 
    always_ff @(posedge clk100 or negedge reset) begin
@@ -304,9 +327,11 @@ module vga_counters(
 
    logic endOfField;
 
+
    always_ff @(posedge clk100 or negedge reset)
      if (!reset)          vcount <= 0;
      else if (endOfLine && clk50)
+
        if (endOfField)   vcount <= 0;
        else              vcount <= vcount + 10'd 1;
 

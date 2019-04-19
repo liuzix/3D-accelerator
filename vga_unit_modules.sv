@@ -191,19 +191,17 @@ module vga_buffer(
     wire VGA_CLK_PRE;
 	 assign VGA_CLK = VGA_CLK_PRE;
     reg [3:0] vga_clk_high_count;
+	 
+	 always_ff @(posedge clk)
+		//if (!reset)
+		//	clk_counter <= 0;
+		//else
+			clk_counter <= clk_counter + 1;
 
-	always_ff @(posedge clk or negedge reset)
-        if (!reset)
-            clk_counter <= 0;
-        else
-		    clk_counter <= clk_counter + 1;
-	
-
-	//assign pixel_read = (clk_counter == 4);	
-	assign clk50 = (clk_counter == 0); 	
+    assign clk50 = (clk_counter == 1);	
     assign cur_vga_addr = frame_buffer_ptr + (hcount[10:1] + 640 * vcount) * 8;
  
-	vga_counters counters(.clk50(clk50), .reset(!reset),.VGA_CLK(VGA_CLK_PRE), .*);		
+	vga_counters counters(.clk50(clk50), .reset(reset),.VGA_CLK(VGA_CLK_PRE), .*, .clk100(clk));		
 	
     typedef enum { R_REQUEST, R_CLOCK, R_IDLE } read_state_t;
     read_state_t read_state;
@@ -212,8 +210,8 @@ module vga_buffer(
 		if (!reset) begin
 			{VGA_R, VGA_G, VGA_B} <= {8'hFF, 8'hFF, 8'hFF};
 			pixel_read <= 0;
-            vga_clk_high_count <= 0;
-            read_state <= R_IDLE;
+         vga_clk_high_count <= 0;
+         read_state <= R_IDLE;
         end else begin
             case (read_state)
                 R_IDLE: begin
@@ -232,7 +230,7 @@ module vga_buffer(
                     //else begin
                         {VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'hFF, 8'hFF};
                      //   $display("vga_buffer: no pixel");
-                    //end
+                    //endclk
                     //VGA_CLK <= 1; 
                     read_state <= R_CLOCK;
                 end
@@ -254,8 +252,8 @@ endmodule
 
 
 module vga_counters(
- input logic 	     clk50, reset,
- output logic [10:0] hcount,  // hcount[10:1] is pixel column
+ input logic 	     clk50, reset, clk100,
+ output logic [10:0] hcount,  //clk hcount[10:1] is pixel column
  output logic [9:0]  vcount,  // vcount[9:0] is pixel row
  output logic 	     VGA_CLK, VGA_HS, VGA_VS, VGA_BLANK_n, VGA_SYNC_n);
 
@@ -288,22 +286,27 @@ module vga_counters(
                             VBACK_PORCH; // 525
 
    logic endOfLine;
+	logic counter;
 
-   always_ff @(posedge clk50 or posedge reset) begin
-     if (reset)          hcount <= 0;
-     else if (endOfLine) hcount <= 0;
-     else begin
-         hcount <= hcount + 11'd 1;
-     end
+   always_ff @(posedge clk100 or negedge reset) begin
+     if (!reset) begin
+	      hcount <= 0;
+	  end
+	  else if (clk50) begin
+		  if (endOfLine) hcount <= 0;
+		  else begin
+				hcount <= hcount + 1;
+		  end
+	  end
    end
 
    assign endOfLine = hcount == HTOTAL - 1;
 
    logic endOfField;
 
-   always_ff @(posedge clk50 or posedge reset)
-     if (reset)          vcount <= 0;
-     else if (endOfLine)
+   always_ff @(posedge clk100 or negedge reset)
+     if (!reset)          vcount <= 0;
+     else if (endOfLine && clk50)
        if (endOfField)   vcount <= 0;
        else              vcount <= vcount + 10'd 1;
 

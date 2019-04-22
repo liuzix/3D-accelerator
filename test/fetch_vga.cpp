@@ -55,6 +55,7 @@ int main(int argc, char** argv) {
 		top->clk = 0;
 		top->eval();
 
+        vgasim.tick(top->VGA_CLK, top->VGA_R, top->VGA_G, top->VGA_B, top->VGA_HS, top->VGA_VS);
         main_time++;
     }
 

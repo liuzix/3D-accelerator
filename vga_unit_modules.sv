@@ -228,10 +228,10 @@ module vga_buffer (
 
 
     //assign pixel_read = (clk_counter == 4);
-    assign clk50        = (clk_counter > 1);
+    assign clk50        = (clk_counter == 0);
     assign cur_vga_addr = frame_buffer_ptr + (hcount[10:1] + 640 * vcount) * 8;
 
-    vga_counters counters(.clk50(clk50), .reset(!reset),.VGA_CLK(VGA_CLK_PRE), .*);
+    vga_counters counters(.clk50(clk50), .reset(reset),.VGA_CLK(VGA_CLK_PRE), .clk100(clk), .*);
 
     typedef enum { R_REQUEST, R_CLOCK, R_IDLE } read_state_t;
     read_state_t read_state;
@@ -282,7 +282,7 @@ endmodule
 
 
 module vga_counters (
-    input logic         clk50, reset,
+    input logic         clk50, reset, clk100,
     output logic [10:0] hcount,  // hcount[10:1] is pixel column
     output logic [9:0]  vcount,  // vcount[9:0] is pixel row
     output logic        VGA_CLK, VGA_HS, VGA_VS, VGA_BLANK_n, VGA_SYNC_n
@@ -318,11 +318,11 @@ module vga_counters (
 
     logic endOfLine;
 
-    always_ff @(posedge clk50 or posedge reset) begin
-        if (reset)          hcount <= 0;
-        else if (endOfLine) hcount <= 0;
-        else begin
-            hcount <= hcount + 11'd 1;
+    always_ff @(posedge clk100 or negedge reset) begin
+        if (!reset)          hcount <= 0;
+        else if (clk50) begin
+            if (endOfLine) hcount <= 0;
+            else hcount <= hcount + 11'd 1;
         end
     end
 
@@ -330,11 +330,12 @@ module vga_counters (
 
     logic endOfField;
 
-    always_ff @(posedge clk50 or posedge reset)
-        if (reset)          vcount <= 0;
-        else if (endOfLine)
+    always_ff @(posedge clk100 or negedge reset)
+        if (!reset)          vcount <= 0;
+        else if (endOfLine & clk50) begin
             if (endOfField)   vcount <= 0;
-        else              vcount <= vcount + 10'd 1;
+            else              vcount <= vcount + 10'd 1;
+        end
 
     assign endOfField = vcount == VTOTAL - 1;
 

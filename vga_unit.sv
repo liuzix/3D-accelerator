@@ -11,7 +11,8 @@ module vga_unit(input clk,
    output logic [7:0] VGA_R, VGA_G, VGA_B,
    output logic 	   VGA_CLK, VGA_HS, VGA_VS,
    VGA_BLANK_n,
-   output logic	   VGA_SYNC_n);
+   output logic	   VGA_SYNC_n,
+   output test_output);
 
    logic pixel_read;
    logic [25:0] cur_vga_addr;
@@ -49,7 +50,8 @@ module vga_unit(input clk,
    .slave_writedata(slave_writedata),
    .slave_address(slave_address),
    .master_address(master_address),
-   .master_writedata(master_writedata));
+   .master_writedata(master_writedata),
+   .test_output(test_output));
     
    vga_master master (.clk(clk),
    .reset(reset),

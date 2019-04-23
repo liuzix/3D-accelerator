@@ -19,7 +19,8 @@ module bus_adapter (
     output master_read,
     output master_write,
     output [1:0] master_byteenable,
-    output [15:0]master_writedata
+    output [15:0]master_writedata,
+    output test_output
 );
 // write to sram
 //three states: IDLE, read data, write data,WAIT
@@ -44,7 +45,16 @@ module bus_adapter (
 		   master_address = master_address_w;
 	 end
 	 
-	 
+    
+    wire test_output;
+
+    always_comb begin
+        if (master_readdatavalid)
+            test_output = 1;
+        else 
+            test_output = 0;
+    end
+
     logic read_busy;
     logic write_busy;
 

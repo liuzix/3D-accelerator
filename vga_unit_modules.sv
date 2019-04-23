@@ -215,9 +215,10 @@ module vga_buffer (
     logic [9:0]     vcount;
 
     logic clk50;
-    logic [1:0] clk_counter;
+    logic clk_counter;
 
     wire VGA_CLK_PRE;
+    //assign VGA_CLK = VGA_CLK_PRE;
     reg [3:0] vga_clk_high_count;
 
     always_ff @(posedge clk or negedge reset)
@@ -238,7 +239,7 @@ module vga_buffer (
 
     always_ff @(posedge clk or negedge reset)
         if (!reset) begin
-            {VGA_R, VGA_G, VGA_B} <= {8'h0, 8'h0, 8'h0};
+            {VGA_R, VGA_G, VGA_B} <= {8'hFF, 8'h0, 8'hFF};
             pixel_read <= 0;
             vga_clk_high_count <= 0;
             read_state <= R_IDLE;
@@ -256,7 +257,8 @@ module vga_buffer (
                 R_REQUEST: begin
                     pixel_read <= 0;
                     if (pixel_valid)
-                        {VGA_B, VGA_G, VGA_R} <= {pixel_data[23:16], pixel_data[15:8], pixel_data[7:0]};
+                    //    {VGA_B, VGA_G, VGA_R} <= {pixel_data[23:16], pixel_data[15:8], pixel_data[7:0]};
+			{VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'h0, 8'h0};
                     else begin
                         {VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'hFF, 8'hFF};
                         $display("vga_buffer: no pixel");
@@ -266,13 +268,8 @@ module vga_buffer (
                 end
 
                 R_CLOCK: begin
-                    if (vga_clk_high_count < 3)
-                        vga_clk_high_count <= vga_clk_high_count + 1;
-                    else begin
-                        vga_clk_high_count <= 0;
-                        VGA_CLK <= 0;
-                        read_state <= R_IDLE;
-                    end
+               	    VGA_CLK <= 0;
+                    read_state <= R_IDLE;
                 end
             endcase
         end

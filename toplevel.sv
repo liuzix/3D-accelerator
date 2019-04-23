@@ -226,7 +226,11 @@ system system0 (
    .vga_unit_0_vga_display_vga_hs             (VGA_HS),    
    .vga_unit_0_vga_display_vga_r              (VGA_R),                           
    .vga_unit_0_vga_display_vga_sync           (VGA_SYNC_N),          
-   .vga_unit_0_vga_display_vga_vs             (VGA_VS));
+   .vga_unit_0_vga_display_vga_vs             (VGA_VS),
+   .reset_bridge_0_in_reset_reset_n(KEY[0])
+);
+
+    assign HEX0[0] = KEY[0];
 	
 	
 

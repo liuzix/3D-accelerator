@@ -665,7 +665,7 @@ proc compose {} {
    kind="altera_avalon_new_sdram_controller"
    version="18.1"
    enabled="1">
-  <parameter name="TAC" value="5.4" />
+  <parameter name="TAC" value="6.0" />
   <parameter name="TMRD" value="3" />
   <parameter name="TRCD" value="15.0" />
   <parameter name="TRFC" value="70.0" />
@@ -744,12 +744,12 @@ proc compose {} {
    kind="clock"
    version="18.1"
    start="sys_sdram_pll_0.sys_clk"
-   end="new_sdram_controller_0.clk" />
+   end="reset_bridge_0.clk" />
  <connection
    kind="clock"
    version="18.1"
    start="sys_sdram_pll_0.sys_clk"
-   end="reset_bridge_0.clk" />
+   end="new_sdram_controller_0.clk" />
  <connection
    kind="clock"
    version="18.1"
@@ -778,7 +778,7 @@ proc compose {} {
  <connection
    kind="reset"
    version="18.1"
-   start="sys_sdram_pll_0.reset_source"
+   start="reset_bridge_0.out_reset_1"
    end="new_sdram_controller_0.reset" />
  <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
  <interconnectRequirement for="$system" name="qsys_mm.enableEccProtection" value="FALSE" />

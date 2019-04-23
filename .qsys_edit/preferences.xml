@@ -3,14 +3,15 @@
  <debug showDebugMenu="0" />
  <systemtable filter="All Interfaces">
   <columns>
-   <connections preferredWidth="175" />
+   <connections preferredWidth="207" />
    <irq preferredWidth="34" />
    <name preferredWidth="244" />
    <inputclock preferredWidth="353" />
   </columns>
  </systemtable>
- <library expandedCategories="Library,Project" />
- <window width="1940" height="2100" x="0" y="25" />
- <generation path="system" block_symbol_file="0" greybox="0" simulation="VERILOG" />
+ <library
+   expandedCategories="Library/Basic Functions/Simulation; Debug and Verification/Simulation,Library/Basic Functions/Clocks; PLLs and Resets,Library/Basic Functions/Simulation; Debug and Verification,Library/Interface Protocols/Transceiver PHY,Library/Basic Functions,Library/Basic Functions/Bridges and Adaptors,Library/Basic Functions/Bridges and Adaptors/Reset,Library/Interface Protocols,Library,Project" />
+ <window width="1600" height="1150" x="-19" y="25" />
+ <generation path="system" block_symbol_file="0" greybox="1" simulation="VERILOG" />
  <hdlexample language="VERILOG" />
 </preferences>

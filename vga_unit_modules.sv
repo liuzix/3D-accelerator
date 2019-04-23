@@ -234,7 +234,7 @@ module vga_buffer (
 
     vga_counters counters(.clk50(clk50), .reset(reset),.VGA_CLK(VGA_CLK_PRE), .clk100(clk), .*);
 
-    typedef enum { R_REQUEST, R_CLOCK, R_IDLE } read_state_t;
+    typedef enum { R_OUTPUT, R_WAIT, R_CLOCK, R_IDLE } read_state_t;
     read_state_t read_state;
 
     always_ff @(posedge clk or negedge reset)
@@ -250,12 +250,17 @@ module vga_buffer (
                         $display("vga_buffer: hcount = %d", hcount[10:1]);
                         if (hcount[10:1] < 640 && vcount < 480)
                             pixel_read <= 1;
-                        read_state <= R_REQUEST;
+                        read_state <= R_WAIT;
                     end
                 end
 
-                R_REQUEST: begin
+                R_WAIT: begin
+                    read_state <= R_OUTPUT;
                     pixel_read <= 0;
+                end
+
+                R_OUTPUT: begin
+                    
                     if (pixel_valid)
                     //    {VGA_B, VGA_G, VGA_R} <= {pixel_data[23:16], pixel_data[15:8], pixel_data[7:0]};
 			{VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'h0, 8'h0};

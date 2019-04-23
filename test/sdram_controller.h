@@ -54,7 +54,7 @@ public:
             && readRequests.front().targetTick <= tickCount
             && readRequests.front().port == port) {
            
-            if (rand() % 3 == 0) {
+            if (rand() % 3 != 0) {
                 Value v = memory[readRequests.front().address / sizeof(Value)];
                 memcpy(readdata, &v, sizeof(Value));
                 readRequests.pop_front();

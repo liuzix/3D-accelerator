@@ -62,11 +62,18 @@ module vga_master (
         else offset8_vga_addr = next_vga + base;
     end
 
-    logic [25:0] next_vga128, offset128_cur_addr;
+    logic [25:0] next_vga128, offset128_vga_addr;
     assign next_vga128 = cur_vga_addr - base + 128;
     always_comb begin
-        if (next_vga128 > 26'H258000) offset128_cur_addr = next_vga128 - 26'H258000 + base;
-        else offset128_cur_addr = next_vga128 + base;
+        if (next_vga128 > 26'H258000) offset128_vga_addr = next_vga128 - 26'H258000 + base;
+        else offset128_vga_addr = next_vga128 + base;
+    end
+
+    logic [25:0] next_vga120, offset120_vga_addr;
+    assign next_vga120 = cur_vga_addr - base + 120;
+    always_comb begin
+        if (next_vga120 > 26'H258000) offset120_vga_addr = next_vga120 - 26'H258000 + base;
+        else offset120_vga_addr = next_vga120 + base;
     end
 
     logic [25:0] next_dout, offset8_dout;
@@ -151,6 +158,7 @@ module vga_master (
                     if (addr_in_range(cur_vga_addr, up_addr, down_addr)) begin
                         pixel_in_progress_next = pixel_in_progress_next - 1;
                         pixel_data <= pixel_buffer[(cur_vga_addr / 8) % 32];
+                        $display("write pixel succeed");
                         pixel_valid <= 1;
                     end
                     else begin
@@ -162,11 +170,13 @@ module vga_master (
                     if (!addr_lt(cur_vga_addr,down_addr))
                         down_addr_next = offset8_vga_addr;
 
-                    if (!addr_lt(cur_vga_addr, up_addr)) begin
+                    if (!addr_lt(cur_vga_addr, up_addr) && !addr_invalid) begin
                         sync = 1;
                         $display("vga_master: syncing!");
-                        down_addr_next = offset128_cur_addr;
+                        down_addr_next = offset128_vga_addr;
+                        pixel_in_progress_next = 0;
                         up_addr_next = down_addr_next;
+                        cur_addr <= offset120_vga_addr;
                     end
 
                 end
@@ -263,7 +273,7 @@ module vga_buffer (
                     
                     if (pixel_valid)
                     //    {VGA_B, VGA_G, VGA_R} <= {pixel_data[23:16], pixel_data[15:8], pixel_data[7:0]};
-			{VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'h0, 8'h0};
+			            {VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'h0, 8'h0};
                     else begin
                         {VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'hFF, 8'hFF};
                         $display("vga_buffer: no pixel");

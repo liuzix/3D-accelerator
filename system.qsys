@@ -658,7 +658,7 @@ proc compose {} {
   <parameter name="TRFC" value="70.0" />
   <parameter name="TRP" value="15.0" />
   <parameter name="TWR" value="14.0" />
-  <parameter name="casLatency" value="3" />
+  <parameter name="casLatency" value="2" />
   <parameter name="clockRate" value="100000000" />
   <parameter name="columnWidth" value="10" />
   <parameter name="componentName">$${FILENAME}_new_sdram_controller_0</parameter>

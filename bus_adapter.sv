@@ -20,7 +20,10 @@ module bus_adapter (
     output master_write,
     output [1:0] master_byteenable,
     output [15:0]master_writedata,
-    output test_output
+    output test_master_read,
+	 output test_slave_read,
+	 output test_waitrequest,
+	 output [3:0] state
 );
 // write to sram
 //three states: IDLE, read data, write data,WAIT
@@ -36,6 +39,8 @@ module bus_adapter (
 
     assign master_byteenable = 2'b11;
 
+	 logic read_busy;
+    logic write_busy;
 	 logic [25:0] master_address_r;
 	 logic [25:0] master_address_w;
 	 always_comb begin
@@ -45,18 +50,30 @@ module bus_adapter (
 		   master_address = master_address_w;
 	 end
 	 
-    
-    wire test_output;
+	 assign state = {1'b0, read_state};
 
-    always_comb begin
-        if (master_readdatavalid)
-            test_output = 1;
-        else 
-            test_output = 0;
-    end
+	 always_ff @(posedge clock or negedge reset) begin
+		if (!reset) begin
+			test_master_read <= 0;
+			test_slave_read <= 0;
+			test_waitrequest <= 0;
+		end else begin
+			if (master_read)
+				test_master_read <= 1;
+			else
+				test_master_read <= 0;
+			if (slave_read)
+				test_slave_read <= 1;
+			else
+				test_slave_read <= 0;
+			if (master_waitrequest)
+				test_waitrequest <= 1;
+			else
+				test_waitrequest <= 0;
+		end
+	 end
+	 
 
-    logic read_busy;
-    logic write_busy;
 
     assign slave_waitrequest = read_busy | write_busy;
 

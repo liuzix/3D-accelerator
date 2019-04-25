@@ -149,6 +149,7 @@ module toplevel(
 
 system system0 (
 	.clock_50_clk(CLOCK_50),
+	
 	.dram_addr(DRAM_ADDR),
 	.dram_ba(DRAM_BA),
 	.dram_cas_n(DRAM_CAS_N),
@@ -158,7 +159,8 @@ system system0 (
 	.dram_dqm({DRAM_UDQM, DRAM_LDQM}),
 	.dram_ras_n(DRAM_RAS_N),
 	.dram_we_n(DRAM_WE_N),
-	.dram_clk_clk(DRAM_CLK), 
+	.dram_clk_clk(DRAM_CLK),
+	
 	.hps_ddr3_mem_a(HPS_DDR3_ADDR),
 	.hps_ddr3_mem_ba(HPS_DDR3_BA),
 	.hps_ddr3_mem_ck(HPS_DDR3_CK_P),
@@ -175,7 +177,9 @@ system system0 (
 	.hps_ddr3_mem_odt(HPS_DDR3_ODT),
 	.hps_ddr3_mem_dm(HPS_DDR3_DM),
 	.hps_ddr3_oct_rzqin(HPS_DDR3_RZQ),
+	
 	.reset_reset_n(KEY[0]),
+	
 	.hps_hps_io_emac1_inst_TX_CLK ( HPS_ENET_GTX_CLK ),
    .hps_hps_io_emac1_inst_TXD0   ( HPS_ENET_TX_DATA[0] ),
    .hps_hps_io_emac1_inst_TXD1   ( HPS_ENET_TX_DATA[1] ),
@@ -218,6 +222,7 @@ system system0 (
 	.hps_hps_io_i2c0_inst_SCL(HPS_I2C1_SCLK),
 	.hps_hps_io_i2c1_inst_SDA(HPS_I2C2_SDAT),
 	.hps_hps_io_i2c1_inst_SCL(HPS_I2C2_SCLK),
+	
 	.vga_unit_0_frame_buffer_frame_buffer_ptr (0), 
    .vga_unit_0_vga_display_vga_b              (VGA_B),       
    .vga_unit_0_vga_display_vga_blank          (VGA_BLANK_N),    
@@ -227,7 +232,11 @@ system system0 (
    .vga_unit_0_vga_display_vga_r              (VGA_R),                           
    .vga_unit_0_vga_display_vga_sync           (VGA_SYNC_N),          
    .vga_unit_0_vga_display_vga_vs             (VGA_VS),
-   .reset_bridge_0_in_reset_reset_n(KEY[0])
+   .reset_bridge_0_in_reset_reset_n			    (KEY[0]),
+	.test_master_read (LEDR[0]),                   
+   .test_slave_read (LEDR[1]),
+	.test_waitrequest (LEDR[2]),
+	.test_hexout (HEX1)
 );
 
     assign HEX0[0] = KEY[0];

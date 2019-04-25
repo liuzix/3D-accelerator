@@ -5,6 +5,7 @@ module vga_unit(input clk,
    input master_waitrequest,
    output master_read,
    output master_write,
+	output [1:0] master_byteenable,
    output [15:0] master_writedata,
    input [15:0] bus_data,
    output [25:0] master_address,
@@ -12,7 +13,10 @@ module vga_unit(input clk,
    output logic 	   VGA_CLK, VGA_HS, VGA_VS,
    VGA_BLANK_n,
    output logic	   VGA_SYNC_n,
-   output test_output);
+   output test_master_read,
+	output test_slave_read,
+	output test_waitrequest,
+	output [6:0] read_state);
 
    logic pixel_read;
    logic [25:0] cur_vga_addr;
@@ -24,7 +28,6 @@ module vga_unit(input clk,
    logic slave_readdatavalid;
    logic slave_waitrequest;
    logic [31:0] slave_readdata;
-   logic [1:0] master_byteenable;
    //logic [15:0] master_writedata;
 
    //input
@@ -34,6 +37,8 @@ module vga_unit(input clk,
    logic [25:0] slave_address;
    logic [15:0] master_readdata;
    //------------------------//
+	
+	logic [3:0] tmp_state;
    
    bus_adapter bus_adp(.clock(clk),
    .reset(reset),
@@ -42,6 +47,7 @@ module vga_unit(input clk,
    .master_read(master_read),
    .master_readdata(bus_data),
    .master_write(master_write),
+	.master_byteenable(master_byteenable),
    .slave_readdatavalid(slave_readdatavalid),
    .slave_waitrequest(slave_waitrequest),
    .slave_readdata(slave_readdata),
@@ -51,7 +57,10 @@ module vga_unit(input clk,
    .slave_address(slave_address),
    .master_address(master_address),
    .master_writedata(master_writedata),
-   .test_output(test_output));
+   .test_master_read(test_master_read),
+	.test_slave_read(test_slave_read),
+	.test_waitrequest(test_waitrequest),
+	.state(tmp_state));
     
    vga_master master (.clk(clk),
    .reset(reset),
@@ -74,5 +83,10 @@ module vga_unit(input clk,
    .pixel_read(pixel_read),
    .cur_vga_addr(cur_vga_addr),
    .*);
+	
+	hex7seg hex(
+	.a(tmp_state),
+	.y(read_state)
+	);
 
 endmodule

@@ -225,24 +225,31 @@ module vga_buffer (
     logic [9:0]     vcount;
 
     logic clk50;
-    logic clk_counter;
+	 logic clk100;
+	 logic clk100_c;
+    logic [1:0] clk50_c;
 
     wire VGA_CLK_PRE;
     //assign VGA_CLK = VGA_CLK_PRE;
     reg [3:0] vga_clk_high_count;
 
     always_ff @(posedge clk or negedge reset)
-        if (!reset)
-            clk_counter <= 0;
-        else
-            clk_counter <= clk_counter + 1;
+        if (!reset) begin
+            clk50_c <= 0;
+				clk100_c <= 0;
+		  end
+        else begin
+            clk100_c <= clk100_c + 1;
+				clk50_c <= clk50_c + 1;
+		  end
 
 
     //assign pixel_read = (clk_counter == 4);
-    assign clk50        = (clk_counter == 0);
+    assign clk100        = (clk100_c == 0);
+	 assign clk50         = (clk50_c == 0 || clk50_c == 1);
     assign cur_vga_addr = frame_buffer_ptr + (hcount[10:1] + 640 * vcount) * 8;
 
-    vga_counters counters(.clk50(clk50), .reset(reset),.VGA_CLK(VGA_CLK_PRE), .clk100(clk), .*);
+    vga_counters counters(.clk50(clk50), .reset(reset),.VGA_CLK(VGA_CLK_PRE), .clk100(clk100), .clk(clk), .*);
 
     typedef enum { R_OUTPUT, R_WAIT, R_CLOCK, R_IDLE } read_state_t;
     read_state_t read_state;
@@ -272,7 +279,7 @@ module vga_buffer (
                 R_OUTPUT: begin
                     
                     if (pixel_valid)
-                    //    {VGA_B, VGA_G, VGA_R} <= {pixel_data[23:16], pixel_data[15:8], pixel_data[7:0]};
+                     //   {VGA_B, VGA_G, VGA_R} <= {pixel_data[23:16], pixel_data[15:8], pixel_data[7:0]};
 			            {VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'h0, 8'h0};
                     else begin
                         {VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'hFF, 8'hFF};
@@ -294,7 +301,7 @@ endmodule
 
 
 module vga_counters (
-    input logic         clk50, reset, clk100,
+    input logic         clk, clk50, reset, clk100,
     output logic [10:0] hcount,  // hcount[10:1] is pixel column
     output logic [9:0]  vcount,  // vcount[9:0] is pixel row
     output logic        VGA_CLK, VGA_HS, VGA_VS, VGA_BLANK_n, VGA_SYNC_n
@@ -330,9 +337,9 @@ module vga_counters (
 
     logic endOfLine;
 
-    always_ff @(posedge clk100 or negedge reset) begin
+    always_ff @(posedge clk or negedge reset) begin
         if (!reset)          hcount <= 0;
-        else if (clk50) begin
+        else if (clk50 & clk100) begin
             if (endOfLine) hcount <= 0;
             else hcount <= hcount + 11'd 1;
         end
@@ -342,9 +349,9 @@ module vga_counters (
 
     logic endOfField;
 
-    always_ff @(posedge clk100 or negedge reset)
+    always_ff @(posedge clk or negedge reset)
         if (!reset)          vcount <= 0;
-        else if (endOfLine & clk50) begin
+        else if (endOfLine & clk50 & clk100) begin
             if (endOfField)   vcount <= 0;
             else              vcount <= vcount + 10'd 1;
         end

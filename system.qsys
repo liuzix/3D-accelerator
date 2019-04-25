@@ -9,6 +9,14 @@
    categories="System" />
  <parameter name="bonusData"><![CDATA[bonusData 
 {
+   element bus_adapter_0.slave
+   {
+      datum baseAddress
+      {
+         value = "268435456";
+         type = "String";
+      }
+   }
    element clk_0
    {
       datum _sortIndex
@@ -55,6 +63,78 @@
       {
          value = "3";
          type = "int";
+      }
+   }
+   element system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
       }
    }
    element vga_unit_0
@@ -108,12 +188,15 @@ proc compose {} {
    dir="start" />
  <interface name="hps" internal="hps_0.hps_io" type="conduit" dir="end" />
  <interface name="hps_ddr3" internal="hps_0.memory" type="conduit" dir="end" />
+ <interface name="m_read" internal="vga_unit_0.m_read" />
  <interface name="reset" internal="clk_0.clk_in_reset" type="reset" dir="end" />
  <interface
    name="reset_bridge_0_in_reset"
    internal="reset_bridge_0.in_reset"
    type="reset"
    dir="end" />
+ <interface name="s_read" internal="vga_unit_0.s_read" />
+ <interface name="test" internal="vga_unit_0.test" type="conduit" dir="end" />
  <interface
    name="vga_unit_0_frame_buffer"
    internal="vga_unit_0.frame_buffer"
@@ -281,10 +364,10 @@ proc compose {} {
   <parameter name="FPGA_PERIPHERAL_OUTPUT_CLOCK_FREQ_SPIM1_SCLK_OUT" value="100" />
   <parameter name="GPIO_Enable">No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No</parameter>
   <parameter name="GP_Enable" value="false" />
-  <parameter name="H2F_AXI_CLOCK_FREQ" value="100000000" />
+  <parameter name="H2F_AXI_CLOCK_FREQ" value="200000000" />
   <parameter name="H2F_CTI_CLOCK_FREQ" value="100" />
   <parameter name="H2F_DEBUG_APB_CLOCK_FREQ" value="100" />
-  <parameter name="H2F_LW_AXI_CLOCK_FREQ" value="100000000" />
+  <parameter name="H2F_LW_AXI_CLOCK_FREQ" value="200000000" />
   <parameter name="H2F_TPIU_CLOCK_IN_FREQ" value="100" />
   <parameter name="HARD_EMIF" value="true" />
   <parameter name="HCX_COMPAT_MODE" value="false" />
@@ -665,18 +748,18 @@ proc compose {} {
    kind="altera_avalon_new_sdram_controller"
    version="18.1"
    enabled="1">
-  <parameter name="TAC" value="6.0" />
+  <parameter name="TAC" value="5.0" />
   <parameter name="TMRD" value="3" />
   <parameter name="TRCD" value="15.0" />
   <parameter name="TRFC" value="70.0" />
   <parameter name="TRP" value="15.0" />
   <parameter name="TWR" value="14.0" />
-  <parameter name="casLatency" value="2" />
-  <parameter name="clockRate" value="100000000" />
+  <parameter name="casLatency" value="3" />
+  <parameter name="clockRate" value="200000000" />
   <parameter name="columnWidth" value="10" />
   <parameter name="componentName">$${FILENAME}_new_sdram_controller_0</parameter>
   <parameter name="dataWidth" value="16" />
-  <parameter name="generateSimulationModel" value="true" />
+  <parameter name="generateSimulationModel" value="false" />
   <parameter name="initNOPDelay" value="0.0" />
   <parameter name="initRefreshCommands" value="2" />
   <parameter name="masteredTristateBridgeSlave" value="0" />
@@ -695,7 +778,7 @@ proc compose {} {
    version="18.1"
    enabled="1">
   <parameter name="ACTIVE_LOW_RESET" value="1" />
-  <parameter name="AUTO_CLK_CLOCK_RATE" value="100000000" />
+  <parameter name="AUTO_CLK_CLOCK_RATE" value="200000000" />
   <parameter name="NUM_RESET_OUTPUTS" value="2" />
   <parameter name="SYNCHRONOUS_EDGES" value="deassert" />
   <parameter name="USE_RESET_REQUEST" value="0" />
@@ -712,7 +795,7 @@ proc compose {} {
   <parameter name="CV_boards" value="DE1-SoC" />
   <parameter name="MAX10_boards" value="DE10-Lite" />
   <parameter name="device_family" value="Cyclone V" />
-  <parameter name="gui_outclk" value="100.0" />
+  <parameter name="gui_outclk" value="200.0" />
   <parameter name="gui_refclk" value="50.0" />
   <parameter name="other_boards" value="None" />
  </module>
@@ -726,20 +809,6 @@ proc compose {} {
   <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
- <connection
-   kind="avalon"
-   version="18.1"
-   start="hps_0.h2f_axi_master"
-   end="new_sdram_controller_0.s1">
-  <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
-  <parameter name="defaultConnection" value="false" />
- </connection>
- <connection
-   kind="clock"
-   version="18.1"
-   start="clk_0.clk"
-   end="sys_sdram_pll_0.ref_clk" />
  <connection
    kind="clock"
    version="18.1"
@@ -765,6 +834,11 @@ proc compose {} {
    version="18.1"
    start="sys_sdram_pll_0.sys_clk"
    end="hps_0.h2f_lw_axi_clock" />
+ <connection
+   kind="clock"
+   version="18.1"
+   start="sys_sdram_pll_0.sys_clk"
+   end="sys_sdram_pll_0.ref_clk" />
  <connection
    kind="reset"
    version="18.1"

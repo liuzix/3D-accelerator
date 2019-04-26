@@ -60,8 +60,8 @@ module bus_adapter (
 		end else begin
 			if (master_read)
 				test_master_read <= 1;
-			else
-				test_master_read <= 0;
+			//else
+				//test_master_read <= 0;
 			if (slave_read)
 				test_slave_read <= 1;
 			else

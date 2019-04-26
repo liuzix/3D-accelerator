@@ -5,9 +5,9 @@ module vga_unit(input clk,
    input master_waitrequest,
    output master_read,
    output master_write,
-	output [1:0] master_byteenable,
-   output [15:0] master_writedata,
-   input [15:0] bus_data,
+	output [3:0] master_byteenable,
+   output [31:0] master_writedata,
+   input [31:0] bus_data,
    output [25:0] master_address,
    output logic [7:0] VGA_R, VGA_G, VGA_B,
    output logic 	   VGA_CLK, VGA_HS, VGA_VS,
@@ -17,6 +17,9 @@ module vga_unit(input clk,
 	output test_slave_read,
 	output test_waitrequest,
 	output [6:0] read_state);
+
+   assign master_write = 0;
+   assign master_byteenable = 4'b1111;
 
    logic pixel_read;
    logic [25:0] cur_vga_addr;
@@ -39,7 +42,7 @@ module vga_unit(input clk,
    //------------------------//
 	
 	logic [3:0] tmp_state;
-   
+   /*
    bus_adapter bus_adp(.clock(clk),
    .reset(reset),
    .master_readdatavalid(master_readdatavalid),
@@ -51,7 +54,7 @@ module vga_unit(input clk,
    .slave_readdatavalid(slave_readdatavalid),
    .slave_waitrequest(slave_waitrequest),
    .slave_readdata(slave_readdata),
-   .slave_write(slave_write),
+   .slave_write(0),
    .slave_read(slave_read),
    .slave_writedata(slave_writedata),
    .slave_address(slave_address),
@@ -61,6 +64,7 @@ module vga_unit(input clk,
 	.test_slave_read(test_slave_read),
 	.test_waitrequest(test_waitrequest),
 	.state(tmp_state));
+  
     
    vga_master master (.clk(clk),
    .reset(reset),
@@ -73,6 +77,20 @@ module vga_unit(input clk,
    .master_waitrequest(slave_waitrequest),
    .master_address(slave_address),
    .master_read(slave_read),
+   .base(frame_buffer_ptr));
+	*/
+
+   vga_master master (.clk(clk),
+   .reset(reset),
+   .pixel_read(pixel_read),
+   .pixel_valid(pixel_valid),
+   .bus_data(bus_data),
+   .cur_vga_addr(cur_vga_addr),
+   .pixel_data(pixel_data),
+   .master_readdatavalid(master_readdatavalid),
+   .master_waitrequest(master_waitrequest),
+   .master_address(master_address),
+   .master_read(master_read),
    .base(frame_buffer_ptr));
 
    vga_buffer buffer (.clk(clk),

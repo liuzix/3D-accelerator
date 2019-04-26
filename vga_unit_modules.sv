@@ -124,6 +124,7 @@ module vga_master (
                 up_addr <= 0;
                 down_addr <= 0;
                 addr_invalid <= 1;
+                master_read <= 0;
             end
             else begin
                 $display("vga_master: -------------------------");
@@ -138,7 +139,7 @@ module vga_master (
                 if (master_waitrequest)
                     $display("vga_master: sdram asks us to wait");
 
-                if (!master_waitrequest && pixel_in_progress < 16) begin
+                if (((master_read && !master_waitrequest) || !master_read) && pixel_in_progress < 16) begin
                     $display("vga_master: sending request %d", offset8_cur_addr);
                     wr <= 1;
                     din <= offset8_cur_addr;
@@ -227,7 +228,7 @@ module vga_buffer (
     logic clk50;
 	 logic clk100;
 	 logic clk100_c;
-    logic [1:0] clk50_c;
+    logic clk50_c;
 
     wire VGA_CLK_PRE;
     //assign VGA_CLK = VGA_CLK_PRE;
@@ -246,10 +247,10 @@ module vga_buffer (
 
     //assign pixel_read = (clk_counter == 4);
     assign clk100        = (clk100_c == 0);
-	 assign clk50         = (clk50_c == 0 || clk50_c == 1);
+	 assign clk50         = (clk50_c == 0);
     assign cur_vga_addr = frame_buffer_ptr + (hcount[10:1] + 640 * vcount) * 8;
 
-    vga_counters counters(.clk50(clk50), .reset(reset),.VGA_CLK(VGA_CLK_PRE), .clk100(clk100), .clk(clk), .*);
+    vga_counters counters(.clk50(clk50), .reset(reset),.VGA_CLK(VGA_CLK_PRE), .clk100(clk), .clk(clk), .*);
 
     typedef enum { R_OUTPUT, R_WAIT, R_CLOCK, R_IDLE } read_state_t;
     read_state_t read_state;
@@ -272,25 +273,25 @@ module vga_buffer (
                 end
 
                 R_WAIT: begin
+	            VGA_CLK <= 0;
                     read_state <= R_OUTPUT;
                     pixel_read <= 0;
                 end
 
                 R_OUTPUT: begin
-                    
                     if (pixel_valid)
-                     //   {VGA_B, VGA_G, VGA_R} <= {pixel_data[23:16], pixel_data[15:8], pixel_data[7:0]};
-			            {VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'h0, 8'h0};
+                       {VGA_B, VGA_G, VGA_R} <= {pixel_data[23:16], pixel_data[15:8], pixel_data[7:0]};
+			//{VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'h0, 8'h0};
                     else begin
                         {VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'hFF, 8'hFF};
                         $display("vga_buffer: no pixel");
                     end
-                    VGA_CLK <= 1;
+                    //VGA_CLK <= 1;
                     read_state <= R_CLOCK;
                 end
 
                 R_CLOCK: begin
-               	    VGA_CLK <= 0;
+               	    VGA_CLK <= 1;
                     read_state <= R_IDLE;
                 end
             endcase

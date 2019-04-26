@@ -10,8 +10,8 @@ module rasterizer (
     //input [23:0] color1, //RGB for v1 = (x1, y1)
     //input [23:0] color2, //RGB for v2 = (x2, y2)
     //input [23:0] color3, //RGB for v3 = (x3, y3)
-    output [25:0] addr_in; //frame buffer base 
-    output [25:0] addr_out;
+    output [25:0] addr_in, //frame buffer base 
+    output [25:0] addr_out,
     output fetch_enable,
     output done
 );
@@ -28,7 +28,7 @@ module rasterizer (
     logic [31:0] maxX;
     logic [31:0] maxY;
 
-    always_comb begin begin
+    always_comb begin
         if (x1 < x2) begin
             maxX <= x2;
             minX <= x1;
@@ -47,7 +47,7 @@ module rasterizer (
     end
         
 
-    always_comb begin begin
+    always_comb begin
         if (y1 < y2) begin
             maxY <= y2;
             minY <= y1;

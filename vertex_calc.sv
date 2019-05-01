@@ -10,10 +10,10 @@ module vertex_calc (input logic [127:0] matrix[1:0],
                     output logic [31:0] z_out,
                     output logic [31:0] w_out)
 
-    logic [61:0] tmp_x;
-    logic [61:0] tmp_y;
-    logic [61:0] tmp_z;
-    logic [61:0] tmp_w;
+    logic [63:0] tmp_x;
+    logic [63:0] tmp_y;
+    logic [63:0] tmp_z;
+    logic [63:0] tmp_w;
 
     always_comb begin
         tmp_x = matrix[0][127:96] * x_in + matrix[0][95:64] * y_in + matrix[0][63:32] * z_in + matrix[0][31:0] * w_in;

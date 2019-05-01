@@ -10,7 +10,8 @@ module rasterizer (
     //input [23:0] color1, //RGB for v1 = (x1, y1)
     //input [23:0] color2, //RGB for v2 = (x2, y2)
     //input [23:0] color3, //RGB for v3 = (x3, y3)
-    output [25:0] addr_in, //frame buffer base 
+    input [25:0] addr_in, //frame buffer base 
+    input ready,
     output [25:0] addr_out,
     output fetch_enable,
     output done

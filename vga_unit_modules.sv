@@ -222,8 +222,8 @@ module vga_buffer (
     output logic       VGA_SYNC_n
 );
 
-    logic [10:0]    hcount;
-    logic [9:0]     vcount;
+    logic [10:0]    hcount, hcount_t;
+    logic [9:0]     vcount, vcount_t;
 
     logic clk50;
 	 logic clk100;
@@ -248,7 +248,7 @@ module vga_buffer (
     //assign pixel_read = (clk_counter == 4);
     assign clk100        = (clk100_c == 0);
 	 assign clk50         = (clk50_c == 0);
-    assign cur_vga_addr = frame_buffer_ptr + (hcount[10:1] + 640 * vcount) * 8;
+    assign cur_vga_addr = frame_buffer_ptr + (hcount_t[10:1] + 640 * vcount_t) * 8;
 
     vga_counters counters(.clk50(clk50), .reset(reset),.VGA_CLK(VGA_CLK_PRE), .clk100(clk), .clk(clk), .*);
 
@@ -265,6 +265,8 @@ module vga_buffer (
             case (read_state)
                 R_IDLE: begin
                     if (VGA_CLK_PRE) begin
+								hcount_t <= hcount;
+								vcount_t <= vcount;
                         $display("vga_buffer: hcount = %d", hcount[10:1]);
                         if (hcount[10:1] < 640 && vcount < 480)
                             pixel_read <= 1;

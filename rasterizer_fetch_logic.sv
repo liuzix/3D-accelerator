@@ -38,7 +38,6 @@ assign addr_out = data_out_reg[25:0];
 assign color_out = data_out_reg[49:26];
 assign new_depth_out = data_out_reg[81:50];
 
-assign wait_request = full || master_waitrequest;
 assign rdreq = master_readdatavalid;
 
 fifo fifo(
@@ -65,6 +64,7 @@ always_ff @(posedge clock or negedge reset) begin
         wrreq <= 0;
         output_valid <= 0;
         state <= S_IDLE;
+        wait_request <= 1;
     end else begin
         enqueue = 0;
         case (state)
@@ -92,6 +92,7 @@ always_ff @(posedge clock or negedge reset) begin
         if (full)
             $display("fifo is full");
         // deal with input port
+        wait_request <= !enqueue;
         if (enqueue)
         begin
             // enqueue the fetch request

@@ -16,121 +16,101 @@ module rasterizer_vertex_fetch (
 
     output output_valid,
     output fetch_busy,
-    output [31:0] vertex_out[3:0]
+    output [31:0] vertex_out[14:0]
 );
 
-    typedef enum logic[2:0] {IDLE_S, SEND1, SEND2, SEND3, SEND4} send_t;
+    typedef enum logic[1:0] {IDLE_S, SEND} send_t;
     send_t send_state;
 
-    typedef enum logic[1:0] {IDLE_R, FETCH1, FETCH2, FETCH3} rec_t;
+    typedef enum logic[1:0] {IDLE_R, FETCH} rec_t;
     rec_t rec_state;
 
 
-    logic [31:0] coordinate[2:0];
     logic [25:0] addr;
 
     assign master_byteenable = 4'b1111;
 
+    logic [3:0] s_count;
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
             send_state <= IDLE_S;
             master_read <= 0;
             fetch_busy <= 0;
+            s_count <= 0;
         end
         else begin
             case(send_state)
                 IDLE_S: begin
                     if (fetch_enable) begin
                         fetch_busy <= 1;
+                        master_address <= addr_in;
+                        master_read <= 1;
+                        addr <= addr_in + 4;
+                        s_count <= s_count + 1;
+                        send_state <= SEND;
+                    end
+                end
+                SEND: begin
+                    if (s_count < 15) begin
                         if (!master_waitrequest) begin
-                            master_address <= addr_in;
+                            master_address <= addr;
                             master_read <= 1;
-                            addr <= addr_in + 4;
-                            send_state <= SEND2;
+                            addr <= addr + 4;
+                            s_count <= s_count + 1;
                         end else begin
+                            master_address <= addr - 4;
+                            master_read <= 1;
+                        end
+                    end else begin
+                        if (!master_waitrequest) begin
                             master_read <= 0;
-                            addr <= addr_in;
-                            send_state <= SEND1;
+                            fetch_busy <= 0;
+                            s_count <= 0;
+                            send_state <= IDLE_S;
+                        end else begin
+                            master_address <= addr - 4;
+                            master_read <= 1;
                         end
                     end
                 end
-                SEND1: begin
-                    if (!master_waitrequest) begin
-                        master_address <= addr;
-                        master_read <= 1;
-                        addr <= addr + 4;
-                        send_state <= SEND2;
-                    end else
-                        master_read <= 0;
-                end
-                SEND2: begin
-                    if (!master_waitrequest) begin
-                        master_address <= addr;
-                        master_read <= 1;
-                        addr <= addr + 4;
-                        send_state <= SEND3;
-                    end else
-                        master_read <= 0;
-                end
-                SEND3: begin
-                    if (!master_waitrequest) begin
-                        master_address <= addr;
-                        master_read <= 1;
-                        addr <= addr + 4;
-                        send_state <= SEND4;
-                    end else
-                        master_read <= 0;
-                end
-                SEND4: begin
-                    if (!master_waitrequest) begin
-                        master_address <= addr;
-                        master_read <= 1;
-                        fetch_busy <= 0;
-                        send_state <= IDLE_S;
-                    end else
-                        master_read <= 0;
-                end
+                default: begin end
             endcase
         end
     end
 
+    logic [31:0] vertex_out_buf[14:0];
+    logic [3:0] r_count;
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
             rec_state <= IDLE_R;
             output_valid <= 0;
+            r_count <= 0;
         end
         else begin
             case (rec_state)
                 IDLE_R: begin
                     output_valid <= 0;
                     if (master_readdatavalid) begin
-                        coordinate[0] <= master_readdata;
-                        rec_state <= FETCH1;
+                        vertex_out_buf[r_count] <= master_readdata;
+                        r_count <= r_count + 1;
+                        rec_state <= FETCH;
                     end
                 end
-                FETCH1: begin
+                FETCH: begin
                     if (master_readdatavalid) begin
-                        coordinate[1] <= master_readdata;
-                        rec_state <= FETCH2;
+                        if (r_count == 14) begin
+                            r_count <= 0;
+                            vertex_out[13:0] <= vertex_out_buf[13:0];
+                            vertex_out[r_count] <= master_readdata;
+                            output_valid <= 1;
+                            rec_state <= IDLE_R;
+                        end else begin
+                            vertex_out_buf[r_count] <= master_readdata;
+                            r_count <= r_count + 1;
+                        end
                     end
                 end
-                FETCH2: begin
-                    if (master_readdatavalid) begin
-                        coordinate[2] <= master_readdata;
-                        rec_state <= FETCH3;
-                    end
-                end
-                FETCH3: begin
-                    if (master_readdatavalid) begin
-                        vertex_out[0] <= coordinate[0];
-                        vertex_out[1] <= coordinate[1];
-                        vertex_out[2] <= coordinate[2];
-                        vertex_out[3] <= master_readdata;
-                        output_valid <= 1;
-
-                        rec_state <= IDLE_R;
-                    end
-                end
+                default: begin end
             endcase
         end
     end

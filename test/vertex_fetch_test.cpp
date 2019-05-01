@@ -46,9 +46,10 @@ int main(int argc, char** argv) {
                              top->master_waitrequest);
         if (addr < 640 * 480 * 8) {
             if (!top->fetch_busy) {
+                cout << "-----------fetch not busy" << endl;
                 top->fetch_enable = 1;
                 top->addr_in = addr;
-                addr += 16;
+                addr += (4*15);
             } else {
                 cout << "fetch busy" << endl;
                 top->fetch_enable = 0;
@@ -64,8 +65,18 @@ int main(int argc, char** argv) {
             cout << "top->vertex_out = " << top->vertex_out[0] << " " <<
              top->vertex_out[1] << " " <<
              top->vertex_out[2] << " " <<
-             top->vertex_out[3] << endl;
-            
+             top->vertex_out[3] << " " <<
+             top->vertex_out[4] << " " <<
+             top->vertex_out[5] << " " <<
+             top->vertex_out[6] << " " <<
+             top->vertex_out[7] << " " <<
+             top->vertex_out[8] << " " <<
+             top->vertex_out[9] << " " <<
+             top->vertex_out[10] << " " <<
+             top->vertex_out[11] << " " <<
+             top->vertex_out[12] << " " <<
+             top->vertex_out[13] << " " <<
+             top->vertex_out[14] << endl;
         } else {
             cout << "output is not valid" << endl;
         }

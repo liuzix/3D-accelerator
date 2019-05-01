@@ -22,9 +22,9 @@ module vertex_calc (input logic [127:0] matrix[1:0],
         tmp_w = matrix[3][127:96] * x_in + matrix[3][95:64] * y_in + matrix[3][63:32] * z_in + matrix[3][31:0] * w_in;
     end
 
-    assign x_out = tmp_x[31:0];
-    assign y_out = tmp_y[31:0];
-    assign z_out = tmp_z[31:0];
-    assign w_out <= tmp_w[31:0];
+    assign x_out = tmp_x[47:16];
+    assign y_out = tmp_y[47:16];
+    assign z_out = tmp_z[47:16];
+    assign w_out <= tmp_w[47:16];
 
 endmodule

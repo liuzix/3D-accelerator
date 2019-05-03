@@ -10,7 +10,7 @@ module rasterizer_fetch_logic (
     input master_readdatavalid,
     output [31:0]master_writedata,
     input master_waitrequest,
-
+    input stall_pipeline,
     input input_valid,
     input [25:0] addr_in,
     input [23:0] color_in,
@@ -53,6 +53,7 @@ fifo fifo(
     .almost_empty(almost_empty)
 );
 
+
 typedef enum { S_IDLE,  S_HOLD } state_t;
 state_t state;
 state_t next_state;
@@ -79,7 +80,7 @@ always_ff @(posedge clock or negedge reset) begin
             end
 
             S_HOLD: begin
-                if (!master_waitrequest) begin
+                if (!master_waitrequest || !stall_pipeline) begin
                     if (!full && input_valid) begin
                         next_state = S_HOLD;
                         enqueue = 1;

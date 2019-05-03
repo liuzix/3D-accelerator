@@ -107,6 +107,9 @@ int main() {
 
 	std::ofstream file_out("data.binary", std::ios_base::out | std::ios_base::binary);
 
+	int tri = data_out.size();
+	file_out.write((char*)&tri, sizeof(int));
+
 	/* output file layout:
 	 * X|Y|Z|R|G|B--X|Y|Z|R|G|B--X|Y|Z|R|G|B--NX|NY|NZ for each triangle
 	 */

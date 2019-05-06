@@ -133,7 +133,7 @@ module rasterizer (
     logic [31:0] w1_tmp;
     logic [31:0] w2_tmp;
     logic [31:0] denom;
-    
+    logic [23:0] cur_color;
 
     //color interpolation using Barycentric Coordinates
     always_ff @(posedge clock or negedge reset) begin
@@ -143,7 +143,7 @@ module rasterizer (
         w1 = w1_tmp1 / denom;
         w2 = w1_tmp2 / denom;
         w3 = 1 - w1 - w2;
-        color_out = w1 * color1 + w2 * color2 + w3 * color3;
+        cur_color = w1 * color1 + w2 * color2 + w3 * color3;
     end 
 
 
@@ -160,8 +160,10 @@ module rasterizer (
 
         is_inside = e12 & e23 & e31;
     
-        if (is_inside)
-            addr_out = addr_in + ((cur_y - 1) * 640 + cur_x);
+        if (is_inside) begin
+            addr_out <= addr_in + ((cur_y - 1) * 640 + cur_x);
+            color_out <= cur_color;
+        end
 
         cur_x = cur_x + 1;
     

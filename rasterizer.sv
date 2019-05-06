@@ -13,13 +13,13 @@ module rasterizer (
     input [25:0] addr_in, //frame buffer base 
     input ready,
     output [25:0] addr_out,
-    output [31:0] color_out
+    output [23:0] color_out
     output fetch_enable,
     output done
 );
 
-    logic [31:0] cur_pixel_x;
-    logic [31:0] cur_pixel_y;
+    logic [31:0] cur_x;
+    logic [31:0] cur_y;
     logic e12, e23, e31;
     logic is_inside;
 
@@ -77,22 +77,6 @@ module rasterizer (
         fp_divide <= (tmp_a * (1 << 16)) / tmp_b;
     endfunction 
 
-
-    always_comb begin
-        v1_x <= minX;
-        v1_y <= minY;
-        v2_x <= minX;
-        v2_y <= maxY;
-        v3_x <= maxX;
-        v3_y <= minY;
-        v4_x <= maxX;
-        v4_y <= maxY;
-
-        //w1 <= ((y2-y3)*(v1_x-x3)+(x3-x2)*(v1_y-y3))/((y2-y3)*(x1-x3))
-
-
-    end
-
     always_comb begin
         if (x1 < x2) begin
             maxX <= x2;
@@ -108,7 +92,7 @@ module rasterizer (
         if (maxX < x3)
             maxX <= x3;
 
-        cur_pixel_x = minX;
+        cur_x = minX;
     end
         
 
@@ -127,47 +111,66 @@ module rasterizer (
         if (maxY < y3)
             maxY <= y3;
 
-        cur_pixel_y = minY;
+        cur_y = minY;
     end
-
     
-    
+    /*
     always_comb begin 
-        if (cur_pixel_y < ((minY + maxY) << 1))
+        if (cur_y < ((minY + maxY) << 1))
             color_out <= color1;
         
-        if (cur_pixel_y >= ((minY + maxY) << 1) & cur_pixel_x < ((minX + maxX) << 1))
+        if (cur_y >= ((minY + maxY) << 1) & cur_x < ((minX + maxX) << 1))
             color_out <= color2;
 
-        if (cur_pixel_y >= ((minY + maxY) << 1) & cur_pixel_x > ((minX + maxX) << 1))
+        if (cur_y >= ((minY + maxY) << 1) & cur_x > ((minX + maxX) << 1))
             color_out <= color3;
     end
+    */
+
+    logic [31:0] w1;
+    logic [31:0] w2;
+    logic [31:0] w3;
+    logic [31:0] w1_tmp;
+    logic [31:0] w2_tmp;
+    logic [31:0] denom;
+    
+
+    //color interpolation using Barycentric Coordinates
+    always_ff @(posedge clock or negedge reset) begin
+        w1_tmp1 <= (y2 - y3) * (cur_x - x3) + (x3 - x2) * (cur_y - v3); 
+        w2_tmp1 <= (y3 - y1) * (cur_x - x3) + (x1 - x3) * (cur_y - y3);
+        denom <= (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
+        w1 = w1_tmp1 / denom;
+        w2 = w1_tmp2 / denom;
+        w3 = 1 - w1 - w2;
+        color_out = w1 * color1 + w2 * color2 + w3 * color3;
+    end 
 
 
     always_ff @(posedge clock or negedge reset) begin
         if (reset) begin 
-            cur_pixel_x <= minX;
-            cur_pixel_y <= minY;
+            cur_x <= minX;
+            cur_y <= minY;
             done <= 0;
         end 
         
-        e12 <= ((cur_pixel_x - x1) * (y2 - y1) - (cur_pixel_y - y1) * (x2 - x1)) >= 0;
-        e23 <= ((cur_pixel_x - x2) * (y3 - y2) - (cur_pixel_y - y2) * (x3 - x2)) >= 0; 
-        e31 <= ((cur_pixel_x - x3) * (y1 - y3) - (cur_pixel_y - y3) * (x1 - x3)) >= 0;
+        e12 <= ((cur_x - x1) * (y2 - y1) - (cur_y - y1) * (x2 - x1)) >= 0;
+        e23 <= ((cur_x - x2) * (y3 - y2) - (cur_y - y2) * (x3 - x2)) >= 0; 
+        e31 <= ((cur_x - x3) * (y1 - y3) - (cur_y - y3) * (x1 - x3)) >= 0;
 
         is_inside = e12 & e23 & e31;
     
         if (is_inside)
-            addr_out = addr_in + ((cur_pixel_y - 1) * 640 + cur_pixel_x);
+            addr_out = addr_in + ((cur_y - 1) * 640 + cur_x);
 
-        cur_pixel_x = cur_pixel_x + 1;
+        cur_x = cur_x + 1;
     
-        if (cur_pixel_x > maxX) begin
-            cur_pixel_x <= minX;
-            cur_pixel_y <= cur_pixel_y + 1;
+        if (cur_x > maxX) begin
+            cur_x <= minX;
+            cur_y <= cur_y + 1;
         end
 
-        if (cur_pixel_y > maxY) begin
+        if (cur_y > maxY) begin
             fetch_enable <= 1;
             done <= 1;
         end

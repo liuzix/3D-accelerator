@@ -27,6 +27,8 @@ int main(int argc, char** argv) {
     for (int i = 0; i < 640 * 480; i++) {
         sdramController.memory[i] = i;
     }
+    // number of triangles to be read
+    sdramController.memory[0] = 5;
 
     top = new Vtop;  // Create instance
 
@@ -39,17 +41,19 @@ int main(int argc, char** argv) {
 
 
     uint32_t addr = 0;
+    int once = 0;
+    int tri_count = 0;
     for (;;) {
         sdramController.tick(0, top->master_address, top->master_read,
                              top->master_write, &top->master_readdata,
                              top->master_readdatavalid, &top->master_writedata,
                              top->master_waitrequest);
         if (addr < 640 * 480 * 8) {
-            if (!top->fetch_busy) {
-                cout << "-----------fetch not busy" << endl;
+            if (!top->fetch_busy && !once) {
                 top->fetch_enable = 1;
                 top->addr_in = addr;
-                addr += (4*15);
+                once = 1;
+               // addr += (4*15);
             } else {
                 cout << "fetch busy" << endl;
                 top->fetch_enable = 0;
@@ -61,7 +65,8 @@ int main(int argc, char** argv) {
         top->clock = 1;
         top->eval();
 
-        if (top->output_valid) {
+        if (top->output_valid && once) {
+            tri_count++;
             cout << "top->vertex_out = " << top->vertex_out[0] << " " <<
              top->vertex_out[1] << " " <<
              top->vertex_out[2] << " " <<
@@ -78,8 +83,11 @@ int main(int argc, char** argv) {
              top->vertex_out[13] << " " <<
              top->vertex_out[14] << endl;
         } else {
-            cout << "output is not valid" << endl;
+            cout << "output is not valid -- " << tri_count << endl;
         }
+
+        if (top->fetch_finish)
+            break;
 
         cout << "-----------------------" << endl;
         top->clock = 0;

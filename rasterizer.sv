@@ -13,9 +13,9 @@ module rasterizer (
     input [25:0] addr_in, //frame buffer base 
     input ready,
     output [25:0] addr_out,
-    output [23:0] color_out
+    output [23:0] color_out,
     output fetch_enable,
-    output done
+    output output_valid
 );
 
     logic [31:0] cur_x;
@@ -30,25 +30,6 @@ module rasterizer (
     logic [31:0] maxX;
     logic [31:0] maxY;
     
-    //bounding box
-    logic [31:0] v1_x;
-    logic [31:0] v1_y;
-    logic [31:0] v2_x;
-    logic [31:0] v2_y;
-    logic [31:0] v3_x;
-    logic [31:0] v3_y;
-    logic [31:0] v4_x;
-    logic [31:0] v4_y;
-
-    logic [24:0] v1_color;
-    logic [24:0] v2_color;
-    logic [24:0] v3_color;
-    logic [24:0] v4_color;
-
-    logic [31:0] w1;
-    logic [31:0] w2;
-    logic [31:0] w3;
-
     //fixed point multiplication
     function logic [32:0] fp_mult(
         input logic [32:0] a,
@@ -114,19 +95,6 @@ module rasterizer (
         cur_y = minY;
     end
     
-    /*
-    always_comb begin 
-        if (cur_y < ((minY + maxY) << 1))
-            color_out <= color1;
-        
-        if (cur_y >= ((minY + maxY) << 1) & cur_x < ((minX + maxX) << 1))
-            color_out <= color2;
-
-        if (cur_y >= ((minY + maxY) << 1) & cur_x > ((minX + maxX) << 1))
-            color_out <= color3;
-    end
-    */
-
     logic [31:0] w1;
     logic [31:0] w2;
     logic [31:0] w3;
@@ -151,7 +119,8 @@ module rasterizer (
         if (reset) begin 
             cur_x <= minX;
             cur_y <= minY;
-            done <= 0;
+            fetch_enable <= 0;
+            output_valid <= 0;
         end 
         
         e12 <= ((cur_x - x1) * (y2 - y1) - (cur_y - y1) * (x2 - x1)) >= 0;
@@ -161,8 +130,11 @@ module rasterizer (
         is_inside = e12 & e23 & e31;
     
         if (is_inside) begin
+            output_valid <= 1;
             addr_out <= addr_in + ((cur_y - 1) * 640 + cur_x);
             color_out <= cur_color;
+        end else begin
+            output_valid <= 0;
         end
 
         cur_x = cur_x + 1;
@@ -174,7 +146,6 @@ module rasterizer (
 
         if (cur_y > maxY) begin
             fetch_enable <= 1;
-            done <= 1;
         end
     end
 

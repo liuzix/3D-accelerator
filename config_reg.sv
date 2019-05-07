@@ -40,4 +40,4 @@ always_ff @(posedge clk or negedge reset)
     else if (read && address == h8)
         readdata <= do_render;
 
-endmodule;
+endmodule // config_reg

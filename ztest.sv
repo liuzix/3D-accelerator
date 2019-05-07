@@ -1,4 +1,4 @@
-modules ztest (
+module ztest (
     input clock,
     input reset,
     input output_valid,
@@ -6,7 +6,7 @@ modules ztest (
     input [31:0] old_depth_out,
     input [31:0] new_depth_out,
     input [31:0] color_in, //color out from rasterizer_fetch_logic
-    input master_waitrequest,    
+    input master_waitrequest,
     output [31:0] color_out,
     output [25:0] addr_out,
     output stall_pipeline
@@ -49,7 +49,7 @@ end
 
 
 always_ff @(posedge clock or negedge reset) begin
-    if (reset) begin
+    if (!reset) begin
         done <= 0;
         stall_pipeline <= 0;
     end
@@ -74,6 +74,7 @@ always_ff @(posedge clock or negedge reset) begin
     end
 end
 
+endmodule // ztest
 
 
 

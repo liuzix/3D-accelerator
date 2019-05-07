@@ -6,7 +6,7 @@ module rasterizer_unit (
     input logic write,
     input logic read
     input logic [15:0] address,
- 
+
     output [25:0] master_address,
     output master_read,
     output master_write,
@@ -18,7 +18,7 @@ module rasterizer_unit (
 );
 
 //output of config_reg
-logic [32:0] readdata;  
+logic [32:0] readdata;
 logic [511:0] MV;
 logic [511:0] MVP;
 logic [96:0] lighting;
@@ -55,6 +55,11 @@ logic [31:0] new_depth_out;
 logic [23:0] fetch_color_out;
 logic wait_request;
 
+//final output
+logic [25:0] final_addr_out;
+logic [23:0] final_color_out;
+
+
 config_reg c_reg (
     .clk(clock),
     .reset_n(reset),
@@ -85,7 +90,7 @@ rasterizer_vertex_fetch vertex_fetch (
     .stall(stall),
     .output_valid(output_valid),
     .fetch_enable(done),
-    .fetch-finish(fetch_finish),
+    .fetch_finish(fetch_finish),
     .fetch_busy(fetch_busy),
     .vertex_out(vertex_out));
 
@@ -112,9 +117,9 @@ rasterizer raster (
     .y2(y_out[1]),
     .x3(x_out[2]),
     .y3(y_out[2]),
-    .color1(vertex_out[3]),
-    .color2(vertex_out[7]),
-    .color3(vertex_out[11]),
+    .color1(vertex_out[3][23:0]),
+    .color2(vertex_out[7][23:0]),
+    .color3(vertex_out[11][23:0]),
     .ready(done), //signal from vertex_calc
     .addr_in(frame_buffer_base), //from config_reg
     .addr_out(addr_out),
@@ -154,10 +159,13 @@ ztest z_test (
     .new_depth_in(new_depth_in),
     .color_in(fetch_color_out),
     .master_waitrequest(master_waitrequest),
-    .color_out(fetch_color_out),
-    .addr_out(fetch_addr_out),
+    .color_out(final_color_out),
+    .addr_out(final_addr_out),
     .stall_pipeline(stall));
 
+//need one to write to SDRAM controller
+
+endmodule // rasterizer_unit
 
 
 

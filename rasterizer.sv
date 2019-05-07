@@ -149,5 +149,5 @@ module rasterizer (
         end
     end
 
-endmodule;
+endmodule
 

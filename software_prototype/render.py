@@ -40,6 +40,7 @@ class Device(object):
       self.main_clock = pygame.time.Clock()
       self.display = pygame.display.set_mode((self.pixel_width, self.pixel_height), 0, 32) # create display
       self.depth_buffer = np.full( (self.pixel_width, self.pixel_height), MAX_VAL)
+      pygame.display.set_caption("alien invasion")
 # clear screen to one solid color
   def clear(self, color):
       self.display.fill(color)
@@ -49,10 +50,13 @@ class Device(object):
   def put_pixel(self, x, y, z, color):
 #print "z buffer shows: " + str(self.depth_buffer[x][y])
 #print "current z is: " + str(z)
+      if (x>=self.pixel_width or y>=self.pixel_height):
+          return
       if self.depth_buffer[x][y] < z:
 #print "not drawing this"
           return # ignore put pixel if depth buffer is less than z
       self.depth_buffer[x][y] = z
+      #print(x,y)
       self.display.set_at((x,y), color)
 # update output
   def update_display(self):
@@ -78,38 +82,7 @@ class Device(object):
       y = point[Y]
       z = point[Z]
       self.put_pixel(int(x), int(y), z, color)
-# draw line b/t two points using Bresenham's algorithm
-  def draw_line(self, point0, point1):
-      x0 = int(point0[0])
-      y0 = int(point0[1])
-      x1 = int(point1[0])
-      y1 = int(point1[1])
-      dx = abs(x1 - x0)
-      dy = abs(y1 - y0)
-      if x0 < x1:
-          sx = 1
 
-      else:
-        sx = -1
-      if y0 < y1:
-        sy = 1
-      else:
-         sy = -1
-         err = dx - dy
-      while True:
-          point_to_draw = (x0, y0)
-          self.draw_point(point_to_draw)
-# check if we're done
-          if ((x0 == x1) and (y0 == y1)):
-                 break
-# otherwise update our point
-          e2 = 2 * err
-          if e2 > -dy:
-              err -= dy
-              x0 += sx
-          if e2 < dx:
-              err += dx
-              y0 += sy
 # clamp value between 0 and 1
   def clamp(self, value, min_val = 0, max_val = 1):
       return max( float(min_val), min(float(value), float(max_val)) )
@@ -200,27 +173,28 @@ class Device(object):
         faceindex = 0
         for face in mesh.faces: # now render each face on the screen
 # first define the three vertices of the face to be drawn
-            vertex_a = mesh.vertices[face.a]
-            vertex_b = mesh.vertices[face.b]
-            vertex_c = mesh.vertices[face.c]
+            try:
+              vertex_a = mesh.vertices[face.a]
+              vertex_b = mesh.vertices[face.b]
+              vertex_c = mesh.vertices[face.c]
 # convert teh 3-d vertices to 2-d pixels that can be drawn on the screen
-            pixel_a = self.project_to_window(vertex_a, transform_matrix)
-            pixel_b = self.project_to_window(vertex_b, transform_matrix)
-            pixel_c = self.project_to_window(vertex_c, transform_matrix)
+              pixel_a = self.project_to_window(vertex_a, transform_matrix)
+              pixel_b = self.project_to_window(vertex_b, transform_matrix)
+              pixel_c = self.project_to_window(vertex_c, transform_matrix)
 # color triangles
-            color = 2 + (faceindex % len(mesh.faces)) * 100 / len(mesh.faces)
-#if faceindex == 0 or faceindex ==1:
-# color_vec = (255, 255, 0, 255)
-#else:
-            color_vec = (color, color, color, 255)
-            #color_vec=(255,255,0,255)
-            self.draw_triangle(pixel_a, pixel_b, pixel_c, color_vec)
-            faceindex += 1
-# draw a line between each pixel
-#self.draw_line(pixel_a, pixel_b)
-#self.draw_line(pixel_b, pixel_c)
-#self.draw_line(pixel_c, pixel_a)
-##################################
+              color = 2 + (faceindex % len(mesh.faces)) * 100 / len(mesh.faces)
+              if faceindex == 0 or faceindex ==1:
+                color_vec = (255, 255, 255, 255)
+              else:
+                color_vec = (color, color, color, 255)
+              #color_vec=(255,255,0,255)
+              self.draw_triangle(pixel_a, pixel_b, pixel_c, color_vec)
+              faceindex += 1
+            except:
+                #print("face index out of range")
+                #print(face.a,face.b,face.c)
+                pass
+
 #
 # Matrix transform functions
 #

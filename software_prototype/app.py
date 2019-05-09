@@ -4,10 +4,13 @@
 
 #### app.y
 #### application that uses the above pygpu render module
+import sys
+
+sys.path.append("/usr/local/lib/python3.7/site-packages")
+import pygame
 from render import *
 import numpy as np
-import sys
-import pygame
+
 import time
 import json
 def load_mesh_from_json(filename):
@@ -76,34 +79,39 @@ def load_mesh_from_json(filename):
 # #
 #############################################
 ####### code to create a new rendering device #######
-filename="bird.json"
+#User ID:  jh4000
+#Password:  Run22875
+#Application:  Office 365
+filename="newdragon.json"
 meshes = load_mesh_from_json(filename)
 print(type(meshes))
-for mesh in meshes:
-    for vertice in mesh.vertices:
-        print(vertice)
-    for face in mesh.faces:
-        print(face.a,face.b,face.c)
+#for mesh in meshes:
+    #for vertice in mesh.vertices:
+        #print(vertice)
+    #for face in mesh.faces:
+        #print(face.a,face.b,face.c)
 
 
-my_device = Device(500, 500) # screen 100 x 100
+my_device = Device(680, 480) 
 ####### code to create a new camera ######
-camera_position = (0, 0, 5) # move 5 units along the z axis
-camera_target = (0.0, 0.0, 1.0) # pointed straight at z axis
+camera_position = (-2, 2, 8) # move 5 units along the z axis
+camera_target = (0.0, 0.0, 1) # pointed straight at z axis
 my_camera = Camera(camera_position, camera_target)
 ####### code to load in mesh from json file #######
 
 
-
+i=0
 while True:
   for event in pygame.event.get():
       if event.type == pygame.QUIT: # wait for user to close window
           sys.exit()
 
-  my_device.clear((0, 0, 0, 255)) # clear screen
-  #pygame.display.flip()
+  my_device.clear((0, 0, 0)) # clear screen
+  pygame.display.flip()
 # rotate cube slightly during each frame rendered
-  mesh.rotation = (mesh.rotation[0] , mesh.rotation[1] + 1, mesh.rotation[2]) # move mesh position slightly
-  my_device.render(my_camera, meshes) # render meshes
-  my_device.update_display() # update display
-       
+  for mesh in meshes:
+    mesh.rotation = (mesh.rotation[0] , mesh.rotation[1] + 10, mesh.rotation[2]) # move mesh position slightly
+    my_device.render(my_camera, meshes) # render meshes
+    my_device.update_display() # update display
+  print(i)
+  i=+1     

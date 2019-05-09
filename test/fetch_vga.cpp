@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 		
 
     // simulate a 64M sdram block
-    SDRAMController<uint16_t> sdramController(64 * 1024 * 1024);
+    SDRAMController<uint32_t> sdramController(64 * 1024 * 1024);
 
 	//copy bitmap 
 	loadFrameBuffer(sdramController.memory.data(), "puppy.jpg");

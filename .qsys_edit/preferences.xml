@@ -9,8 +9,8 @@
    <inputclock preferredWidth="353" />
   </columns>
  </systemtable>
- <library expandedCategories="Project,Library" />
- <window width="1920" height="1040" x="563" y="149" />
- <generation path="system" block_symbol_file="0" greybox="0" simulation="VERILOG" />
+ <library expandedCategories="Library,Project" />
+ <window width="1920" height="1040" x="511" y="341" />
+ <generation path="system" block_symbol_file="1" greybox="1" simulation="VERILOG" />
  <hdlexample language="VERILOG" />
 </preferences>

@@ -23,9 +23,7 @@ logic almost_empty;
 logic full;
 logic empty;
 
-logic done;
-
-fifo fifo(
+fifo #(.DBITS(115))fifo(
     .din(data_in),
     .dout(data_out),
     .wr(wrreq),
@@ -40,12 +38,13 @@ fifo fifo(
 
 
 always_ff @(posedge clock) begin
-    if (!done & !full) begin
+    if (!full) begin
         wrreq <= 1;
         data_in[25:0] <= addr_in;
         data_in[49:26] <= color_in;
         data_in[81:50] <= old_depth_out;
-        data_in[113:82] <= in_depth_out; 
+        data_in[113:82] <= in_depth_out;
+        data_in[114] <= done_in;
     end
 end
 
@@ -61,20 +60,18 @@ always_ff @(posedge clock or negedge reset) begin
     else
         stall_out <= 0;
     
-    if (done_in) begin
-        if (done_in & !empty) begin
-            rdreq <= 1;
-            addr_in <= data_out[25:0];
-            color_in <= data_out[49:26];
-            old_depth_out <= data[81:50];
-            in_depth_out <= data[113:82];
-        end
+    if (!empty) begin
+        rdreq <= 1;
+        addr_in <= data_out[25:0];
+        color_in <= data_out[49:26];
+        old_depth_out <= data[81:50];
+        in_depth_out <= data[113:82];
+        done_out <= data[114]
+    end
     
-        if (new_depth_out < out_depth_out) begin
-            addr_out <= addr_in;
-            color_out <= color_in;
-            done_out <= 1
-        end
+    if (new_depth_out < out_depth_out) begin
+        addr_out <= addr_in;
+        color_out <= color_in;
     end
 end
 

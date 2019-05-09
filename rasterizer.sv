@@ -112,11 +112,11 @@ module rasterizer (
 
     //color interpolation using Barycentric Coordinates
     always_ff @(posedge clock or negedge reset) begin
-        w1_tmp1 <= (y2 - y3) * (cur_x - x3) + (x3 - x2) * (cur_y - v3); 
-        w2_tmp1 <= (y3 - y1) * (cur_x - x3) + (x1 - x3) * (cur_y - y3);
+        w1_tmp <= (y2 - y3) * (cur_x - x3) + (x3 - x2) * (cur_y - y3); 
+        w2_tmp <= (y3 - y1) * (cur_x - x3) + (x1 - x3) * (cur_y - y3);
         denom <= (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
-        w1 = w1_tmp1 / denom;
-        w2 = w1_tmp2 / denom;
+        w1 = w1_tmp / denom;
+        w2 = w1_tmp / denom;
         w3 = 1 - w1 - w2;
         cur_color = w1 * color1 + w2 * color2 + w3 * color3;
     end 

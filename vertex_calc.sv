@@ -80,10 +80,11 @@ module vertex_calc (input clock,
                 y_out[2] <= tmp_y[2][47:16];
                 z_out[2] <= tmp_z[2][47:16];
                 w_out[2] <= tmp_w[2][47:16];
-                done <= 1;
+                done_out <= 1;
                 out_data_valid <= 1;
                 stall_out <= 0;
             end else 
                 stall_out <= 1;
         end
+    end
 endmodule

@@ -4,7 +4,7 @@ module rasterizer_unit (
 
     input [32:0] writedata,
     input logic write,
-    input logic read
+    input logic read,
     input logic [15:0] address,
 
     output [25:0] master_address,
@@ -24,6 +24,15 @@ module rasterizer_unit (
     input master_readdatavalid_2,
     output [31:0]master_writedata_2,
     input master_waitrequest_2,
+
+    output [25:0] master_address_3,
+    output master_read_3,
+    output master_write_3,
+    output [3:0] master_byteenable_3,
+    input [31:0] master_readdata_3,
+    input master_readdatavalid_3,
+    output [31:0]master_writedata_3,
+    input master_waitrequest_3
 );
 
 
@@ -123,9 +132,8 @@ vertex_calc v_calc (
     .clock(clock),
     .reset(reset),
     .mat(MVP),
-    .vin(vertex_out),
-    .input_data_valid(input_data_valid)
-    .ready(fetch_finish),
+    .v_in(vertex_out),
+    .input_data_valid(input_data_valid),
     .x_out(x_out),
     .y_out(y_out),
     .z_out(z_out),
@@ -149,10 +157,8 @@ rasterizer raster (
     .color1(vertex_out[3][23:0]),
     .color2(vertex_out[7][23:0]),
     .color3(vertex_out[11][23:0]),
-    .ready(done), //signal from vertex_calc
     .addr_in(frame_buffer_base), //from config_reg
     .addr_out(addr_out),
-    .fetch_enable(fetch_enable),
     .color_out(color_out),
     .in_data_valid(out_data_valid),
     .done_in(done2),
@@ -181,7 +187,6 @@ rasterizer_fetch_logic fetch_logic (
     .old_depth_out(old_depth_out),
     .new_depth_out(new_depth_out),
     .color_out(fetch_color_out),
-    .wait_request(wait_request),
     .done_in(done3), //from rasterizer
     .done_out(done4),
     .stall_in(stall4),
@@ -191,13 +196,20 @@ ztest z_test (
     .clock(clock),
     .reset(reset),
     .output_valid(fetch_output_valid),
-    .addr_int(fetch_addr_out),
+    .addr_in(fetch_addr_out),
     .old_depth_out(old_depth_out),
-    .new_depth_in(new_depth_in),
+    .new_depth_out(new_depth_out),
     .color_in(fetch_color_out),
-    .master_waitrequest(master_waitrequest),
     .done_in(done4),
     .done_out(done5),
+    .master_address(master_address_3),
+    .master_read(master_read_3),
+    .master_write(master_write_3),
+    .master_byteenable(master_byteenable_3),
+    .master_readdata(master_readdata_3),
+    .master_readdatavalid(master_readdatavalid_3),
+    .master_writedata(master_writedata_3),
+    .master_waitrequest(master_waitrequest_3),
     .stall_out(stall4));
 
 //need one to write to SDRAM controller

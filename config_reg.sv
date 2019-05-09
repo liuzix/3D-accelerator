@@ -16,28 +16,28 @@ module config_reg(
     inout logic do_render
 );
 
-always_ff @(posedge clk or negedge reset)
-    if (reset) begin
+always_ff @(posedge clk or negedge reset_n)
+    if (!reset_n) begin
         MV <= 0;
         MVP <= 0;
-        framebuffer_base <= 0;
+        frame_buffer_base <= 0;
         vertex_buffer_base <= 26'h300000;
     end
     else if (write) begin
         case (address)
-            h0: frame_buffer_base <= writedata;
-            h4: vertex_buffer_base <= writedata;
-            h8: do_render <= writedata;
+            'h0: frame_buffer_base <= writedata;
+            'h4: vertex_buffer_base <= writedata;
+            'h8: do_render <= writedata;
             default:
-                if (h100 <= address && address <= h13C)
-                    MV[(address - h100) * 8 + 31: (address - h100) * 8] <= writedata;
-                else if (h200 <= address && address <= h23C)
-                    MVP[(address - h200) * 8 + 31: (address - h200) * 8] <= writedata;
-                else if (h300 <= address & address <= h308)
-                    lighting[(address - h300) * 8 + 31: (address - h300) * 8] <= writedata;
+                if ('h100 <= address && address <= 'h13C)
+                    MV[(address - 'h100) * 8 + 31: (address - 'h100) * 8] <= writedata;
+                else if ('h200 <= address && address <= 'h23C)
+                    MVP[(address - 'h200) * 8 + 31: (address - 'h200) * 8] <= writedata;
+                else if ('h300 <= address & address <= 'h308)
+                    lighting[(address - 'h300) * 8 + 31: (address - 'h300) * 8] <= writedata;
         endcase
     end
-    else if (read && address == h8)
+    else if (read && address == 'h8)
         readdata <= do_render;
 
 endmodule // config_reg

@@ -11,6 +11,7 @@ module rasterizer (
     input [23:0] color2, //RGB for v2 = (x2, y2)
     input [23:0] color3, //RGB for v3 = (x3, y3)
     input [25:0] addr_in, //frame buffer base 
+    input in_data_valid,
     input done_in,
     input stall_in,
     output [25:0] addr_out,
@@ -106,6 +107,9 @@ module rasterizer (
     logic [31:0] denom;
     logic [23:0] cur_color;
 
+    logic [25:0] tmp_addr_out;
+    logic [23:0] tmp_color_out;
+
     //color interpolation using Barycentric Coordinates
     always_ff @(posedge clock or negedge reset) begin
         w1_tmp1 <= (y2 - y3) * (cur_x - x3) + (x3 - x2) * (cur_y - v3); 
@@ -125,11 +129,12 @@ module rasterizer (
             fetch_enable <= 0;
             output_valid <= 0;
             done_out <= 0;
-            stall_out <= 0;
+            stall_out = 0;
         end 
         
-        if (done_in & !stall_in) begin
-            stall_out <= 1;
+        stall_out = 1;
+        
+        if (in_data_valid) begin
             e12 <= ((cur_x - x1) * (y2 - y1) - (cur_y - y1) * (x2 - x1)) >= 0;
             e23 <= ((cur_x - x2) * (y3 - y2) - (cur_y - y2) * (x3 - x2)) >= 0; 
             e31 <= ((cur_x - x3) * (y1 - y3) - (cur_y - y3) * (x1 - x3)) >= 0;
@@ -138,8 +143,8 @@ module rasterizer (
     
             if (is_inside) begin
                 output_valid <= 1;
-                addr_out <= addr_in + ((cur_y - 1) * 640 + cur_x);
-                color_out <= cur_color;
+                tmp_addr_out <= addr_in + ((cur_y - 1) * 640 + cur_x);
+                tmp_color_out <= cur_color;
             end else begin
                 output_valid <= 0;
             end
@@ -153,8 +158,18 @@ module rasterizer (
 
             if (cur_y > maxY) begin
                 fetch_enable <= 1;
-                done_out <= 1;
-                stall_out <= 0;
+                done_out <= done_in;
+                stall_out = 0;
+            end
+
+            if (!output_valid) begin
+                addr_out <= tmp_addr_out;
+                color_out <= tmp_color_out;
+            end else begin
+                if (!stall_in) begin
+                    addr_out <= tmp_addr_out;
+                    color_out <= tmp_color_out;
+                end
             end
         end
     end

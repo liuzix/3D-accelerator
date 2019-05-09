@@ -15,6 +15,15 @@ module rasterizer_unit (
     input master_readdatavalid,
     output [31:0]master_writedata,
     input master_waitrequest,
+    
+    output [25:0] master_address_2,
+    output master_read_2,
+    output master_write_2,
+    output [3:0] master_byteenable_2,
+    input [31:0] master_readdata_2,
+    input master_readdatavalid_2,
+    output [31:0]master_writedata_2,
+    input master_waitrequest_2,
 );
 
 //output of config_reg
@@ -130,14 +139,14 @@ rasterizer raster (
 rasterizer_fetch_logic fetch_logic (
     .clock(clock),
     .reset(reset),
-    .master_address(master_address),
-    .master_read(master_read),
-    .master_write(master_write),
-    .master_byteenable(master_byteenable),
-    .master_readdata(master_readdata),
-    .master_readdatavalid(master_readdatavalid),
-    .master_writedata(master_writedata),
-    .master_waitrequest(master_waitrequest),
+    .master_address(master_address_2),
+    .master_read(master_read_2),
+    .master_write(master_write_2),
+    .master_byteenable(master_byteenable_2),
+    .master_readdata(master_readdata_2),
+    .master_readdatavalid(master_readdatavalid_2),
+    .master_writedata(master_writedata_2),
+    .master_waitrequest(master_waitrequest_2),
     .stall_pipeline(stall),
     .input_valid(rasterizer_output_valid), //from rasterizer
     .addr_in(addr_out), //from rasterizer

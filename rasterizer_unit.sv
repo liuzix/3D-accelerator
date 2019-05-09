@@ -96,11 +96,14 @@ rasterizer_vertex_fetch vertex_fetch (
     .master_readdatavalid(master_readdatavalid),
     .master_writedata(master_writedata),
     .master_waitrequest(master_waitrequest),
-    .stall(stall),
+    /* pipeline interface */
+    .fetch_enable(),
+    .vertex_buffer_base(),
+    .stall_in(),
+    .done_out(),
+    /* data for one triangle is ready */
     .output_valid(output_valid),
-    .fetch_enable(done),
-    .fetch_finish(fetch_finish),
-    .fetch_busy(fetch_busy),
+    /* triangle data 15-32bits x1,y1,z1,rgb, ..., nx, ny, nz */
     .vertex_out(vertex_out));
 
 

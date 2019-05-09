@@ -12,12 +12,14 @@ module rasterizer_vertex_fetch (
     input master_waitrequest,
 
     input fetch_enable,
-    input stall,
-    input [25:0] addr_in,
+    input [25:0] vertex_buffer_base,
+    /* tasterizer_unit pipeling interface*/
+    input stall_in,
+    //output stall_out,
+    //input done_in,
+    output done_out,
 
     output output_valid,
-    output fetch_busy,
-    output fetch_finish,
     output [31:0] vertex_out[14:0]
 );
 
@@ -34,14 +36,13 @@ module rasterizer_vertex_fetch (
 
     assign master_byteenable = 4'b1111;
 
-    assign fetch_finish = (tri_num != 0) && (output_count == tri_num);
+    assign done_out = (tri_num != 0) && (output_count == tri_num);
 
     logic [3:0] s_count;
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
             send_state <= IDLE_S;
             master_read <= 0;
-            fetch_busy <= 0;
             s_count <= 0;
             tri_num = 0;
             total_count <= 0;
@@ -50,8 +51,7 @@ module rasterizer_vertex_fetch (
             case(send_state)
                 IDLE_S: begin
                     $display("triangles: [%d] addr: [%d]",tri_num, addr);
-                    if (total_count < tri_num && !stall) begin
-                        fetch_busy <= 1;
+                    if (total_count < tri_num && !stall_in) begin
                         master_address <= addr;
                         master_read <= 1;
                         addr <= addr + 4;
@@ -60,7 +60,6 @@ module rasterizer_vertex_fetch (
                         send_state <= SEND;
                     end
                     if (tri_num == 0 && fetch_enable) begin
-                        fetch_busy <= 1;
                         master_address <= addr_in;
                         master_read <= 1;
                         addr <= addr + 4;
@@ -81,7 +80,6 @@ module rasterizer_vertex_fetch (
                     end else begin
                         if (!master_waitrequest) begin
                             master_read <= 0;
-                            // fetch_busy <= 0;
                             s_count <= 0;
                             send_state <= IDLE_S;
                         end else begin
@@ -148,19 +146,3 @@ module rasterizer_vertex_fetch (
         end
     end
 endmodule
-
-// module matrix_mul (
-//     input clock,
-//     input reset,
-
-//     output fetch_enable,
-//     output address,
-//     input fetch_valid,
-//     input fetch_busy,
-//     input [31:0] vetex_data[14:0],
-
-
-//     output output_valid,
-//     input stall,
-//     input [31:0] vetex_data[14:0]
-//     )

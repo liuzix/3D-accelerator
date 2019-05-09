@@ -32,8 +32,9 @@ logic almost_full;
 logic almost_empty;
 logic full;
 logic empty;
+logic half_full;
 
-fifo #(.DBITS(115))fifo(
+fifo #(.DBITS(115), .SIZE(6))fifo(
     .din(data_in),
     .dout(data_out),
     .wr(wrreq),
@@ -42,26 +43,25 @@ fifo #(.DBITS(115))fifo(
     .clk(clock),
     .full(full),
     .empty(empty),
+    .half_full(half_full),
     .almost_full(almost_full),
     .almost_empty(almost_empty)
 );
 
+assign stall_out = half_full;
 
 always_ff @(posedge clock or negedge reset) begin
     if (!reset) 
         stall_out <= 1;
-    else
-    if (!full) begin
-        wrreq <= 1;
-        stall_out <= 0;
-        data_in[25:0] <= addr_in;
-        data_in[49:26] <= color_in;
-        data_in[81:50] <= old_depth_out;
-        data_in[113:82] <= in_depth_out;
-        data_in[114] <= done_in;
-    end else begin
-        wrreq <= 0;
-        stall_out <= 1;
+    else begin
+        if (!full) begin
+            wrreq <= 1;
+            data_in[25:0] <= addr_in;
+            data_in[49:26] <= color_in;
+            data_in[81:50] <= old_depth_out;
+            data_in[113:82] <= in_depth_out;
+            data_in[114] <= done_in;
+        end 
     end
 end
 

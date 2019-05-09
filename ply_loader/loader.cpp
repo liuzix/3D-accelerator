@@ -122,6 +122,7 @@ int main() {
 			file_out << color_out[i][0 + 3*j];
 			file_out << color_out[i][1 + 3*j];
 			file_out << color_out[i][2 + 3*j];
+            file_out << '\0';
 		}
 
 		file_out.write((char*)&data_out[i][9], sizeof(fixed_point_t));
@@ -134,17 +135,19 @@ int main() {
 
 	std::ifstream file_in("data.binary", std::ios_base::in | std::ios_base::binary);
 
-	fixed_point_t buffer[3];
-	file_in.read((char*)buffer, 3 * sizeof(fixed_point_t));
+	fixed_point_t buffer[9];
+	file_in.read((char*)buffer, 9 * sizeof(fixed_point_t));
 
-	for (int i = 0; i < 3; i++) {
+	for (int i = 3; i < 6; i++)
 		std::cout << std::bitset<32>(data_out[0][i]) << " ";
-	}
+	for (int i = 3; i < 6; i++)
+        std::cout << std::bitset<8>(color_out[0][i]);
 
 	std::cout << std::endl;
-	for (int i = 0; i < 3; i++) {
+    std::cout << "|||||SHOULD BE THE SAME|||||" << std::endl;
+	for (int i = 5; i < 9; i++)
 		std::cout << std::bitset<32>(buffer[i]) << " ";
-	}
+    
 
 	file_in.close();
 

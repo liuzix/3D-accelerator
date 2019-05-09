@@ -3,10 +3,13 @@ module rasterizer (
     input reset,
     input [31:0] x1,
     input [31:0] y1,
+    input [31:0] z1,
     input [31:0] x2,
     input [31:0] y2,
+    input [31:0] z2,
     input [31:0] x3,
     input [31:0] y3,
+    input [31:0] z3,
     input [23:0] color1, //RGB for v1 = (x1, y1)
     input [23:0] color2, //RGB for v2 = (x2, y2)
     input [23:0] color3, //RGB for v3 = (x3, y3)
@@ -16,6 +19,7 @@ module rasterizer (
     input stall_in,
     output [25:0] addr_out,
     output [23:0] color_out,
+    output [31:0] depth_out,
     output fetch_enable,
     output output_valid,
     output stall_out,
@@ -35,7 +39,7 @@ module rasterizer (
     logic [31:0] maxY;
     
     //fixed point multiplication
-    function logic [32:0] fp_mult(
+    function logic [32:0] fp_m(
         input logic [32:0] a,
         input logic [32:0] b
     );
@@ -45,11 +49,11 @@ module rasterizer (
         tmp_a[32:0] <= a;
         tmp_b[63:33] <= 0;
         tmp_b[32:0] <= b;
-        fp_mult <= (tmp_a * tmp_b) >> 16;
+        fp_m <= (tmp_a * tmp_b) >> 16;
     endfunction 
 
     //fixed point division
-    function logic [32:0] fp_divide(
+    function logic [32:0] fp_d(
         input logic [32:0] a,
         input logic [32:0] b
     );
@@ -59,7 +63,7 @@ module rasterizer (
         tmp_a[32:0] <= a;
         tmp_b[63:33] <= 0;
         tmp_b[32:0] <= b;
-        fp_divide <= (tmp_a * (1 << 16)) / tmp_b;
+        fp_d <= (tmp_a * (1 << 16)) / tmp_b;
     endfunction 
 
     always_comb begin
@@ -106,19 +110,22 @@ module rasterizer (
     logic [31:0] w2_tmp;
     logic [31:0] denom;
     logic [23:0] cur_color;
+    logic [31:0] cur_depth;
 
     logic [25:0] tmp_addr_out;
     logic [23:0] tmp_color_out;
 
     //color interpolation using Barycentric Coordinates
     always_ff @(posedge clock or negedge reset) begin
-        w1_tmp1 <= (y2 - y3) * (cur_x - x3) + (x3 - x2) * (cur_y - v3); 
-        w2_tmp1 <= (y3 - y1) * (cur_x - x3) + (x1 - x3) * (cur_y - y3);
-        denom <= (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
-        w1 = w1_tmp1 / denom;
-        w2 = w1_tmp2 / denom;
+        w1_tmp1 <= fp_m((y2-y3),(cur_x-x3)) + fp_m((x3-x2),(cur_y-v3));
+        w2_tmp1 <= fp_m((y3-y1),(cur_x-x3)) + fp_m((x1-x3),(cur_y-y3));
+        denom <= fp_m((y2-y3),(x1-x3)) + fp_m((x3-x2),(y1-y3));
+        
+        w1 = fp_d(w1_tmp1, denom);
+        w2 = fp_d(w1_tmp2, denom);
         w3 = 1 - w1 - w2;
-        cur_color = w1 * color1 + w2 * color2 + w3 * color3;
+        cur_color = fp_m(w1, color1) + fp_m(w2, color2) + fp+m(w3, color3);
+        cur_depth = fp_m(w1, z1) + fp_m(w2, z2) + fp_m(w3, z3);
     end 
 
 
@@ -165,10 +172,12 @@ module rasterizer (
             if (!output_valid) begin
                 addr_out <= tmp_addr_out;
                 color_out <= tmp_color_out;
+                depth_out <= cur_depth;
             end else begin
                 if (!stall_in) begin
                     addr_out <= tmp_addr_out;
                     color_out <= tmp_color_out;
+                    depth_out <= cur_depth;
                 end
             end
         end

@@ -1,7 +1,8 @@
 module rasterizer_fetch_logic (
     input clock,
     input reset,
-     
+    
+    /* bus interface */
     output [25:0] master_address,
     output master_read,
     output master_write,
@@ -10,18 +11,26 @@ module rasterizer_fetch_logic (
     input master_readdatavalid,
     output [31:0]master_writedata,
     input master_waitrequest,
-    input stall_pipeline,
+
+    /* pipeline control */
+    input stall_in,
+    output stall_out,
+    input done_in,
+    output done_out,
+    
+
+    /* data input */
     input input_valid,
     input [25:0] addr_in,
     input [23:0] color_in,
     input [31:0] depth_in,
     
+    /* data output */
     output output_valid,
     output [25:0] addr_out,
     output [31:0] old_depth_out,
     output [31:0] new_depth_out,
     output [23:0] color_out,
-    output wait_request
 );
 
 logic [95:0] data_in;
@@ -37,6 +46,7 @@ reg [95:0] data_out_reg;
 assign addr_out = data_out_reg[25:0];
 assign color_out = data_out_reg[49:26];
 assign new_depth_out = data_out_reg[81:50];
+assign done_out = data_out_reg[82];
 
 assign rdreq = master_readdatavalid;
 
@@ -65,7 +75,7 @@ always_ff @(posedge clock or negedge reset) begin
         wrreq <= 0;
         output_valid <= 0;
         state <= S_IDLE;
-        wait_request <= 1;
+        stall_out <= 1;
     end else begin
         enqueue = 0;
         case (state)
@@ -80,7 +90,7 @@ always_ff @(posedge clock or negedge reset) begin
             end
 
             S_HOLD: begin
-                if (!master_waitrequest || !stall_pipeline) begin
+                if (!master_waitrequest || !stall_in) begin
                     if (!full && input_valid) begin
                         next_state = S_HOLD;
                         enqueue = 1;
@@ -93,7 +103,7 @@ always_ff @(posedge clock or negedge reset) begin
         if (full)
             $display("fifo is full");
         // deal with input port
-        wait_request <= !enqueue;
+        stall_out <= !enqueue;
         if (enqueue)
         begin
             // enqueue the fetch request
@@ -102,7 +112,8 @@ always_ff @(posedge clock or negedge reset) begin
             data_in[25:0] <= addr_in;
             data_in[49:26] <= color_in;
             data_in[81:50] <= depth_in;
-            data_in[95:82] <= 0;
+            data_in[82] <= done_in;
+            data_in[95:83] <= 0;
 
             master_address <= addr_in + 4;
             master_read <= 1;

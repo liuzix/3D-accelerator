@@ -4,12 +4,14 @@ module vertex_calc (input clock,
                     input reset,
                     input logic [511:0] mat,
                     input logic [31:0] v_in [14:0],
-                    input logic ready,
+                    input logic done_in,
+                    input logic stall_in,
                     output logic [31:0] x_out[3:0],
                     output logic [31:0] y_out[3:0],
                     output logic [31:0] z_out[3:0],
                     output logic [31:0] w_out[3:0],
-                    output logic done);
+                    output logic done_out,
+                    output logic stall_out);
 
     //v_in 0-14 = x1 y1 z1 rgb1 x2 y2 z2 rgb2 x3 y3 z3 rgb3 nx ny nz
 
@@ -18,11 +20,15 @@ module vertex_calc (input clock,
     logic [63:0] tmp_z[3:0];
     logic [63:0] tmp_w[3:0];
 
-    always_ff @(posedge clock or negedge reset) begin
-        if (reset)
-            done <= 0;
+    assign stall_out = stall_in;
 
-        if (ready) begin
+    always_ff @(posedge clock or negedge reset) begin
+        if (reset) begin
+            done_out <= 0;
+            stall_out <= 0;
+        end
+
+        if (done_in & !stall_in) begin
             tmp_x[0] <= mat[511:480] * v_in[0] + mat[479:448] * v_in[1] + mat[447:416] * v_in[2] + mat[415:384]; //w = 1
             tmp_y[0] <= mat[383:352] * v_in[0] + mat[351:320] * v_in[1] + mat[319:288] * v_in[2] + mat[287:256];
             tmp_z[0] <= mat[255:224] * v_in[0] + mat[223:192] * v_in[1] + mat[191:160] * v_in[2] + mat[159:128];
@@ -38,8 +44,7 @@ module vertex_calc (input clock,
             tmp_z[0] <= mat[255:224] * v_in[8] + mat[223:192] * v_in[9] + mat[191:160] * v_in[10] + mat[159:128];
             tmp_w[0] <= mat[127:96] * v_in[8] + mat[95:64] * v_in[9] + mat[63:32] * v_in[10] + mat[31:0];
       
-
-            done <= 1;
+            done_out <= 1;
         end
     end
 

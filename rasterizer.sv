@@ -11,11 +11,14 @@ module rasterizer (
     input [23:0] color2, //RGB for v2 = (x2, y2)
     input [23:0] color3, //RGB for v3 = (x3, y3)
     input [25:0] addr_in, //frame buffer base 
-    input ready,
+    input done_in,
+    input stall_in,
     output [25:0] addr_out,
     output [23:0] color_out,
     output fetch_enable,
-    output output_valid
+    output output_valid,
+    output stall_out,
+    output done_out
 );
 
     logic [31:0] cur_x;
@@ -121,31 +124,38 @@ module rasterizer (
             cur_y <= minY;
             fetch_enable <= 0;
             output_valid <= 0;
+            done_out <= 0;
+            stall_out <= 0;
         end 
         
-        e12 <= ((cur_x - x1) * (y2 - y1) - (cur_y - y1) * (x2 - x1)) >= 0;
-        e23 <= ((cur_x - x2) * (y3 - y2) - (cur_y - y2) * (x3 - x2)) >= 0; 
-        e31 <= ((cur_x - x3) * (y1 - y3) - (cur_y - y3) * (x1 - x3)) >= 0;
+        if (done_in & !stall_in) begin
+            stall_out <= 1;
+            e12 <= ((cur_x - x1) * (y2 - y1) - (cur_y - y1) * (x2 - x1)) >= 0;
+            e23 <= ((cur_x - x2) * (y3 - y2) - (cur_y - y2) * (x3 - x2)) >= 0; 
+            e31 <= ((cur_x - x3) * (y1 - y3) - (cur_y - y3) * (x1 - x3)) >= 0;
 
-        is_inside = e12 & e23 & e31;
+            is_inside = e12 & e23 & e31;
     
-        if (is_inside) begin
-            output_valid <= 1;
-            addr_out <= addr_in + ((cur_y - 1) * 640 + cur_x);
-            color_out <= cur_color;
-        end else begin
-            output_valid <= 0;
-        end
+            if (is_inside) begin
+                output_valid <= 1;
+                addr_out <= addr_in + ((cur_y - 1) * 640 + cur_x);
+                color_out <= cur_color;
+            end else begin
+                output_valid <= 0;
+            end
 
-        cur_x = cur_x + 1;
+            cur_x = cur_x + 1;
     
-        if (cur_x > maxX) begin
-            cur_x <= minX;
-            cur_y <= cur_y + 1;
-        end
+            if (cur_x > maxX) begin
+                cur_x <= minX;
+                cur_y <= cur_y + 1;
+            end
 
-        if (cur_y > maxY) begin
-            fetch_enable <= 1;
+            if (cur_y > maxY) begin
+                fetch_enable <= 1;
+                done_out <= 1;
+                stall_out <= 0;
+            end
         end
     end
 

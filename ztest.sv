@@ -7,9 +7,11 @@ module ztest (
     input [31:0] new_depth_out,
     input [31:0] color_in, //color out from rasterizer_fetch_logic
     input master_waitrequest,
+    input done_in,
     output [31:0] color_out,
     output [25:0] addr_out,
-    output stall_pipeline
+    output stall_out,
+    output done_out
 );
 
 logic [113:0] data_in;
@@ -50,27 +52,29 @@ end
 
 always_ff @(posedge clock or negedge reset) begin
     if (!reset) begin
-        done <= 0;
-        stall_pipeline <= 0;
+        done_out <= 0;
+        stall_out <= 0;
     end
     
     if (master_waitrequest & full)
-        stall_pipeline <= 1;
+        stall_out <= 1;
     else
-        stall_pipeline <= 0;
+        stall_out <= 0;
     
-    if (!empty) begin
-        rdreq <= 1;
-        addr_in <= data_out[25:0];
-        color_in <= data_out[49:26];
-        old_depth_out <= data[81:50];
-        in_depth_out <= data[113:82];
-    end
+    if (done_in) begin
+        if (done_in & !empty) begin
+            rdreq <= 1;
+            addr_in <= data_out[25:0];
+            color_in <= data_out[49:26];
+            old_depth_out <= data[81:50];
+            in_depth_out <= data[113:82];
+        end
     
-    if (new_depth_out < out_depth_out) begin
-        addr_out <= addr_in;
-        color_out <= color_in;
-        done <= 1
+        if (new_depth_out < out_depth_out) begin
+            addr_out <= addr_in;
+            color_out <= color_in;
+            done_out <= 1
+        end
     end
 end
 

@@ -26,6 +26,18 @@ module rasterizer_unit (
     input master_waitrequest_2,
 );
 
+
+wire stall1;
+wire stall2;
+wire stall3;
+wire stall4;
+
+wire done1;
+wire done2;
+wire done3;
+wire done4;
+wire done5;
+
 //output of config_reg
 logic [32:0] readdata;
 logic [511:0] MV;
@@ -35,20 +47,20 @@ logic [25:0] frame_buffer_base;
 logic [25:0] vertex_buffer_base;
 logic do_render;
 
-logic stall;
 
 //output of vertex fetch
 logic output_valid;
 logic fetch_busy;
 logic fetch_finish;
 logic [31:0] vertex_out[14:0];
+logic input_data_valid;
 
-logic done;
 //output of vertex cal
 logic [31:0] x_out[3:0];
 logic [31:0] y_out[3:0];
 logic [31:0] z_out[3:0];
 logic [31:0] w_out[3:0];
+logic out_data_valid;
 
 //output of rasterizer
 logic [25:0] addr_out;
@@ -109,12 +121,17 @@ vertex_calc v_calc (
     .reset(reset),
     .mat(MVP),
     .vin(vertex_out),
+    .input_data_valid(input_data_valid)
     .ready(fetch_finish),
     .x_out(x_out),
     .y_out(y_out),
     .z_out(z_out),
     .w_out(w_out),
-    .done(done));
+    .done_in(done1),
+    .done_out(done2),
+    .stall_in(stall2), 
+    .stall_out(stall1),
+    .out_data_valid(out_data_valid));
 
 
 rasterizer raster (
@@ -134,6 +151,11 @@ rasterizer raster (
     .addr_out(addr_out),
     .fetch_enable(fetch_enable),
     .color_out(color_out),
+    .in_data_valid(out_data_valid),
+    .done_in(done2),
+    .done_out(done3),
+    .stall_out(stall2),
+    .stall_in(stall3),
     .output_valid(rasterizer_output_valid));
 
 rasterizer_fetch_logic fetch_logic (
@@ -147,7 +169,6 @@ rasterizer_fetch_logic fetch_logic (
     .master_readdatavalid(master_readdatavalid_2),
     .master_writedata(master_writedata_2),
     .master_waitrequest(master_waitrequest_2),
-    .stall_pipeline(stall),
     .input_valid(rasterizer_output_valid), //from rasterizer
     .addr_in(addr_out), //from rasterizer
     .color_in(color_out), //from rasterizer
@@ -157,7 +178,11 @@ rasterizer_fetch_logic fetch_logic (
     .old_depth_out(old_depth_out),
     .new_depth_out(new_depth_out),
     .color_out(fetch_color_out),
-    .wait_request(wait_request));
+    .wait_request(wait_request),
+    .done_in(done3), //from rasterizer
+    .done_out(done4),
+    .stall_in(stall4),
+    .stall_out(stall3));
 
 ztest z_test (
     .clock(clock),
@@ -168,9 +193,9 @@ ztest z_test (
     .new_depth_in(new_depth_in),
     .color_in(fetch_color_out),
     .master_waitrequest(master_waitrequest),
-    .color_out(final_color_out),
-    .addr_out(final_addr_out),
-    .stall_pipeline(stall));
+    .done_in(done4),
+    .done_out(done5),
+    .stall_out(stall4));
 
 //need one to write to SDRAM controller
 

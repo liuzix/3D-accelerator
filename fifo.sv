@@ -34,7 +34,7 @@ module fifo (
     //counter keeps track of number of elements in buffer
     assign empty = (counter == 0); 
     assign full = (counter == 2**SIZE);
-    assign half_full = (counter == (SIZE >> 1));
+    assign half_full = (counter == ((2**SIZE) >> 1));
 
     assign dout = buffer[rd_ptr];
 

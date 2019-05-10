@@ -63,10 +63,9 @@ int main(int argc, char** argv) {
     Verilated::commandArgs(argc, argv);  // Remember args
 		
     VGADisplay*display=new VGADisplay();
-    display.framebuffer=0x0；
     // simulate a 64M sdram block
     SDRAMController<uint32_t> sdramController(64 * 1024 * 1024);
-
+    display.framebuffer=sdramController.memory;//?
 	//copy bitmap 
 	//loadFrameBuffer(sdramController.memory.data(), "puppy.jpg");
 
@@ -127,16 +126,16 @@ int main(int argc, char** argv) {
     //begin rasterization
     for (;;) {
         
-		top->clk = 1;
+		top->clock = 1;
 		display->poll();
-        sdramController.tick(0, vga->master_address, vga->master_read,
-                             vga->master_write, &vga->bus_data,
-                             vga->master_readdatavalid, &vga->master_writedata,
-                             vga->master_waitrequest);
+        sdramController.tick(0, top->master_address, top->master_read,
+                             top->master_write, &top->bus_data,
+                             top->master_readdatavalid, &top->master_writedata,
+                             top->master_waitrequest);
 	    top->eval();
         //vgasim.tick(vga->VGA_CLK, vga->VGA_R, vga->VGA_G, vga->VGA_B, vga->VGA_HS, vga->VGA_VS);
 
-		top->clk = 0;
+		top->clock = 0;
 		top->eval();
 
        // vgasim.tick(vga->VGA_CLK, vga->VGA_R, vga->VGA_G, vga->VGA_B, vga->VGA_HS, vga->VGA_VS);

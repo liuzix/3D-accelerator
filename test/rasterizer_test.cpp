@@ -63,7 +63,7 @@ int main(int argc, char** argv) {
     Verilated::commandArgs(argc, argv);  // Remember args
 		
     VGADisplay*display=new VGADisplay();
-    display.framebuffer=0x000000；
+    display.framebuffer=0x0；
     // simulate a 64M sdram block
     SDRAMController<uint32_t> sdramController(64 * 1024 * 1024);
 
@@ -84,44 +84,66 @@ int main(int argc, char** argv) {
     uint32_t framebuffer_base = 0;
     uint32_t vertex_buffer_base = 640*480;
     //configuration
-    uint16_t config_reg_addr=0;
-    for(int i=0;i<3+512+512+97;i++){
-        case(i)
+    
+    for(int i=0;i<3;i++){
+        switch(i)
             0:top->writedata=framebuffer_base;break;
             1:top->writedata=vertex_buffer_base;break;      
             2:top->writedata=0;break;
-            default:
-              if(i)
         top->address=4*i;
-        top->write=1;
         top->write=1;
         top->clock=1;
         top->eval();
         top->clock=0;
         top->eval();
     }
+    uint16_t config_MVreg_addr=0x100;
+    uint16_t config_MVPreg_addr=0x200;
+    uint16_t config_lightingreg_addr=0x300;
+    for(int i=0;i<60+60+8;i++){
+    //MV address 256->316  60
+      if(i>0&&i<60){
+         top->writedata=1;
+         top->address=config_MVreg_addr+0x8*i;
+       }
+    //MVP address 512->572 60
+      else if(i>=60&&i<120){
+          top->writedata=2;
+          top->address=config_MVPreg_addr+0x8*(i-60);
+       }
+      else{
+          //lighting address 768->176  8
+          top->writedata=3;
+          top->address=config_lightingreg_addr+0x8*(i-120);
+       }
+      top->write=1;
+      top->clock=1;
+      top->eval();
+      top->clock=0;
+      top->eval();
     
-
+    
+    }
     //begin rasterization
     for (;;) {
         
-		vga->clk = 1;
-		vgasim.poll();
+		top->clk = 1;
+		display->poll();
         sdramController.tick(0, vga->master_address, vga->master_read,
                              vga->master_write, &vga->bus_data,
                              vga->master_readdatavalid, &vga->master_writedata,
                              vga->master_waitrequest);
-	    vga->eval();
-        vgasim.tick(vga->VGA_CLK, vga->VGA_R, vga->VGA_G, vga->VGA_B, vga->VGA_HS, vga->VGA_VS);
+	    top->eval();
+        //vgasim.tick(vga->VGA_CLK, vga->VGA_R, vga->VGA_G, vga->VGA_B, vga->VGA_HS, vga->VGA_VS);
 
-		vga->clk = 0;
-		vga->eval();
+		top->clk = 0;
+		top->eval();
 
-        vgasim.tick(vga->VGA_CLK, vga->VGA_R, vga->VGA_G, vga->VGA_B, vga->VGA_HS, vga->VGA_VS);
+       // vgasim.tick(vga->VGA_CLK, vga->VGA_R, vga->VGA_G, vga->VGA_B, vga->VGA_HS, vga->VGA_VS);
         display->refresh();
         main_time++;
     }
 
-    vga->final();
-    delete vga;
+    //vga->final();
+    delete top;
 }

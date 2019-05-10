@@ -24,8 +24,8 @@ module ztest (
     input master_waitrequest
 );
 
-logic [113:0] data_in;
-logic [113:0] data_out;
+logic [114:0] data_in;
+logic [114:0] data_out;
 logic wrreq;
 logic rdreq;
 logic almost_full;

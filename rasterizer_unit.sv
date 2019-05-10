@@ -123,7 +123,7 @@ rasterizer_vertex_fetch vertex_fetch (
     .stall_in(stall1),
     .done_out(done1),
     /* data for one triangle is ready */
-    .output_valid(output_valid),
+    .output_valid(input_data_valid),
     /* triangle data 15-32bits x1,y1,z1,rgb, ..., nx, ny, nz */
     .vertex_out(vertex_out));
 

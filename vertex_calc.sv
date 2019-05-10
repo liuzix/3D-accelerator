@@ -17,27 +17,26 @@ module vertex_calc (input clock,
 
     //v_in 0-14 = x1 y1 z1 rgb1 x2 y2 z2 rgb2 x3 y3 z3 rgb3 nx ny nz
 
-    logic [63:0] tmp_x[3:0];
-    logic [63:0] tmp_y[3:0];
-    logic [63:0] tmp_z[3:0];
-    logic [63:0] tmp_w[3:0];
+    logic [63:0] tmp_x[2:0];
+    logic [63:0] tmp_y[2:0];
+    logic [63:0] tmp_z[2:0];
+    logic [63:0] tmp_w[2:0];
 
-    always_comb begin 
-        tmp_x[0] <= mat[511:480] * v_in[0] + mat[479:448] * v_in[1] + mat[447:416] * v_in[2] + mat[415:384]; //w = 1
-        tmp_y[0] <= mat[383:352] * v_in[0] + mat[351:320] * v_in[1] + mat[319:288] * v_in[2] + mat[287:256];
-        tmp_z[0] <= mat[255:224] * v_in[0] + mat[223:192] * v_in[1] + mat[191:160] * v_in[2] + mat[159:128];
-        tmp_w[0] <= mat[127:96] * v_in[0] + mat[95:64] * v_in[1] + mat[63:32] * v_in[2] + mat[31:0];
+    assign  tmp_x[0] = mat[511:480] * v_in[0] + mat[479:448] * v_in[1] + mat[447:416] * v_in[2] + mat[415:384]; //w = 1
+    assign  tmp_y[0] = mat[383:352] * v_in[0] + mat[351:320] * v_in[1] + mat[319:288] * v_in[2] + mat[287:256];
+    assign  tmp_z[0] = mat[255:224] * v_in[0] + mat[223:192] * v_in[1] + mat[191:160] * v_in[2] + mat[159:128];
+    assign  tmp_w[0] = mat[127:96] * v_in[0] + mat[95:64] * v_in[1] + mat[63:32] * v_in[2] + mat[31:0];
       
-        tmp_x[1] <= mat[511:480] * v_in[4] + mat[479:448] * v_in[5] + mat[447:416] * v_in[6] + mat[415:384]; //w = 1
-        tmp_y[1] <= mat[383:352] * v_in[4] + mat[351:320] * v_in[5] + mat[319:288] * v_in[6] + mat[287:256];
-        tmp_z[1] <= mat[255:224] * v_in[4] + mat[223:192] * v_in[5] + mat[191:160] * v_in[6] + mat[159:128];
-        tmp_w[1] <= mat[127:96] * v_in[4] + mat[95:64] * v_in[5] + mat[63:32] * v_in[6] + mat[31:0];
+    assign  tmp_x[1] = mat[511:480] * v_in[4] + mat[479:448] * v_in[5] + mat[447:416] * v_in[6] + mat[415:384]; //w = 1
+    assign  tmp_y[1] = mat[383:352] * v_in[4] + mat[351:320] * v_in[5] + mat[319:288] * v_in[6] + mat[287:256];
+    assign  tmp_z[1] = mat[255:224] * v_in[4] + mat[223:192] * v_in[5] + mat[191:160] * v_in[6] + mat[159:128];
+    assign  tmp_w[1] = mat[127:96] * v_in[4] + mat[95:64] * v_in[5] + mat[63:32] * v_in[6] + mat[31:0];
         
-        tmp_x[0] <= mat[511:480] * v_in[8] + mat[479:448] * v_in[9] + mat[447:416] * v_in[10] + mat[415:384]; //w = 1
-        tmp_y[0] <= mat[383:352] * v_in[8] + mat[351:320] * v_in[9] + mat[319:288] * v_in[10] + mat[287:256];
-        tmp_z[0] <= mat[255:224] * v_in[8] + mat[223:192] * v_in[9] + mat[191:160] * v_in[10] + mat[159:128];
-        tmp_w[0] <= mat[127:96] * v_in[8] + mat[95:64] * v_in[9] + mat[63:32] * v_in[10] + mat[31:0];
-    end
+    assign  tmp_x[2] = mat[511:480] * v_in[8] + mat[479:448] * v_in[9] + mat[447:416] * v_in[10] + mat[415:384]; //w = 1
+    assign  tmp_y[2] = mat[383:352] * v_in[8] + mat[351:320] * v_in[9] + mat[319:288] * v_in[10] + mat[287:256];
+    assign  tmp_z[2] = mat[255:224] * v_in[8] + mat[223:192] * v_in[9] + mat[191:160] * v_in[10] + mat[159:128];
+    assign  tmp_w[2] = mat[127:96] * v_in[8] + mat[95:64] * v_in[9] + mat[63:32] * v_in[10] + mat[31:0];
+    
 
 
     always_ff @(posedge clock or negedge reset) begin

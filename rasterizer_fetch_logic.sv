@@ -41,6 +41,7 @@ logic almost_full;
 logic almost_empty;
 logic full;
 logic empty;
+logic half_full;
 
 reg [95:0] data_out_reg;
 assign addr_out = data_out_reg[25:0];
@@ -59,6 +60,7 @@ fifo fifo(
     .clk(clock),
     .full(full),
     .empty(empty),
+    .half_full(half_full),
     .almost_full(almost_full),
     .almost_empty(almost_empty)
 );

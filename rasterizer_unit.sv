@@ -49,9 +49,9 @@ wire done5;
 
 //output of config_reg
 logic [32:0] readdata;
-logic [511:0] MV;
-logic [511:0] MVP;
-logic [96:0] lighting;
+logic [31:0] MV [15:0];
+logic [31:0] MVP [15:0];
+logic [31:0] lighting [2:0];
 logic [25:0] frame_buffer_base;
 logic [25:0] vertex_buffer_base;
 logic do_render;
@@ -103,7 +103,8 @@ config_reg c_reg (
     .lighting(lighting),
     .frame_buffer_base(frame_buffer_base),
     .vertex_buffer_base(vertex_buffer_base),
-    .do_render(do_render));
+    .start_render(do_render),
+    .done_in(done5));
 
 
 rasterizer_vertex_fetch vertex_fetch (
@@ -168,7 +169,6 @@ rasterizer raster (
     .addr_out(addr_out),
     .color_out(color_out),
     .depth_out(depth_in),
-    .fetch_enable(do_render),//?
     .output_valid(rasterizer_output_valid),
    
     .stall_out(stall2),

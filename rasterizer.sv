@@ -21,7 +21,6 @@ module rasterizer (
     output [25:0] addr_out,
     output [23:0] color_out,
     output [31:0] depth_out,
-    output fetch_enable,
     output output_valid,
     output stall_out,//
     output done_out//
@@ -40,30 +39,30 @@ module rasterizer (
     logic [31:0] maxY;
     
     //fixed point multiplication
-    function logic [32:0] fp_m(
-        input logic [32:0] a,
-        input logic [32:0] b
+    function logic [31:0] fp_m(
+        input logic [31:0] a,
+        input logic [31:0] b
     );
         logic [63:0] tmp_a;
         logic [63:0] tmp_b;
-        tmp_a[63:33] <= 0;
-        tmp_a[32:0] <= a;
-        tmp_b[63:33] <= 0;
-        tmp_b[32:0] <= b;
+        tmp_a[63:32] <= 0;
+        tmp_a[31:0] <= a;
+        tmp_b[63:32] <= 0;
+        tmp_b[31:0] <= b;
         fp_m <= (tmp_a * tmp_b) >> 16;
     endfunction 
 
     //fixed point division
-    function logic [32:0] fp_d(
-        input logic [32:0] a,
-        input logic [32:0] b
+    function logic [31:0] fp_d(
+        input logic [31:0] a,
+        input logic [31:0] b
     );
         logic [63:0] tmp_a;
         logic [63:0] tmp_b;
-        tmp_a[63:33] <= 0;
-        tmp_a[32:0] <= a;
-        tmp_b[63:33] <= 0;
-        tmp_b[32:0] <= b;
+        tmp_a[63:32] <= 0;
+        tmp_a[31:0] <= a;
+        tmp_b[63:32] <= 0;
+        tmp_b[31:0] <= b;
         fp_d <= (tmp_a * (1 << 16)) / tmp_b;
     endfunction 
 
@@ -121,8 +120,8 @@ module rasterizer (
         w1_tmp <= (y2 - y3) * (cur_x - x3) + (x3 - x2) * (cur_y - y3); 
         w2_tmp <= (y3 - y1) * (cur_x - x3) + (x1 - x3) * (cur_y - y3);
         denom <= (y2 - y3) * (x1 - x3) + (x3 - x2) * (y1 - y3);
-        w1 = w1_tmp / denom;
-        w2 = w1_tmp / denom;
+        w1 = fp_d(w1_tmp, denom);
+        w2 = fp_d(w1_tmp, denom);
         w3 = 1 - w1 - w2;
         cur_color = fp_m(w1, color1) + fp_m(w2, color2) + fp_m(w3, color3);
         cur_depth = fp_m(w1, z1) + fp_m(w2, z2) + fp_m(w3, z3);
@@ -131,9 +130,8 @@ module rasterizer (
 
     always_ff @(posedge clock or negedge reset) begin
         if (reset) begin 
-            cur_x <= minX;
-            cur_y <= minY;
-            fetch_enable <= 0;
+            cur_x = minX;
+            cur_y = minY;
             output_valid <= 0;
             done_out <= 0;
             stall_out = 0;
@@ -159,12 +157,11 @@ module rasterizer (
             cur_x = cur_x + 1;
     
             if (cur_x > maxX) begin
-                cur_x <= minX;
-                cur_y <= cur_y + 1;
+                cur_x = minX;
+                cur_y = cur_y + 1;
             end
 
             if (cur_y > maxY) begin
-                fetch_enable <= 1;
                 done_out <= done_in;
                 stall_out = 0;
             end

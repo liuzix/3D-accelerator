@@ -24,11 +24,11 @@ module vertex_calc (input clock,
     );
         logic [63:0] tmp_a;
         logic [63:0] tmp_b;
-        tmp_a[63:32] <= 0;
-        tmp_a[31:0] <= a;
-        tmp_b[63:32] <= 0;
-        tmp_b[31:0] <= b;
-        fp_m <= (tmp_a * tmp_b) >> 16;
+        tmp_a[63:32] = 0;
+        tmp_a[31:0] = a;
+        tmp_b[63:32] = 0;
+        tmp_b[31:0] = b;
+        fp_m = (tmp_a * tmp_b) >> 16;
     endfunction 
 
     logic [31:0] w;

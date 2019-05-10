@@ -17,7 +17,7 @@ module config_reg(
 );
 
 always_ff @(posedge clk or negedge reset)
-    if (reset) begin
+    if (!reset) begin
         MV <= 0;
         MVP <= 0;
         framebuffer_base <= 0;
@@ -27,7 +27,7 @@ always_ff @(posedge clk or negedge reset)
         case (address)
             h0: frame_buffer_base <= writedata;
             h4: vertex_buffer_base <= writedata;
-            h8: do_render <= writedata;
+            h8: do_render <= writedata;//?
             default:
                 if (h100 <= address && address <= h13C)
                     MV[(address - h100) * 8 + 31: (address - h100) * 8] <= writedata;

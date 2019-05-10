@@ -5,12 +5,14 @@
 #include "sdram_controller.h"
 #include "vgasim.h"
 #include "Vvga_unit.h"
+#include "Vrasterizer_unit.h"
 #include "SDL2/SDL.h"
 
 using namespace std;
-using Vtop = Vvga_unit;
-Vtop* top;  // Instantiation of module
-
+//using Vvga_module = Vvga_unit;
+//Vvga_module* vga;  // Instantiation of module
+using Vras=Vrasterizer_unit;
+Vras*top;
 void loadFrameBuffer(void *buf, const string &file);
 
 class VGADisplay {
@@ -18,7 +20,12 @@ public:
     VGADisplay(void *_framebuffer) {
         framebuffer = _framebuffer;
     }
-    
+    void poll()
+    {
+    SDL_PollEvent(&event);
+    if (event.type == SDL_QUIT)
+        exit(0);
+     }
     void refresh() {
         uint8_t *ptr = (uint8_t *)framebuffer;
 
@@ -55,41 +62,66 @@ double sc_time_stamp() {  // Called by $time in Verilog
 int main(int argc, char** argv) {
     Verilated::commandArgs(argc, argv);  // Remember args
 		
-
+    VGADisplay*display=new VGADisplay();
+    display.framebuffer=0x000000；
     // simulate a 64M sdram block
     SDRAMController<uint32_t> sdramController(64 * 1024 * 1024);
 
 	//copy bitmap 
-	loadFrameBuffer(sdramController.memory.data(), "puppy.jpg");
+	//loadFrameBuffer(sdramController.memory.data(), "puppy.jpg");
 
-    top = new Vtop;  // Create instance
-	VGASimulator vgasim; 	
+     // Create instance
+    top=new Vras;
+	//rasterizer; 	
 
-    top->clk = 0;
+    
+    top->clock = 0;
     top->reset = 1;  // Set some inputs
     top->eval();
     top->reset = 0;
     top->eval();
     top->reset = 1;
+    uint32_t framebuffer_base = 0;
+    uint32_t vertex_buffer_base = 640*480;
+    //configuration
+    uint16_t config_reg_addr=0;
+    for(int i=0;i<3+512+512+97;i++){
+        case(i)
+            0:top->writedata=framebuffer_base;break;
+            1:top->writedata=vertex_buffer_base;break;      
+            2:top->writedata=0;break;
+            default:
+              if(i)
+        top->address=4*i;
+        top->write=1;
+        top->write=1;
+        top->clock=1;
+        top->eval();
+        top->clock=0;
+        top->eval();
+    }
+    
 
-    uint32_t addr = 0;
+    //begin rasterization
     for (;;) {
-		top->clk = 1;
+        
+		vga->clk = 1;
 		vgasim.poll();
-        sdramController.tick(0, top->master_address, top->master_read,
-                             top->master_write, &top->bus_data,
-                             top->master_readdatavalid, &top->master_writedata,
-                             top->master_waitrequest);
-		top->eval();
-        vgasim.tick(top->VGA_CLK, top->VGA_R, top->VGA_G, top->VGA_B, top->VGA_HS, top->VGA_VS);
+        sdramController.tick(0, vga->master_address, vga->master_read,
+                             vga->master_write, &vga->bus_data,
+                             vga->master_readdatavalid, &vga->master_writedata,
+                             vga->master_waitrequest);
+	    vga->eval();
+        vgasim.tick(vga->VGA_CLK, vga->VGA_R, vga->VGA_G, vga->VGA_B, vga->VGA_HS, vga->VGA_VS);
 
-		top->clk = 0;
-		top->eval();
+		vga->clk = 0;
+		vga->eval();
 
-        vgasim.tick(top->VGA_CLK, top->VGA_R, top->VGA_G, top->VGA_B, top->VGA_HS, top->VGA_VS);
+        vgasim.tick(vga->VGA_CLK, vga->VGA_R, vga->VGA_G, vga->VGA_B, vga->VGA_HS, vga->VGA_VS);
+        display->refresh();
         main_time++;
     }
 
-    top->final();
-    delete top;
+    vga->final();
+    delete vga;
 }

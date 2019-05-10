@@ -1,7 +1,7 @@
 module rasterizer_unit (
     input clock,
     input reset,
-
+    // to config_reg
     input [32:0] writedata,
     input logic write,
     input logic read

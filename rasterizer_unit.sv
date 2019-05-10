@@ -6,7 +6,8 @@ module rasterizer_unit (
     input logic write,
     input logic read,
     input logic [15:0] address,
-
+    output logic [32:0] readdata,
+    
     output [25:0] master_address,
     output master_read,
     output master_write,
@@ -48,7 +49,7 @@ wire done4;
 wire done5;
 
 //output of config_reg
-logic [32:0] readdata;
+
 logic [31:0] MV [15:0];
 logic [31:0] MVP [15:0];
 logic [31:0] lighting [2:0];

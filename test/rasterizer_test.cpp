@@ -112,6 +112,7 @@ int main(int argc, char **argv) {
     std::ifstream file("../ply_loader/data.binary",
                        std::ios::in | std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
+        cout<<"file open failed";
         std::abort();
     }
     size_t size = file.tellg();
@@ -120,7 +121,7 @@ int main(int argc, char **argv) {
     file.read(memblock, size);
     file.close();
 
-    cout << "the entire binary file content is in sdram";
+    cout << "the entire binary file content is in sdram\n";
 
     VGADisplay *display = new VGADisplay(sdramController.memory.data());
     // Create instance
@@ -162,11 +163,12 @@ int main(int argc, char **argv) {
         // MV address 256->316  60
         if (i > 0 && i < 16) {
             top->writedata = 1;
-            top->address = config_MVreg_addr + 0x8 * i;
+            top->address = config_MVreg_addr + 0x4 * i;
         }
         // MVP address 512->572 60
         else if (i >= 16 && i < 32) {
             top->writedata = matrix_base[i - 16];
+            cout<<"MVP matrix:"<<matrix_base[i - 16]<<"\n";
             top->address = config_MVPreg_addr + 4 * (i - 16);
         } else {
             // lighting address 768->176  8
@@ -179,6 +181,7 @@ int main(int argc, char **argv) {
         top->clock = 0;
         top->eval();
     }
+    cout<<"configuration done!\n";
     // begin rasterization
     for (;;) {
         top->clock = 1;

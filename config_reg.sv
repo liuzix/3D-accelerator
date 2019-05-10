@@ -16,13 +16,8 @@ module config_reg(
     inout logic do_render
 );
 
-<<<<<<< HEAD
-always_ff @(posedge clk or negedge reset)
-    if (!reset) begin
-=======
-always_ff @(posedge clk or negedge reset_n)
+always_ff @(posedge clk or negedge reset_n)begin
     if (!reset_n) begin
->>>>>>> 2f2036e50a521ce868f4a2cbde8ef74ebec26316
         MV <= 0;
         MVP <= 0;
         frame_buffer_base <= 0;
@@ -30,15 +25,9 @@ always_ff @(posedge clk or negedge reset_n)
     end
     else if (write) begin
         case (address)
-<<<<<<< HEAD
-            h0: frame_buffer_base <= writedata;
-            h4: vertex_buffer_base <= writedata;
-            h8: do_render <= writedata;//?
-=======
             'h0: frame_buffer_base <= writedata;
             'h4: vertex_buffer_base <= writedata;
             'h8: do_render <= writedata;
->>>>>>> 2f2036e50a521ce868f4a2cbde8ef74ebec26316
             default:
                 if ('h100 <= address && address <= 'h13C)
                     MV[(address - 'h100) * 8 + 31: (address - 'h100) * 8] <= writedata;
@@ -47,8 +36,8 @@ always_ff @(posedge clk or negedge reset_n)
                 else if ('h300 <= address & address <= 'h308)
                     lighting[(address - 'h300) * 8 + 31: (address - 'h300) * 8] <= writedata;
         endcase
-    end
+      end
     else if (read && address == 'h8)
         readdata <= do_render;
-
+   end
 endmodule // config_reg

@@ -154,6 +154,7 @@ module rasterizer (
         
             stall_out = 1;
             
+            $display("rasterizer: in_data_valid = %d", in_data_valid);
             if (in_data_valid) begin
                 e12 <= (signed'(cur_x - x1) * signed'(y2 - y1) - signed'(cur_y - y1) * signed'(x2 - x1)) >= 0;
                 e23 <= (signed'(cur_x - x2) * signed'(y3 - y2) - signed'(cur_y - y2) * signed'(x3 - x2)) >= 0; 

@@ -67,34 +67,16 @@ module vertex_calc (input clock,
         if (reset) begin
             done_out <= 0;
             stall_out <= 0;
+            out_data_valid <= 0;
         end
 
-        if (!out_data_valid) begin
-            x_out[0] <= fp_m(tmp_x[0], width) + width; 
-            y_out[0] <= fp_m(tmp_y[0], height) + height;
-            z_out[0] <= fp_m(tmp_x[0], width) + width;
-            w_out[0] <= fp_m(tmp_y[0], height) + height;
-            
-            x_out[1] <= fp_m(tmp_x[1], width) + width; 
-            y_out[1] <= fp_m(tmp_y[1], height) + height;
-            z_out[1] <= fp_m(tmp_x[1], width) + width;
-            w_out[1] <= fp_m(tmp_y[1], height) + height;
-
-            x_out[2] <= fp_m(tmp_x[2], width) + width; 
-            y_out[2] <= fp_m(tmp_y[2], height) + height;
-            z_out[2] <= fp_m(tmp_x[2], width) + width;
-            w_out[2] <= fp_m(tmp_y[2], height) + height;
-
-            done_out <= 1;
-            out_data_valid <= 1;
-            stall_out <= 0;
-        end else begin 
-            if (!stall_in) begin    
+        if (input_data_valid) begin
+            if (!out_data_valid) begin
                 x_out[0] <= fp_m(tmp_x[0], width) + width; 
                 y_out[0] <= fp_m(tmp_y[0], height) + height;
                 z_out[0] <= fp_m(tmp_x[0], width) + width;
                 w_out[0] <= fp_m(tmp_y[0], height) + height;
-            
+                
                 x_out[1] <= fp_m(tmp_x[1], width) + width; 
                 y_out[1] <= fp_m(tmp_y[1], height) + height;
                 z_out[1] <= fp_m(tmp_x[1], width) + width;
@@ -108,8 +90,32 @@ module vertex_calc (input clock,
                 done_out <= 1;
                 out_data_valid <= 1;
                 stall_out <= 0;
-            end else 
-                stall_out <= 1;
-        end
+            end else begin 
+                if (!stall_in) begin    
+                    x_out[0] <= fp_m(tmp_x[0], width) + width; 
+                    y_out[0] <= fp_m(tmp_y[0], height) + height;
+                    z_out[0] <= fp_m(tmp_x[0], width) + width;
+                    w_out[0] <= fp_m(tmp_y[0], height) + height;
+                
+                    x_out[1] <= fp_m(tmp_x[1], width) + width; 
+                    y_out[1] <= fp_m(tmp_y[1], height) + height;
+                    z_out[1] <= fp_m(tmp_x[1], width) + width;
+                    w_out[1] <= fp_m(tmp_y[1], height) + height;
+
+                    x_out[2] <= fp_m(tmp_x[2], width) + width; 
+                    y_out[2] <= fp_m(tmp_y[2], height) + height;
+                    z_out[2] <= fp_m(tmp_x[2], width) + width;
+                    w_out[2] <= fp_m(tmp_y[2], height) + height;
+
+                    done_out <= 1;
+                    out_data_valid <= 1;
+                    stall_out <= 0;
+                end else begin
+                    stall_out <= 1;
+                    out_data_valid <= 0;
+                end
+            end
+        end else
+            out_data_valid <= 0;
     end
 endmodule

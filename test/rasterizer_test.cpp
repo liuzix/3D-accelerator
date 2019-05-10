@@ -90,7 +90,7 @@ fixed_point_t *load_matrix() {
     glm::mat4 mvp =
         Projection * View *
         Model;  // Remember, matrix multiplication is the other way around
-    fixed_point_t *fixed_matrix = new fixed_point_t(16);
+    fixed_point_t *fixed_matrix = new fixed_point_t[16];
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
             fixed_matrix[4 * i + j] = float2fixed(mvp[i][j]);
@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
                 top->writedata = vertex_buffer_base;
                 break;
             case 2:
-                top->writedata = 0;
+                top->writedata = 1;
                 break;
         }
         top->address = 4 * i;

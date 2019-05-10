@@ -96,6 +96,9 @@ module rasterizer_vertex_fetch (
             rdreq <= 1;
             fifo_counter = fifo_counter - 1;
             output_valid <= 1;
+
+            foreach(vertex_out[i])
+                $display ("vertex binary data %d", vertex_out[i]);
         end else begin
             rdreq <= 0;
             output_valid <= 0;
@@ -123,7 +126,6 @@ module rasterizer_vertex_fetch (
                         send_state <= SEND;
                     end
                     if (tri_num == 0 && fetch_enable) begin
-                        $display("vertex_fetch: vertex_buffer_base = %d", vertex_buffer_base);
                         master_address <= vertex_buffer_base;
                         master_read <= 1;
                         addr <= addr + 4;
@@ -179,6 +181,7 @@ module rasterizer_vertex_fetch (
                     recv_valid <= 0;
                     if (master_readdatavalid && tri_num != 0) begin
                         vertex_out_buf[r_count] <= master_readdata;
+                        $display("first vertex x %d", master_readdata);
                         r_count <= r_count + 1;
                         rec_state <= FETCH;
                     end

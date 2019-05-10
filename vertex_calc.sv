@@ -2,7 +2,7 @@
 
 module vertex_calc (input clock,
                     input reset,
-                    input logic [511:0] mat,
+                    input logic [31:0] mat[15:0],
                     input logic [31:0] v_in [14:0],
                     input logic input_data_valid,
                     input logic done_in,
@@ -22,20 +22,20 @@ module vertex_calc (input clock,
     logic [63:0] tmp_z[2:0];
     logic [63:0] tmp_w[2:0];
 
-    assign  tmp_x[0] = mat[511:480] * v_in[0] + mat[479:448] * v_in[1] + mat[447:416] * v_in[2] + mat[415:384]; //w = 1
-    assign  tmp_y[0] = mat[383:352] * v_in[0] + mat[351:320] * v_in[1] + mat[319:288] * v_in[2] + mat[287:256];
-    assign  tmp_z[0] = mat[255:224] * v_in[0] + mat[223:192] * v_in[1] + mat[191:160] * v_in[2] + mat[159:128];
-    assign  tmp_w[0] = mat[127:96] * v_in[0] + mat[95:64] * v_in[1] + mat[63:32] * v_in[2] + mat[31:0];
+    assign  tmp_x[0] = mat[0] * v_in[0] + mat[1] * v_in[1] + mat[2] * v_in[2] + mat[3]; //w = 1
+    assign  tmp_y[0] = mat[4] * v_in[0] + mat[5] * v_in[1] + mat[6] * v_in[2] + mat[7];
+    assign  tmp_z[0] = mat[8] * v_in[0] + mat[9] * v_in[1] + mat[10] * v_in[2] + mat[11];
+    assign  tmp_w[0] = mat[12] * v_in[0] + mat[13] * v_in[1] + mat[14] * v_in[2] + mat[15];
       
-    assign  tmp_x[1] = mat[511:480] * v_in[4] + mat[479:448] * v_in[5] + mat[447:416] * v_in[6] + mat[415:384]; //w = 1
-    assign  tmp_y[1] = mat[383:352] * v_in[4] + mat[351:320] * v_in[5] + mat[319:288] * v_in[6] + mat[287:256];
-    assign  tmp_z[1] = mat[255:224] * v_in[4] + mat[223:192] * v_in[5] + mat[191:160] * v_in[6] + mat[159:128];
-    assign  tmp_w[1] = mat[127:96] * v_in[4] + mat[95:64] * v_in[5] + mat[63:32] * v_in[6] + mat[31:0];
+    assign  tmp_x[1] = mat[0] * v_in[4] + mat[1] * v_in[5] + mat[2] * v_in[6] + mat[3]; //w = 1
+    assign  tmp_y[1] = mat[4] * v_in[4] + mat[5] * v_in[5] + mat[6] * v_in[6] + mat[7];
+    assign  tmp_z[1] = mat[8] * v_in[4] + mat[9] * v_in[5] + mat[10] * v_in[6] + mat[11];
+    assign  tmp_w[1] = mat[12] * v_in[4] + mat[13] * v_in[5] + mat[14] * v_in[6] + mat[15];
         
-    assign  tmp_x[2] = mat[511:480] * v_in[8] + mat[479:448] * v_in[9] + mat[447:416] * v_in[10] + mat[415:384]; //w = 1
-    assign  tmp_y[2] = mat[383:352] * v_in[8] + mat[351:320] * v_in[9] + mat[319:288] * v_in[10] + mat[287:256];
-    assign  tmp_z[2] = mat[255:224] * v_in[8] + mat[223:192] * v_in[9] + mat[191:160] * v_in[10] + mat[159:128];
-    assign  tmp_w[2] = mat[127:96] * v_in[8] + mat[95:64] * v_in[9] + mat[63:32] * v_in[10] + mat[31:0];
+    assign  tmp_x[2] = mat[0] * v_in[8] + mat[1] * v_in[9] + mat[2] * v_in[10] + mat[3]; //w = 1
+    assign  tmp_y[2] = mat[4] * v_in[8] + mat[5] * v_in[9] + mat[6] * v_in[10] + mat[7];
+    assign  tmp_z[2] = mat[8] * v_in[8] + mat[9] * v_in[9] + mat[10] * v_in[10] + mat[11];
+    assign  tmp_w[2] = mat[12] * v_in[8] + mat[13] * v_in[9] + mat[14] * v_in[10] + mat[15];
     
 
 

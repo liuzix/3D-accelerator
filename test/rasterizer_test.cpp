@@ -6,12 +6,14 @@
 #include <fstream>
 #include <string.h>
 #include <verilated.h>
-
+#include <tgmath.h>
 using namespace std;
 // using Vvga_module = Vvga_unit;
 // Vvga_module* vga;  // Instantiation of module
 using Vras = Vrasterizer_unit;
 Vras *top;
+typedef uint32_t fixed_point_t;
+#define FIXED_POINT_FRACTIONAL_BITS 16
 void loadFrameBuffer(void *buf, const string &file);
 
 class VGADisplay {
@@ -55,7 +57,35 @@ double sc_time_stamp() { // Called by $time in Verilog
   return main_time;      // converts to double, to match
                          // what SystemC does
 }
+inline fixed_point_t float2fixed(double input)
+{
+    return (fixed_point_t)(round(input * (1 << FIXED_POINT_FRACTIONAL_BITS)));
+}
+fixed_point_t* load_matrix(){
+    // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
+  glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float) width / (float)height, 0.1f, 100.0f);
+  // Or, for an ortho camera :
+  //glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
+  // Camera matrix
+  glm::mat4 View = glm::lookAt(
+      glm::vec3(4,3,3), // Camera is at (4,3,3), in World Space
+      glm::vec3(0,0,0), // and looks at the origin
+      glm::vec3(0,1,0)  // Head is up (set to 0,-1,0 to look upside-down)
+      );
+  // Model matrix : an identity matrix (model will be at the origin)
+  glm::mat4 Model = glm::mat4(1.0f);
+  // Our ModelViewProjection : multiplication of our 3 matrices
+  glm::mat4 mvp = Projection * View * Model; // Remember, matrix multiplication is the other way around
+  fixed_point_t* fixed_matrix=new fixed_point_t(16);
+  for(int i=0;i<4;i++){
+    for int j=0;j<4;j++){
+      fixed_matrix[4*i+j]=float2fixed(mvp[i][j]);
 
+    }  
+  }
+  //memcpy(matrix_base,fixed_matrix,16*4);
+  return fixed_matrix;
+}
 int main(int argc, char **argv) {
   Verilated::commandArgs(argc, argv); // Remember args
   uint32_t framebuffer_base = 0;
@@ -63,6 +93,7 @@ int main(int argc, char **argv) {
   // simulate a 64M sdram block
 
   SDRAMController<uint32_t> sdramController(64 * 1024 * 1024);
+
   //load vertex in sdram
   ifstream file ("data.binary", ios::in|ios::binary|ios::ate);
   if(!file.is_open()){
@@ -108,20 +139,21 @@ int main(int argc, char **argv) {
   uint16_t config_MVreg_addr = 0x100;
   uint16_t config_MVPreg_addr = 0x200;
   uint16_t config_lightingreg_addr = 0x300;
-  for (int i = 0; i < 60 + 60 + 8; i++) {
+  fixed_point_t* matrix_base=load_matrix();
+  for (int i = 0; i < 16+ 16 + 8; i++) {
     // MV address 256->316  60
-    if (i > 0 && i < 60) {
+    if (i > 0 && i < 16) {
       top->writedata = 1;
       top->address = config_MVreg_addr + 0x8 * i;
     }
     // MVP address 512->572 60
-    else if (i >= 60 && i < 120) {
-      top->writedata = 2;
-      top->address = config_MVPreg_addr + 0x8 * (i - 60);
+    else if (i >= 16 && i < 32) {
+      top->writedata = matrix_base+(i-16);
+      top->address = config_MVPreg_addr +  4*(i - 16);
     } else {
       // lighting address 768->176  8
       top->writedata = 3;
-      top->address = config_lightingreg_addr + 0x8 * (i - 120);
+      top->address = config_lightingreg_addr + 0x4 * (i - 32);
     }
     top->write = 1;
     top->clock = 1;

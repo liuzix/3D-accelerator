@@ -45,9 +45,9 @@ module rasterizer (
     );
         logic signed [63:0] tmp_a;
         logic signed [63:0] tmp_b;
-        tmp_a[63:33] <= 0;
+        tmp_a[63:32] <= 0;
         tmp_a[31:0] <= a;
-        tmp_b[63:33] <= 0;
+        tmp_b[63:32] <= 0;
         tmp_b[31:0] <= b;
         fp_m <= (tmp_a * tmp_b) >> 16;
     endfunction 
@@ -59,10 +59,10 @@ module rasterizer (
     );
         logic signed [63:0] tmp_a;
         logic signed [63:0] tmp_b;
-        tmp_a[63:33] <= 0;
-        tmp_a[32:0] <= a;
-        tmp_b[63:33] <= 0;
-        tmp_b[32:0] <= b;
+        tmp_a[63:32] <= 0;
+        tmp_a[31:0] <= a;
+        tmp_b[63:32] <= 0;
+        tmp_b[31:0] <= b;
         fp_d <= (tmp_a * (1 << 16)) / tmp_b;
     endfunction 
 
@@ -163,17 +163,17 @@ module rasterizer (
     
             if (is_inside) begin
                 output_valid <= 1;
-                tmp_addr_out <= addr_in + ((cur_y - 1) * 640 + cur_x);
+                tmp_addr_out <= addr_in + fp_m(cur_y - (1 << 16), (640 << 16) + cur_x)[31:16];
                 tmp_color_out <= cur_color;
             end else begin
                 output_valid <= 0;
             end
 
-            cur_x = cur_x + 1;
+            cur_x = cur_x + (1 << 16);
     
             if (cur_x > maxX) begin
                 cur_x = minX;
-                cur_y = cur_y + 1;
+                cur_y = cur_y + (1 << 16);
             end
 
             if (cur_y > maxY) begin

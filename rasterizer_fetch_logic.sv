@@ -30,7 +30,7 @@ module rasterizer_fetch_logic (
     output [25:0] addr_out,
     output [31:0] old_depth_out,
     output [31:0] new_depth_out,
-    output [23:0] color_out,
+    output [23:0] color_out
 );
 
 logic [95:0] data_in;

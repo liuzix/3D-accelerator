@@ -114,7 +114,7 @@ module rasterizer_vertex_fetch (
                         send_state <= SEND;
                     end
                     if (tri_num == 0 && fetch_enable) begin
-                        master_address <= addr_in;
+                        master_address <= vertex_buffer_base;
                         master_read <= 1;
                         addr <= addr + 4;
                         send_state <= TRI_SEND;

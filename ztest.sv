@@ -12,7 +12,7 @@ module ztest (
     
     input done_in,
     output stall_out,
-    output done_out
+    output done_out,
     
     output [25:0] master_address,
     output master_read,
@@ -21,7 +21,7 @@ module ztest (
     input [31:0] master_readdata,
     input master_readdatavalid,
     output [31:0]master_writedata,
-    input master_waitrequest,
+    input master_waitrequest
 );
 
 logic [113:0] data_in;
@@ -59,7 +59,7 @@ always_ff @(posedge clock or negedge reset) begin
             data_in[25:0] <= addr_in;
             data_in[49:26] <= color_in;
             data_in[81:50] <= old_depth_out;
-            data_in[113:82] <= in_depth_out;
+            data_in[113:82] <= new_depth_out;
             data_in[114] <= done_in;
         end 
     end
@@ -73,9 +73,9 @@ wire done_out_temp;
 
 assign addr_out = data_out[25:0];
 assign color_out = data_out[49:26];
-assign old_depth_out = data[81:50];
-assign new_depth_out = data[113:82];
-assign done_out_reg = data[114];
+assign real_old_depth_out = data_out[81:50];
+assign new_depth_out = data_out[113:82];
+assign done_out_temp = data_out[114];
 
 always_ff @(posedge clock or negedge reset) begin
     if (!reset) begin

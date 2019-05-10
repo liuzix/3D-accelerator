@@ -132,6 +132,14 @@ int main(int argc, char** argv) {
                              top->master_write, &top->bus_data,
                              top->master_readdatavalid, &top->master_writedata,
                              top->master_waitrequest);
+        sdramController.tick(0, top->master_address_1, top->master_read_1,
+                             top->master_write_1, &top->bus_data_1,
+                             top->master_readdatavalid_1, &top->master_writedata_1,
+                             top->master_waitrequest_1);
+        sdramController.tick(0, top->master_address_2, top->master_read_2,
+                             top->master_write_2, &top->bus_data_2,
+                             top->master_readdatavalid_2, &top->master_writedata_2,
+                             top->master_waitrequest_2);
 	    top->eval();
         //vgasim.tick(vga->VGA_CLK, vga->VGA_R, vga->VGA_G, vga->VGA_B, vga->VGA_HS, vga->VGA_VS);
 

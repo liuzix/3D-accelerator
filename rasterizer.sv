@@ -163,7 +163,7 @@ module rasterizer (
     
             if (is_inside) begin
                 output_valid <= 1;
-                tmp_addr_out <= addr_in + fp_m(cur_y - (1 << 16), (640 << 16) + cur_x)[31:16];
+                tmp_addr_out <= addr_in + (fp_m(cur_y - (1 << 16), (640 << 16) + cur_x) >> 16);
                 tmp_color_out <= cur_color;
             end else begin
                 output_valid <= 0;

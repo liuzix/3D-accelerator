@@ -131,8 +131,8 @@ module rasterizer (
 
     always_ff @(posedge clock or negedge reset) begin
         if (reset) begin 
-            cur_x <= minX;
-            cur_y <= minY;
+            cur_x = minX;
+            cur_y = minY;
             fetch_enable <= 0;
             output_valid <= 0;
             done_out <= 0;
@@ -159,8 +159,8 @@ module rasterizer (
             cur_x = cur_x + 1;
     
             if (cur_x > maxX) begin
-                cur_x <= minX;
-                cur_y <= cur_y + 1;
+                cur_x = minX;
+                cur_y = cur_y + 1;
             end
 
             if (cur_y > maxY) begin

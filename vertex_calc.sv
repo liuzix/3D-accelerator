@@ -89,21 +89,22 @@ module vertex_calc (input clock,
             out_data_valid <= 1;
             stall_out <= 0;
         end else begin 
-            if (!stall_in) begin
-                x_out[0] <= tmp_x[0];
-                y_out[0] <= tmp_y[0];
-                z_out[0] <= tmp_z[0];
-                w_out[0] <= tmp_w[0];
+            if (!stall_in) begin    
+                x_out[0] <= fp_m(tmp_x[0], width) + width; 
+                y_out[0] <= fp_m(tmp_y[0], height) + height;
+                z_out[0] <= fp_m(tmp_x[0], width) + width;
+                w_out[0] <= fp_m(tmp_y[0], height) + height;
+            
+                x_out[1] <= fp_m(tmp_x[1], width) + width; 
+                y_out[1] <= fp_m(tmp_y[1], height) + height;
+                z_out[1] <= fp_m(tmp_x[1], width) + width;
+                w_out[1] <= fp_m(tmp_y[1], height) + height;
 
-                x_out[1] <= tmp_x[1];
-                y_out[1] <= tmp_y[1];
-                z_out[1] <= tmp_z[1];
-                w_out[1] <= tmp_w[1];
+                x_out[2] <= fp_m(tmp_x[2], width) + width; 
+                y_out[2] <= fp_m(tmp_y[2], height) + height;
+                z_out[2] <= fp_m(tmp_x[2], width) + width;
+                w_out[2] <= fp_m(tmp_y[2], height) + height;
 
-                x_out[2] <= tmp_x[2];
-                y_out[2] <= tmp_y[2];
-                z_out[2] <= tmp_z[2];
-                w_out[2] <= tmp_w[2];
                 done_out <= 1;
                 out_data_valid <= 1;
                 stall_out <= 0;

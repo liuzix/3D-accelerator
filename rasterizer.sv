@@ -132,7 +132,6 @@ module rasterizer (
         if (reset) begin 
             cur_x = minX;
             cur_y = minY;
-            fetch_enable <= 0;
             output_valid <= 0;
             done_out <= 0;
             stall_out = 0;

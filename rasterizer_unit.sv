@@ -168,7 +168,6 @@ rasterizer raster (
     .addr_out(addr_out),
     .color_out(color_out),
     .depth_out(depth_in),
-    .fetch_enable(do_render),//?
     .output_valid(rasterizer_output_valid),
    
     .stall_out(stall2),

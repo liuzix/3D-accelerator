@@ -21,7 +21,6 @@ module rasterizer (
     output [25:0] addr_out,
     output [23:0] color_out,
     output [31:0] depth_out,
-    output fetch_enable,
     output output_valid,
     output stall_out,//
     output done_out//
@@ -133,7 +132,6 @@ module rasterizer (
         if (reset) begin 
             cur_x <= minX;
             cur_y <= minY;
-            fetch_enable <= 0;
             output_valid <= 0;
             done_out <= 0;
             stall_out = 0;
@@ -164,7 +162,6 @@ module rasterizer (
             end
 
             if (cur_y > maxY) begin
-                fetch_enable <= 1;
                 done_out <= done_in;
                 stall_out = 0;
             end

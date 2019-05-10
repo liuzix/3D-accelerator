@@ -5,7 +5,7 @@ module ztest (
     input output_valid,
     input [25:0] addr_in, //addr_out from rasterizer_fetch_logic
     input [31:0] old_depth_out,
-    input [31:0] new_depth_out,
+    output [31:0] new_depth_out,//input->output
     input [31:0] color_in, //color out from rasterizer_fetch_logic
     //output [31:0] color_out,
     //output [25:0] addr_out,
@@ -70,7 +70,7 @@ wire [23:0] color_out;
 wire [31:0] old_depth_out;
 wire [31:0] new_depth_out;
 wire done_out_temp;
-
+logic[31:0]real_old_depth_out;
 assign addr_out = data_out[25:0];
 assign color_out = data_out[49:26];
 assign real_old_depth_out = data_out[81:50];

@@ -51,23 +51,25 @@ module rasterizer_vertex_fetch (
     logic full;
     logic empty;
     logic almost_full;
+    logic half_full;
     logic almost_empty;
 
     logic recv_valid;
     int fifo_size = 2**FIFO_SIZE;
     int fifo_counter;
-
+    
     fifo #(.DBITS(480), .SIZE(FIFO_SIZE))fifo(
-        .din(data_in),
-        .dout(data_out),
+        .clk(clock),
+        .reset(reset),
         .wr(wrreq),
         .rd(rdreq),
-        .reset(reset),
-        .clk(clock),
-        .full(full),
+        .din(data_in),
         .empty(empty),
+        .full(full),
         .almost_full(almost_full),
-        .almost_empty(almost_empty)
+        .half_full(half_full),
+        .almost_empty(almost_empty),
+        .dout(data_out)   
     );
 
     assign vertex_out = {>>{data_out}};

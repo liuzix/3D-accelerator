@@ -3,6 +3,7 @@
 #include "sdram_controller.h"
 #include <cassert>
 #include <iostream>
+#include <fstream>
 #include <string.h>
 #include <verilated.h>
 
@@ -57,8 +58,25 @@ double sc_time_stamp() { // Called by $time in Verilog
 
 int main(int argc, char **argv) {
   Verilated::commandArgs(argc, argv); // Remember args
+  uint32_t framebuffer_base = 0;
+  uint32_t vertex_buffer_base = 640 * 480 * 8; // byte addressable,one pixel 8 bytes
   // simulate a 64M sdram block
+
   SDRAMController<uint32_t> sdramController(64 * 1024 * 1024);
+  //load vertex in sdram
+  ifstream file ("data.binary", ios::in|ios::binary|ios::ate);
+  if(!file.is_open()){
+    std::abort();
+  }
+  size_t size = file.tellg();
+  char* memblock = (char*)sdramController.memory.data()+vertex_buffer_base;
+  file.seekg (0, ios::beg);
+  file.read (memblock, size);
+  file.close();
+
+    cout << "the entire binary file content is in sdram";
+
+
   VGADisplay *display = new VGADisplay(sdramController.memory.data());
   // Create instance
   top = new Vras;
@@ -69,8 +87,7 @@ int main(int argc, char **argv) {
   top->reset = 0;
   top->eval();
   top->reset = 1;
-  uint32_t framebuffer_base = 0;
-  uint32_t vertex_buffer_base = 640 * 480 * 8; // byte addressable,one pixel 8 bytes
+  
   // configuration
 
   for (int i = 0; i < 3; i++) {

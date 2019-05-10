@@ -72,7 +72,11 @@ module rasterizer_vertex_fetch (
         .dout(data_out)   
     );
 
-    assign vertex_out = {>>{data_out}};
+    assign vertex_out = '{data_out[479:448],data_out[447:416],
+        data_out[415:384],data_out[383:352],data_out[351:320],
+        data_out[319:288],data_out[287:256],data_out[255:224],
+        data_out[223:192],data_out[191:160],data_out[159:128],
+        data_out[127:96],data_out[95:64],data_out[63:32],data_out[31:0]};
 
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
@@ -81,7 +85,10 @@ module rasterizer_vertex_fetch (
 
         if (recv_valid && !full) begin
             wrreq <= 1;
-            data_in <= {>>{vertex_out_buf}};
+            data_in <= {vertex_out_buf[14],vertex_out_buf[13],vertex_out_buf[12],vertex_out_buf[11],
+                vertex_out_buf[10],vertex_out_buf[9],vertex_out_buf[8],vertex_out_buf[7],
+                vertex_out_buf[6],vertex_out_buf[5],vertex_out_buf[4],vertex_out_buf[3],
+                vertex_out_buf[2],vertex_out_buf[1],vertex_out_buf[0]};
         end else
             wrreq <= 0;
 

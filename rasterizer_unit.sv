@@ -49,9 +49,9 @@ wire done5;
 
 //output of config_reg
 logic [32:0] readdata;
-logic [511:0] MV;
-logic [511:0] MVP;
-logic [96:0] lighting;
+logic [31:0] MV [15:0];
+logic [31:0] MVP [15:0];
+logic [31:0] lighting [2:0];
 logic [25:0] frame_buffer_base;
 logic [25:0] vertex_buffer_base;
 logic do_render;

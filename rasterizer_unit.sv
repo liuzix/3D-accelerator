@@ -161,15 +161,21 @@ rasterizer raster (
     .color2(vertex_out[7][23:0]),
     .color3(vertex_out[11][23:0]),
     .addr_in(frame_buffer_base), //from config_reg
+    .in_data_valid(out_data_valid),
+
+    .done_in(done2),
+    .stall_in(stall3),
     .addr_out(addr_out),
     .color_out(color_out),
     .depth_out(depth_in),
-    .in_data_valid(out_data_valid),
-    .done_in(done2),
-    .done_out(done3),
+    .fetch_enable(do_render),//?
+    .output_valid(rasterizer_output_valid),
+   
     .stall_out(stall2),
-    .stall_in(stall3),
-    .output_valid(rasterizer_output_valid));
+    .done_out(done3)
+    
+    
+    );
 
 rasterizer_fetch_logic fetch_logic (
     .clock(clock),

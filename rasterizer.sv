@@ -15,15 +15,16 @@ module rasterizer (
     input [23:0] color3, //RGB for v3 = (x3, y3)
     input [25:0] addr_in, //frame buffer base 
     input in_data_valid,
-    input done_in,
-    input stall_in,
+
+    input done_in,//
+    input stall_in,//
     output [25:0] addr_out,
     output [23:0] color_out,
     output [31:0] depth_out,
     output fetch_enable,
     output output_valid,
-    output stall_out,
-    output done_out
+    output stall_out,//
+    output done_out//
 );
 
     logic [31:0] cur_x;
@@ -123,7 +124,7 @@ module rasterizer (
         w1 = w1_tmp / denom;
         w2 = w1_tmp / denom;
         w3 = 1 - w1 - w2;
-        cur_color = fp_m(w1, color1) + fp_m(w2, color2) + fp+m(w3, color3);
+        cur_color = fp_m(w1, color1) + fp_m(w2, color2) + fp_m(w3, color3);
         cur_depth = fp_m(w1, z1) + fp_m(w2, z2) + fp_m(w3, z3);
     end 
 

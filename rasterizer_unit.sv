@@ -103,7 +103,8 @@ config_reg c_reg (
     .lighting(lighting),
     .frame_buffer_base(frame_buffer_base),
     .vertex_buffer_base(vertex_buffer_base),
-    .do_render(do_render));
+    .start_render(do_render),
+    .done_in(done5));
 
 
 rasterizer_vertex_fetch vertex_fetch (

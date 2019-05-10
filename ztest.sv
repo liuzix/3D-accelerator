@@ -51,9 +51,7 @@ fifo #(.DBITS(115), .SIZE(6))fifo(
 assign stall_out = half_full;
 
 always_ff @(posedge clock or negedge reset) begin
-    if (!reset) 
-        stall_out <= 1;
-    else begin
+    if (reset) begin
         if (!full) begin
             wrreq <= 1;
             data_in[25:0] <= addr_in;

@@ -57,6 +57,7 @@ module rasterizer_vertex_fetch (
     logic recv_valid;
     int fifo_size = 2**FIFO_SIZE;
     int fifo_counter;
+    logic already_pop;
     
     fifo #(.DBITS(480), .SIZE(FIFO_SIZE))fifo(
         .clk(clock),
@@ -81,24 +82,29 @@ module rasterizer_vertex_fetch (
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
             fifo_counter = 0;
+            already_pop <= 0;
         end
 
         if (recv_valid && !full) begin
-            wrreq <= 1;
             data_in <= {vertex_out_buf[14],vertex_out_buf[13],vertex_out_buf[12],vertex_out_buf[11],
                 vertex_out_buf[10],vertex_out_buf[9],vertex_out_buf[8],vertex_out_buf[7],
                 vertex_out_buf[6],vertex_out_buf[5],vertex_out_buf[4],vertex_out_buf[3],
                 vertex_out_buf[2],vertex_out_buf[1],vertex_out_buf[0]};
-        end else
+            wrreq <= 1;
+        end else begin
             wrreq <= 0;
+            data_in <= 'hff;
+        end
 
-        if (!stall_in && !empty) begin
+        if (!stall_in && !empty && !already_pop) begin
             rdreq <= 1;
             fifo_counter = fifo_counter - 1;
             output_valid <= 1;
+            already_pop <= 1;
         end else begin
             rdreq <= 0;
             output_valid <= 0;
+            already_pop <= 0;
         end
     end
 
@@ -191,8 +197,7 @@ module rasterizer_vertex_fetch (
                     if (master_readdatavalid) begin
                         if (r_count == 14) begin
                             r_count <= 0;
-                            //vertex_out[13:0] <= vertex_out_buf[13:0];
-                            vertex_out[r_count] <= master_readdata;
+                            vertex_out_buf[r_count] <= master_readdata;
                             recv_valid <= 1;
                             output_count <= output_count + 1;
                             rec_state <= IDLE_R;

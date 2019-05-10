@@ -24,8 +24,8 @@ int main(int argc, char** argv) {
     // simulate a 64M sdram block
     SDRAMController<uint32_t> sdramController(64 * 1024 * 1024);
 
-    for (int i = 0; i < 640 * 480; i++) {
-        sdramController.memory[i] = i;
+    for (int i = 1; i < 640 * 480; i++) {
+        sdramController.memory[i] = i-1;
     }
     // number of triangles to be read
     sdramController.memory[0] = 5;
@@ -48,18 +48,17 @@ int main(int argc, char** argv) {
                              top->master_write, &top->master_readdata,
                              top->master_readdatavalid, &top->master_writedata,
                              top->master_waitrequest);
+        top->stall_in = 0;
         if (addr < 640 * 480 * 8) {
-            if (!top->fetch_busy && !once) {
+            if (!once) {
                 top->fetch_enable = 1;
-                top->addr_in = addr;
+                top->vertex_buffer_base = addr;
                 once = 1;
                // addr += (4*15);
             } else {
-                cout << "fetch busy" << endl;
                 top->fetch_enable = 0;
             }
         } else {
-            cout << "not inputing anything" << endl;
             top->fetch_enable = 0;
         }
         top->clock = 1;
@@ -86,7 +85,7 @@ int main(int argc, char** argv) {
             cout << "output is not valid -- " << tri_count << endl;
         }
 
-        if (top->fetch_finish)
+        if (top->done_out)
             break;
 
         cout << "-----------------------" << endl;

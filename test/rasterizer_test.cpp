@@ -116,6 +116,7 @@ int main(int argc, char **argv) {
         std::abort();
     }
     size_t size = file.tellg();
+    cout << "binary file size = " << dec << size << endl;
     char *memblock = (char *)sdramController.memory.data() + vertex_buffer_base;
     file.seekg(0, ios::beg);
     file.read(memblock, size);

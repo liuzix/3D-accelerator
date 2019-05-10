@@ -93,7 +93,7 @@ always_ff @(posedge clock or negedge reset) begin
             end
 
             S_HOLD: begin
-                if (!master_waitrequest || !stall_in) begin
+                if (!master_waitrequest && !stall_in) begin
                     if (!full && input_valid) begin
                         next_state = S_HOLD;
                         enqueue = 1;

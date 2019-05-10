@@ -80,6 +80,7 @@ always_ff @(posedge clock or negedge reset) begin
         stall_out <= 1;
     end else begin
         enqueue = 0;
+        $display("depth fetch: input valid = %d", input_valid);
         case (state)
             S_IDLE: begin
                 if (full) begin

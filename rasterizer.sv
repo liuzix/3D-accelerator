@@ -144,54 +144,56 @@ module rasterizer (
 
 
     always_ff @(posedge clock or negedge reset) begin
-        if (reset) begin 
+        if (!reset) begin 
             cur_x = minX;
             cur_y = minY;
             output_valid <= 0;
             done_out <= 0;
             stall_out = 0;
-        end 
+        end else begin
         
-        stall_out = 1;
+            stall_out = 1;
+            
+            if (in_data_valid) begin
+                e12 <= (signed'(cur_x - x1) * signed'(y2 - y1) - signed'(cur_y - y1) * signed'(x2 - x1)) >= 0;
+                e23 <= (signed'(cur_x - x2) * signed'(y3 - y2) - signed'(cur_y - y2) * signed'(x3 - x2)) >= 0; 
+                e31 <= (signed'(cur_x - x3) * signed'(y1 - y3) - signed'(cur_y - y3) * signed'(x1 - x3)) >= 0;
+
+                is_inside = e12 & e23 & e31;
         
-        if (in_data_valid) begin
-            e12 <= (signed'(cur_x - x1) * signed'(y2 - y1) - signed'(cur_y - y1) * signed'(x2 - x1)) >= 0;
-            e23 <= (signed'(cur_x - x2) * signed'(y3 - y2) - signed'(cur_y - y2) * signed'(x3 - x2)) >= 0; 
-            e31 <= (signed'(cur_x - x3) * signed'(y1 - y3) - signed'(cur_y - y3) * signed'(x1 - x3)) >= 0;
+                if (is_inside) begin
+                    output_valid <= 1;
+                    tmp_addr_out <= addr_in + (fp_m(cur_y - (1 << 16), (640 << 16) + cur_x) >> 16);
+                    tmp_color_out <= cur_color;
+                end else begin
+                    output_valid <= 0;
+                end
 
-            is_inside = e12 & e23 & e31;
-    
-            if (is_inside) begin
-                output_valid <= 1;
-                tmp_addr_out <= addr_in + (fp_m(cur_y - (1 << 16), (640 << 16) + cur_x) >> 16);
-                tmp_color_out <= cur_color;
-            end else begin
-                output_valid <= 0;
-            end
+                cur_x = cur_x + (1 << 16);
+        
+                if (cur_x > maxX) begin
+                    cur_x = minX;
+                    cur_y = cur_y + (1 << 16);
+                end
 
-            cur_x = cur_x + (1 << 16);
-    
-            if (cur_x > maxX) begin
-                cur_x = minX;
-                cur_y = cur_y + (1 << 16);
-            end
+                if (cur_y > maxY) begin
+                    done_out <= done_in;
+                    stall_out = 0;
+                end
 
-            if (cur_y > maxY) begin
-                done_out <= done_in;
-                stall_out = 0;
-            end
-
-            if (!output_valid) begin
-                addr_out <= tmp_addr_out;
-                color_out <= tmp_color_out;
-                depth_out <= cur_depth;
-            end else begin
-                if (!stall_in) begin
+                if (!output_valid) begin
                     addr_out <= tmp_addr_out;
                     color_out <= tmp_color_out;
                     depth_out <= cur_depth;
+                end else begin
+                    if (!stall_in) begin
+                        addr_out <= tmp_addr_out;
+                        color_out <= tmp_color_out;
+                        depth_out <= cur_depth;
+                    end
                 end
             end
+
         end
     end
 

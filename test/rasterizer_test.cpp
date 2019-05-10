@@ -20,7 +20,16 @@ void loadFrameBuffer(void *buf, const string &file);
 
 class VGADisplay {
    public:
-    VGADisplay(void *_framebuffer) { framebuffer = _framebuffer; }
+    VGADisplay(void *_framebuffer) {
+        framebuffer = _framebuffer;
+        SDL_Init(SDL_INIT_VIDEO);
+        SDL_CreateWindowAndRenderer(640, 480, 0, &window, &renderer);
+        
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+        SDL_RenderClear(renderer);
+        SDL_RenderPresent(renderer);
+    }
+
     void poll() {
         SDL_PollEvent(&event);
         if (event.type == SDL_QUIT) exit(0);
@@ -100,7 +109,7 @@ int main(int argc, char **argv) {
     SDRAMController<uint32_t> sdramController(64 * 1024 * 1024);
 
     // load vertex in sdram
-    std::ifstream file("data.binary",
+    std::ifstream file("../ply_loader/data.binary",
                        std::ios::in | std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
         std::abort();

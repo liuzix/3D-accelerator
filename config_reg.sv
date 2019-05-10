@@ -35,9 +35,18 @@ always_ff @(posedge clk or negedge reset_n)begin
     end
     else if (write) begin
         case (address)
-            'h0: frame_buffer_base <= writedata;
-            'h4: vertex_buffer_base <= writedata;
-            'h8: start_render <= writedata;
+            'h0: begin 
+                frame_buffer_base <= writedata;
+                $display("frame_buffer_base: %d", writedata);
+            end
+            'h4: begin
+                vertex_buffer_base <= writedata;
+                $display("vertex_buffer_base: %d", writedata);
+            end
+            'h8: begin
+                start_render <= writedata;
+                $display("start_render: %d", writedata);
+            end
             default:
                 if ('h100 <= address && address <= 'h13C)
                     MV[(address - 'h100) / 4] <= writedata;
@@ -48,6 +57,6 @@ always_ff @(posedge clk or negedge reset_n)begin
         endcase
       end
     else if (read && address == 'h8)
-        readdata <= done_in;
+        readdata <= done_latch;
    end
 endmodule // config_reg

@@ -45,18 +45,18 @@ int main(int argc, char** argv) {
                              top->master_waitrequest);
 
         if (addr < 640 * 480 * 8) {
-            if (!top->wait_request) {
-                top->input_valid = 1;
-                top->addr_in = addr;
-
-                // these are just test values
-                top->color_in = addr;
-                top->depth_in = addr * 8;
+            if (!top->stall_out) {
                 addr += 8;
             } else {
-                top->input_valid = 0;
+                //top->input_valid = 0;
                 cout << "rasterizer asks us to wait" << endl;
             }
+            top->input_valid = 1;
+            top->addr_in = addr;
+
+            // these are just test values
+            top->color_in = addr;
+            top->depth_in = addr * 8;
         } else {
             cout << "not inputing anything" << endl;
             top->input_valid = 0;

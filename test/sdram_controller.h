@@ -34,7 +34,7 @@ private:
 public:
     vector<Value> memory;
     SDRAMController(uint32_t memSize)
-        : memory(memSize / sizeof(Value), 0)
+        : memory(memSize / sizeof(Value), 0xcc)
     {
         cout << "Initializting SDRAM model, size = 0x"
              << hex << memSize << endl;
@@ -57,9 +57,9 @@ public:
             if (rand() % 3 != 0) {
                 Value v = memory[readRequests.front().address / sizeof(Value)];
                 memcpy(readdata, &v, sizeof(Value));
+                cout << "sdram read address " << dec << readRequests.front().address << " data " << hex << *readdata << endl;
                 readRequests.pop_front();
                 readvalid = true;
-                cout << "read data: " << *readdata << endl;
             } else {
                 readvalid = false;
             }
@@ -101,6 +101,7 @@ public:
             memcpy(&req.value, writedata, sizeof(Value));
             req.targetTick = tickCount + MEMORY_LATENCY;
             writeRequests.push_back(req);
+        } else {
         }
 
     }

@@ -40,8 +40,7 @@ module rasterizer (
     reg [23:0] color3_t;
     reg [25:0] addr_in_t; 
 
-    logic counter;
-    initial counter = 0;
+    logic [1:0] counter;
 
 
     logic [31:0] cur_x;
@@ -61,27 +60,14 @@ module rasterizer (
         input logic signed [31:0] a,
         input logic signed [31:0] b
     );
-        logic signed [63:0] tmp_a;
-        logic signed [63:0] tmp_b;
-        tmp_a[63:32] <= 0;
-        tmp_a[31:0] <= a;
-        tmp_b[63:32] <= 0;
-        tmp_b[31:0] <= b;
-        fp_m <= (tmp_a * tmp_b) >> 16;
+        fp_m = (64'(a) * 64'(b)) >>> 16;
     endfunction 
-
     //fixed point division
     function logic signed [31:0] fp_d(
         input logic signed [31:0] a,
         input logic signed [31:0] b
     );
-        logic signed [63:0] tmp_a;
-        logic signed [63:0] tmp_b;
-        tmp_a[63:32] <= 0;
-        tmp_a[31:0] <= a;
-        tmp_b[63:32] <= 0;
-        tmp_b[31:0] <= b;
-        fp_d <= (tmp_a * (1 << 16)) / tmp_b;
+        fp_d = (64'(a) << 16) / 64'(b);
     endfunction 
 
     function logic signed [31:0] byte_to_fp(
@@ -111,8 +97,6 @@ module rasterizer (
 
         if (maxX < x3_t)
             maxX = x3_t;
-
-        cur_x = minX;
     end
         
 
@@ -130,8 +114,6 @@ module rasterizer (
 
         if (maxY < y3_t)
             maxY = y3_t;
-
-        cur_y = minY;
     end
     
     logic signed [31:0] w1;
@@ -148,9 +130,9 @@ module rasterizer (
 
     //color interpolation using Barycentric Coordinates
     always_comb begin
-        w1_tmp <= fp_m(y2_t - y3_t, cur_x - x3_t) + fp_m(x3_t - x2_t, cur_y - y3_t); 
-        w2_tmp <= fp_m(y3_t - y1_t, cur_x - x3_t) + fp_m(x1_t - x3_t, cur_y - y3_t);
-        denom <= fp_m(y2_t - y3_t, x1_t - x3_t) + fp_m(x3_t - x2_t, y1_t - y3_t);
+        w1_tmp = fp_m(y2_t - y3_t, cur_x - x3_t) + fp_m(x3_t - x2_t, cur_y - y3_t); 
+        w2_tmp = fp_m(y3_t - y1_t, cur_x - x3_t) + fp_m(x1_t - x3_t, cur_y - y3_t);
+        denom = fp_m(y2_t - y3_t, x1_t - x3_t) + fp_m(x3_t - x2_t, y1_t - y3_t);
         w1 = fp_d(w1_tmp, denom);
         w2 = fp_d(w1_tmp, denom);
         w3 = 1 - w1 - w2;
@@ -163,76 +145,88 @@ module rasterizer (
 
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin 
-            cur_x = minX;
-            cur_y = minY;
+            cur_x = 0;
+            cur_y = 0;
             output_valid <= 0;
             done_out <= 0;
-            stall_out = 0;
+            stall_out = 1;
             counter = 0;
         end else begin
             if (counter == 0) begin
-                x1_t <= x3;
-                y1_t <= y3;
-                z1_t <= z3;
-                x2_t <= x3;
-                y2_t <= y3;
-                z2_t <= z3_t;
-                x3_t <= x3;
-                y3_t <= y3;
-                z3_t <= z3;
-                color1_t <= color1;
-                color2_t <= color2;
-                color3_t <= color3;
-                addr_in_t <= addr_in;
-                stall_out <= 0;
-                counter = counter + 1;
-            end else begin
-                stall_out = 1;
-                $display("rasterizer: in_data_valid = %d", in_data_valid);
                 if (in_data_valid) begin
-                    e12 <= (signed'(cur_x - x1_t) * signed'(y2_t - y1_t) - signed'(cur_y - y1_t) * signed'(x2_t - x1_t)) >= 0;
-                    e23 <= (signed'(cur_x - x2_t) * signed'(y3_t - y2_t) - signed'(cur_y - y2_t) * signed'(x3_t - x2_t)) >= 0; 
-                    e31 <= (signed'(cur_x - x3_t) * signed'(y1_t - y3_t) - signed'(cur_y - y3_t) * signed'(x1_t - x3_t)) >= 0;
+                    x1_t <= x1;
+                    y1_t <= y1;
+                    z1_t <= z1;
+                    x2_t <= x2;
+                    y2_t <= y2;
+                    z2_t <= z2;
+                    x3_t <= x3;
+                    y3_t <= y3;
+                    z3_t <= z3;
+                    color1_t <= color1;
+                    color2_t <= color2;
+                    color3_t <= color3;
+                    addr_in_t <= addr_in;
+                    stall_out = 0;
+                    counter = counter + 1;
+                    
+                    $display("rasterizer: triangle = (%d, %d, %d), (%d, %d, %d), (%d, %d, %d)",
+                        $signed(x1) >>> 16, $signed(y1) >>> 16, $signed(z1) >>> 16,
+                        $signed(x2) >>> 16, $signed(y2) >>> 16, $signed(z2) >>> 16,
+                        $signed(x3) >>> 16, $signed(y3) >>> 16, $signed(z3) >>> 16);
+                end
+                output_valid <= 0;
+            end else begin
+                if (counter == 1) begin
+                    cur_x = minX;
+                    cur_y = minY;
+                    counter = counter + 1;
+                end
 
-                    is_inside = e12 & e23 & e31;
-        
-                    if (is_inside) begin
-                        output_valid <= 1;
-                        tmp_addr_out <= addr_in_t + (fp_m(cur_y - (1 << 16), (640 << 16) + cur_x) >> 16);
-                        tmp_color_out <= cur_color;
-                    end else begin
-                        output_valid <= 0;
-                    end
 
-                    cur_x = cur_x + (1 << 16);
-        
-                    if (cur_x > maxX) begin
-                        cur_x = minX;
-                        cur_y = cur_y + (1 << 16);
-                    end
+                $display("rasterizer: cur_point = (%d, %d)", cur_x >> 16, cur_y >> 16);
+                stall_out = 1;
+                e12 <= (signed'(cur_x - x1_t) * signed'(y2_t - y1_t) - signed'(cur_y - y1_t) * signed'(x2_t - x1_t)) >= 0;
+                e23 <= (signed'(cur_x - x2_t) * signed'(y3_t - y2_t) - signed'(cur_y - y2_t) * signed'(x3_t - x2_t)) >= 0; 
+                e31 <= (signed'(cur_x - x3_t) * signed'(y1_t - y3_t) - signed'(cur_y - y3_t) * signed'(x1_t - x3_t)) >= 0;
 
-                    if (cur_y > maxY) begin
-                        done_out <= done_in;
-                        cur_x <= minX;
-                        cur_y <= minY;
-                        stall_out = 0;
-
-                    end
-
+                is_inside = e12 & e23 & e31;
+    
+                if (is_inside) begin
+                    $display("rasterizer: w1 = %f, w2 = %f, w3 = %f",
+                        $itor(w1) / $itor(1 << 16), $itor(w2) / $itor(1 << 16), $itor(w3) / $itor(1 << 16)); 
+                    $display("rasterizer: input color %d, %d, %d", color1_t, color2_t, color3_t);
+                    $display("rasterizer: output color %d, %d, %d", cur_color[7:0], cur_color[15:8], cur_color[23:16]);
+                    output_valid <= 1;
+                    tmp_addr_out = addr_in_t + (fp_m(cur_y - (1 << 16), (640 << 16) + cur_x) >> 16);
+                    
                     if (!output_valid) begin
                         addr_out <= tmp_addr_out;
-                        color_out <= tmp_color_out;
+                        color_out <= cur_color;
                         depth_out <= cur_depth;
                     end else begin
                         if (!stall_in) begin
                             addr_out <= tmp_addr_out;
-                            color_out <= tmp_color_out;
+                            color_out <= cur_color;
                             depth_out <= cur_depth;
                         end
                     end
+                end else begin
+                    output_valid <= 0;
                 end
 
-                counter = counter + 1;
+                cur_x = cur_x + (1 << 16);
+    
+                if (cur_x > maxX) begin
+                    cur_x = minX;
+                    cur_y = cur_y + (1 << 16);
+                end
+
+                if (cur_y > maxY) begin
+                    done_out <= done_in;
+                    counter = 0;
+                end
+
             end
         end
     end

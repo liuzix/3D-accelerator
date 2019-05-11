@@ -129,7 +129,7 @@ module rasterizer (
     logic [23:0] tmp_color_out;
 
     //color interpolation using Barycentric Coordinates
-    always_ff @(posedge clock or negedge reset) begin
+    always_comb begin
         w1_tmp <= fp_m(y2 - y3, cur_x - x3) + fp_m(x3 - x2, cur_y - y3); 
         w2_tmp <= fp_m(y3 - y1, cur_x - x3) + fp_m(x1 - x3, cur_y - y3);
         denom <= fp_m(y2 - y3, x1 - x3) + fp_m(x3 - x2, y1 - y3);
@@ -179,7 +179,10 @@ module rasterizer (
 
                 if (cur_y > maxY) begin
                     done_out <= done_in;
+                    cur_x <= minX;
+                    cur_y <= minY;
                     stall_out = 0;
+
                 end
 
                 if (!output_valid) begin

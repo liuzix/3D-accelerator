@@ -5,6 +5,7 @@
 
 typedef uint32_t fixed_point_t;
 #define FIXED_POINT_FRACTIONAL_BITS 16
+using namespace std;
 
 /* calculate normal vector for each triangle */
 Vec3 calcFaceNormal(Vec3 vpos[3], Vec3 vnormal[3]) {
@@ -24,7 +25,7 @@ inline fixed_point_t float2fixed(double input)
     return (fixed_point_t)(round(input * (1 << FIXED_POINT_FRACTIONAL_BITS)));
 }
 
-int main() {
+int main(int argc, char** argv) {
 	// Construct the data object by reading from file
 	happly::PLYData plyIn("simple.ply");
 
@@ -61,10 +62,11 @@ int main() {
 
 	// fixed point test
 	uint64_t u;
-	memcpy(&u, &vPos[0][0], sizeof(vPos[0][0]));
-	std::cout << "before conversion: " << vPos[0][0] << " " << std::hex << u << std::endl;
+	memcpy(&u, &vPos[0][2], sizeof(vPos[0][2]));
+	std::cout << "before conversion: " << vPos[0][2] << " " << std::hex << u << std::endl;
 
-	std::cout << "after conversion: " << std::bitset<32>(float2fixed(vPos[0][0])) << std::endl;
+	std::cout << "after conversion: " << std::bitset<32>(float2fixed(vPos[0][2])) << std::endl;
+    cout << hex << float2fixed(vPos[0][2]) << endl;
 
 
 	/* data_out: X|Y|Z--X|Y|Z--X|Y|Z--NX|NY|NZ
@@ -86,18 +88,32 @@ int main() {
 			pos_tmp.emplace_back(float2fixed(vPos[index][0]));
 			pos_tmp.emplace_back(float2fixed(vPos[index][1]));
 			pos_tmp.emplace_back(float2fixed(vPos[index][2]));
+            if (argc > 1)
+            std::cout << "( " << std::dec << vPos[index][0]
+                << " " << vPos[index][1]
+                << " " << vPos[index][2] << " )"  << std::endl;
 
 			/* R G B */
 			col_tmp.emplace_back(vColor[index][0]);
 			col_tmp.emplace_back(vColor[index][1]);
 			col_tmp.emplace_back(vColor[index][2]);
 
+            if (argc > 1)
+            std::cout << "RGB( " << std::dec << (unsigned int)vColor[index][0]
+                << " " << (unsigned int)vColor[index][1]
+                << " " << (unsigned int)vColor[index][2] << " )"  << std::endl;
 		}
 
 		/* NX NY NZ */
 		pos_tmp.emplace_back(float2fixed(fNormal[i][0]));
 		pos_tmp.emplace_back(float2fixed(fNormal[i][1]));
 		pos_tmp.emplace_back(float2fixed(fNormal[i][2]));
+        if (argc > 1) {
+        std::cout << "NORMAL( " << std::dec << fNormal[i][0]
+            << " " << fNormal[i][1]
+            << " " << fNormal[i][2] << " )"  << std::endl;
+        std::cout << std::endl;
+        }
 
 		data_out.emplace_back(pos_tmp);
 		color_out.emplace_back(col_tmp);
@@ -147,6 +163,7 @@ int main() {
     std::cout << "|||||SHOULD BE THE SAME|||||" << std::endl;
 	for (int i = 5; i < 9; i++)
 		std::cout << std::bitset<32>(buffer[i]) << " ";
+    cout << endl;
     
 
 	file_in.close();

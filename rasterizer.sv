@@ -10,9 +10,9 @@ module rasterizer (
     input [31:0] x3,
     input [31:0] y3,
     input [31:0] z3,
-    input [23:0] color1, //RGB for v1 = (x1, y1)
-    input [23:0] color2, //RGB for v2 = (x2, y2)
-    input [23:0] color3, //RGB for v3 = (x3, y3)
+    input [23:0] color1, //RGB for v1 = (x1_t, y1_t)
+    input [23:0] color2, //RGB for v2 = (x2_t, y2_t)
+    input [23:0] color3, //RGB for v3 = (x3_t, y3_t)
     input [25:0] addr_in, //frame buffer base 
     input in_data_valid,
 
@@ -25,6 +25,24 @@ module rasterizer (
     output stall_out,//
     output done_out//
 );
+
+    reg [31:0] x1_t;
+    reg [31:0] y1_t;
+    reg [31:0] z1_t;
+    reg [31:0] x2_t;
+    reg [31:0] y2_t;
+    reg [31:0] z2_t;
+    reg [31:0] x3_t;
+    reg [31:0] y3_t;
+    reg [31:0] z3_t;
+    reg [23:0] color1_t;
+    reg [23:0] color2_t;
+    reg [23:0] color3_t;
+    reg [25:0] addr_in_t; 
+
+    logic counter;
+    initial counter = 0;
+
 
     logic [31:0] cur_x;
     logic [31:0] cur_y;
@@ -80,38 +98,38 @@ module rasterizer (
     endfunction
 
     always_comb begin
-        if (x1 < x2) begin
-            maxX = x2;
-            minX = x1;
+        if (x1_t < x2_t) begin
+            maxX = x2_t;
+            minX = x1_t;
         end else begin
-            maxX = x1;
-            minX = x2;
+            maxX = x1_t;
+            minX = x2_t;
         end
 
-        if (minX > x3)
-            minX = x3;
+        if (minX > x3_t)
+            minX = x3_t;
 
-        if (maxX < x3)
-            maxX = x3;
+        if (maxX < x3_t)
+            maxX = x3_t;
 
         cur_x = minX;
     end
         
 
     always_comb begin
-        if (y1 < y2) begin
-            maxY = y2;
-            minY = y1;
+        if (y1_t < y2_t) begin
+            maxY = y2_t;
+            minY = y1_t;
         end else begin
-            maxY = y1;
-            minY = y2;
+            maxY = y1_t;
+            minY = y2_t;
         end
 
-        if (minY > y3)
-            minY = y3;
+        if (minY > y3_t)
+            minY = y3_t;
 
-        if (maxY < y3)
-            maxY = y3;
+        if (maxY < y3_t)
+            maxY = y3_t;
 
         cur_y = minY;
     end
@@ -130,16 +148,16 @@ module rasterizer (
 
     //color interpolation using Barycentric Coordinates
     always_comb begin
-        w1_tmp <= fp_m(y2 - y3, cur_x - x3) + fp_m(x3 - x2, cur_y - y3); 
-        w2_tmp <= fp_m(y3 - y1, cur_x - x3) + fp_m(x1 - x3, cur_y - y3);
-        denom <= fp_m(y2 - y3, x1 - x3) + fp_m(x3 - x2, y1 - y3);
+        w1_tmp <= fp_m(y2_t - y3_t, cur_x - x3_t) + fp_m(x3_t - x2_t, cur_y - y3_t); 
+        w2_tmp <= fp_m(y3_t - y1_t, cur_x - x3_t) + fp_m(x1_t - x3_t, cur_y - y3_t);
+        denom <= fp_m(y2_t - y3_t, x1_t - x3_t) + fp_m(x3_t - x2_t, y1_t - y3_t);
         w1 = fp_d(w1_tmp, denom);
         w2 = fp_d(w1_tmp, denom);
         w3 = 1 - w1 - w2;
-        cur_color[7:0] = fp_to_byte(fp_m(w1, byte_to_fp(color1[7:0])) + fp_m(w2, byte_to_fp(color2[7:0])) + fp_m(w3, byte_to_fp(color3[7:0])));
-        cur_color[15:8] = fp_to_byte(fp_m(w1, byte_to_fp(color1[15:8])) + fp_m(w2, byte_to_fp(color2[15:8])) + fp_m(w3, byte_to_fp(color3[15:8])));
-        cur_color[23:16] = fp_to_byte(fp_m(w1, byte_to_fp(color1[23:16])) + fp_m(w2, byte_to_fp(color2[23:16])) + fp_m(w3, byte_to_fp(color3[23:16])));
-        cur_depth = fp_m(w1, z1) + fp_m(w2, z2) + fp_m(w3, z3);
+        cur_color[7:0] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[7:0])) + fp_m(w2, byte_to_fp(color2_t[7:0])) + fp_m(w3, byte_to_fp(color3_t[7:0])));
+        cur_color[15:8] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[15:8])) + fp_m(w2, byte_to_fp(color2_t[15:8])) + fp_m(w3, byte_to_fp(color3_t[15:8])));
+        cur_color[23:16] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[23:16])) + fp_m(w2, byte_to_fp(color2_t[23:16])) + fp_m(w3, byte_to_fp(color3_t[23:16])));
+        cur_depth = fp_m(w1, z1_t) + fp_m(w2, z2_t) + fp_m(w3, z3_t);
     end 
 
 
@@ -150,54 +168,72 @@ module rasterizer (
             output_valid <= 0;
             done_out <= 0;
             stall_out = 0;
+            counter = 0;
         end else begin
+            if (counter == 0) begin
+                x1_t <= x3;
+                y1_t <= y3;
+                z1_t <= z3;
+                x2_t <= x3;
+                y2_t <= y3;
+                z2_t <= z3_t;
+                x3_t <= x3;
+                y3_t <= y3;
+                z3_t <= z3;
+                color1_t <= color1;
+                color2_t <= color2;
+                color3_t <= color3;
+                addr_in_t <= addr_in;
+                stall_out <= 0;
+                counter = counter + 1;
+            end else begin
+                stall_out = 1;
+                $display("rasterizer: in_data_valid = %d", in_data_valid);
+                if (in_data_valid) begin
+                    e12 <= (signed'(cur_x - x1_t) * signed'(y2_t - y1_t) - signed'(cur_y - y1_t) * signed'(x2_t - x1_t)) >= 0;
+                    e23 <= (signed'(cur_x - x2_t) * signed'(y3_t - y2_t) - signed'(cur_y - y2_t) * signed'(x3_t - x2_t)) >= 0; 
+                    e31 <= (signed'(cur_x - x3_t) * signed'(y1_t - y3_t) - signed'(cur_y - y3_t) * signed'(x1_t - x3_t)) >= 0;
+
+                    is_inside = e12 & e23 & e31;
         
-            stall_out = 1;
-            
-            $display("rasterizer: in_data_valid = %d", in_data_valid);
-            if (in_data_valid) begin
-                e12 <= (signed'(cur_x - x1) * signed'(y2 - y1) - signed'(cur_y - y1) * signed'(x2 - x1)) >= 0;
-                e23 <= (signed'(cur_x - x2) * signed'(y3 - y2) - signed'(cur_y - y2) * signed'(x3 - x2)) >= 0; 
-                e31 <= (signed'(cur_x - x3) * signed'(y1 - y3) - signed'(cur_y - y3) * signed'(x1 - x3)) >= 0;
+                    if (is_inside) begin
+                        output_valid <= 1;
+                        tmp_addr_out <= addr_in_t + (fp_m(cur_y - (1 << 16), (640 << 16) + cur_x) >> 16);
+                        tmp_color_out <= cur_color;
+                    end else begin
+                        output_valid <= 0;
+                    end
 
-                is_inside = e12 & e23 & e31;
+                    cur_x = cur_x + (1 << 16);
         
-                if (is_inside) begin
-                    output_valid <= 1;
-                    tmp_addr_out <= addr_in + (fp_m(cur_y - (1 << 16), (640 << 16) + cur_x) >> 16);
-                    tmp_color_out <= cur_color;
-                end else begin
-                    output_valid <= 0;
-                end
+                    if (cur_x > maxX) begin
+                        cur_x = minX;
+                        cur_y = cur_y + (1 << 16);
+                    end
 
-                cur_x = cur_x + (1 << 16);
-        
-                if (cur_x > maxX) begin
-                    cur_x = minX;
-                    cur_y = cur_y + (1 << 16);
-                end
+                    if (cur_y > maxY) begin
+                        done_out <= done_in;
+                        cur_x <= minX;
+                        cur_y <= minY;
+                        stall_out = 0;
 
-                if (cur_y > maxY) begin
-                    done_out <= done_in;
-                    cur_x <= minX;
-                    cur_y <= minY;
-                    stall_out = 0;
+                    end
 
-                end
-
-                if (!output_valid) begin
-                    addr_out <= tmp_addr_out;
-                    color_out <= tmp_color_out;
-                    depth_out <= cur_depth;
-                end else begin
-                    if (!stall_in) begin
+                    if (!output_valid) begin
                         addr_out <= tmp_addr_out;
                         color_out <= tmp_color_out;
                         depth_out <= cur_depth;
+                    end else begin
+                        if (!stall_in) begin
+                            addr_out <= tmp_addr_out;
+                            color_out <= tmp_color_out;
+                            depth_out <= cur_depth;
+                        end
                     end
                 end
-            end
 
+                counter = counter + 1;
+            end
         end
     end
 

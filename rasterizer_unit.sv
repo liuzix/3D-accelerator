@@ -57,6 +57,9 @@ logic [25:0] frame_buffer_base;
 logic [25:0] vertex_buffer_base;
 logic do_render;
 
+logic [23:0] color1;
+logic [23:0] color2;
+logic [23:0] color3;
 
 //output of vertex fetch
 logic output_valid;
@@ -142,6 +145,12 @@ vertex_calc v_calc (
     .w_out(w_out),
     .done_in(done1),
     .done_out(done2),
+    .color_in1(vertex_out[3][23:0]),
+    .color_in2(vertex_out[7][23:0]),
+    .color_in3(vertex_out[11][23:0]),
+    .color_out1(color1),
+    .color_out2(color2),
+    .color_out3(color3),
     .stall_in(stall2), 
     .stall_out(stall1),
     .out_data_valid(out_data_valid));
@@ -159,9 +168,9 @@ rasterizer raster (
     .z1(z_out[0]),
     .z2(z_out[1]),
     .z3(z_out[2]),
-    .color1(vertex_out[3][23:0]),
-    .color2(vertex_out[7][23:0]),
-    .color3(vertex_out[11][23:0]),
+    .color1(color1), //from vertex calc
+    .color2(color2),
+    .color3(color3),
     .addr_in(frame_buffer_base), //from config_reg
     .in_data_valid(out_data_valid),
 

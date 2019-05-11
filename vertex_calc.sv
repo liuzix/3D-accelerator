@@ -4,6 +4,9 @@ module vertex_calc (input clock,
                     input reset,
                     input logic [31:0] mat[15:0],
                     input logic [31:0] v_in [14:0],
+                    input logic color_in1,
+                    input logic color_in2,
+                    input logic color_in3,
                     input logic input_data_valid,
                     input logic done_in,
                     input logic stall_in,
@@ -11,6 +14,9 @@ module vertex_calc (input clock,
                     output logic [31:0] y_out[3:0],
                     output logic [31:0] z_out[3:0],
                     output logic [31:0] w_out[3:0],
+                    output logic color_out1;
+                    output logic color_out2;
+                    output logic color_out3;
                     output logic out_data_valid,
                     output logic done_out,
                     output logic stall_out);
@@ -87,6 +93,10 @@ module vertex_calc (input clock,
                 z_out[2] <= fp_m(tmp_x[2], width) + width;
                 w_out[2] <= fp_m(tmp_y[2], height) + height;
 
+                color_out1 <= color_in1;
+                color_out2 <= color_in2;
+                color_out3 <= color_in3;
+
                 done_out <= 1;
                 out_data_valid <= 1;
                 stall_out <= 0;
@@ -106,6 +116,10 @@ module vertex_calc (input clock,
                     y_out[2] <= fp_m(tmp_y[2], height) + height;
                     z_out[2] <= fp_m(tmp_x[2], width) + width;
                     w_out[2] <= fp_m(tmp_y[2], height) + height;
+
+                    color_out1 <= color_in1;
+                    color_out2 <= color_in2;
+                    color_out3 <= color_in3;
 
                     done_out <= 1;
                     out_data_valid <= 1;

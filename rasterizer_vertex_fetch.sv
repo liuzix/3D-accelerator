@@ -54,6 +54,7 @@ module rasterizer_vertex_fetch (
     logic half_full;
     logic almost_empty;
 
+    logic fetch_tri;
     logic recv_valid;
     int fifo_size = 2**FIFO_SIZE;
     int fifo_counter;
@@ -90,6 +91,11 @@ module rasterizer_vertex_fetch (
                 vertex_out_buf[10],vertex_out_buf[9],vertex_out_buf[8],vertex_out_buf[7],
                 vertex_out_buf[6],vertex_out_buf[5],vertex_out_buf[4],vertex_out_buf[3],
                 vertex_out_buf[2],vertex_out_buf[1],vertex_out_buf[0]};
+            $display("triangle:");
+            $display("[%x], [%x], [%x]", vertex_out_buf[0], vertex_out_buf[1], vertex_out_buf[2]);
+            $display("[%x], [%x], [%x]", vertex_out_buf[4], vertex_out_buf[5], vertex_out_buf[6]);
+            $display("[%x], [%x], [%x]", vertex_out_buf[8], vertex_out_buf[9], vertex_out_buf[10]);
+            $display("=====");
             wrreq <= 1;
         end else begin
             wrreq <= 0;
@@ -115,6 +121,7 @@ module rasterizer_vertex_fetch (
             s_count <= 0;
             tri_num = 0;
             input_count <= 0;
+            fetch_tri <= 0;
         end
         else begin
             case(send_state)
@@ -128,10 +135,11 @@ module rasterizer_vertex_fetch (
                         s_count <= s_count + 1;
                         send_state <= SEND;
                     end
-                    if (tri_num == 0 && fetch_enable) begin
+                    if (tri_num == 0 && fetch_enable && !fetch_tri) begin
                         $display("vertex_fetch: vertex_buffer_base = %d", vertex_buffer_base);
                         master_address <= vertex_buffer_base;
                         master_read <= 1;
+                        fetch_tri <= 1;
                         addr <= vertex_buffer_base + 4;
                         send_state <= TRI_SEND;
                     end

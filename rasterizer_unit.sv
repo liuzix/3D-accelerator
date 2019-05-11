@@ -7,7 +7,7 @@ module rasterizer_unit (
     input logic read,
     input logic [15:0] address,
     output logic [32:0] readdata,
-    
+
     output [25:0] master_address,
     output master_read,
     output master_write,
@@ -189,10 +189,12 @@ rasterizer_fetch_logic fetch_logic (
     .master_readdatavalid(master_readdatavalid_2),
     .master_writedata(master_writedata_2),
     .master_waitrequest(master_waitrequest_2),
+
     .input_valid(rasterizer_output_valid), //from rasterizer
     .addr_in(addr_out), //from rasterizer
     .color_in(color_out), //from rasterizer
     .depth_in(depth_in), /// from bus...
+    
     .output_valid(fetch_output_valid),
     .addr_out(fetch_addr_out),
     .old_depth_out(old_depth_out),
@@ -213,6 +215,7 @@ ztest z_test (
     .color_in(fetch_color_out),
     .done_in(done4),
     .done_out(done5),
+
     .master_address(master_address_3),
     .master_read(master_read_3),
     .master_write(master_write_3),
@@ -221,6 +224,7 @@ ztest z_test (
     .master_readdatavalid(master_readdatavalid_3),
     .master_writedata(master_writedata_3),
     .master_waitrequest(master_waitrequest_3),
+    
     .stall_out(stall4));
 
 //need one to write to SDRAM controller

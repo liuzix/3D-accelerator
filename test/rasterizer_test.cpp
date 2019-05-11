@@ -101,13 +101,11 @@ fixed_point_t *load_matrix() {
 }
 int main(int argc, char **argv) {
     Verilated::commandArgs(argc, argv);  // Remember args
-    uint32_t framebuffer_base = 0;
-    uint32_t vertex_buffer_base =
-        640 * 480 * 8;  // byte addressable,one pixel 8 bytes
     // simulate a 64M sdram block
-
     SDRAMController<uint32_t> sdramController(64 * 1024 * 1024);
-
+    char*framebuffer_base = (char*)sdramController.memory.data();
+    uint32_t vertex_buffer_offset =
+        640 * 480 * 8;  // byte addressable,one pixel 8 bytes
     // load vertex in sdram
     std::ifstream file("../ply_loader/data.binary",
                        std::ios::in | std::ios::binary | std::ios::ate);
@@ -116,14 +114,22 @@ int main(int argc, char **argv) {
         std::abort();
     }
     size_t size = file.tellg();
-    char *memblock = (char *)sdramController.memory.data() + vertex_buffer_base;
+    cout << "binary file size = " << dec << size << endl;
+    char *vertex_buffer_base = framebuffer_base + vertex_buffer_offset;
     file.seekg(0, ios::beg);
-    file.read(memblock, size);
+    file.read(vertex_buffer_base, size);
     file.close();
-
+    cout<<(void*)framebuffer_base<<"\n";
+    cout<<(void*)vertex_buffer_base<<"\n";
     cout << "the entire binary file content is in sdram\n";
-
-    VGADisplay *display = new VGADisplay(sdramController.memory.data());
+    //initialize framebuffer
+    for(int i=0;i<480*640*4;i++){
+        char*p = framebuffer_base+i*4;
+        *p = 0x1e;     //r
+        *(p+1) = 0x90; //g
+        *(p+2) = 0xff; //b
+    }
+    VGADisplay *display = new VGADisplay(framebuffer_base);
     // Create instance
     top = new Vras;
     // rasterizer;
@@ -135,17 +141,17 @@ int main(int argc, char **argv) {
     top->reset = 1;
 
     // configuration
-
+    
     for (int i = 0; i < 3; i++) {
         switch (i) {
             case 0:
-                top->writedata = framebuffer_base;
+                top->writedata = 0x0;//frame buffer start from the address 0 of sdram
                 break;
             case 1:
-                top->writedata = vertex_buffer_base;
+                top->writedata = vertex_buffer_offset;
                 break;
             case 2:
-                top->writedata = 1;
+                top->writedata = 1;//
                 break;
         }
         top->address = 4 * i;
@@ -159,7 +165,7 @@ int main(int argc, char **argv) {
     uint16_t config_MVPreg_addr = 0x200;
     uint16_t config_lightingreg_addr = 0x300;
     fixed_point_t *matrix_base = load_matrix();
-    for (int i = 0; i < 16 + 16 + 8; i++) {
+    for (int i = 0; i < 16 + 16 + 2; i++) {
         // MV address 256->316  60
         if (i > 0 && i < 16) {
             top->writedata = 1;
@@ -186,6 +192,7 @@ int main(int argc, char **argv) {
     for (;;) {
         top->clock = 1;
         display->poll();
+        display->refresh();
         sdramController.tick(0, top->master_address, top->master_read,
                              top->master_write, &top->master_readdata,
                              top->master_readdatavalid, &top->master_writedata,
@@ -199,14 +206,12 @@ int main(int argc, char **argv) {
                              top->master_readdatavalid_2, &top->master_writedata_2,
                              top->master_waitrequest_2);
         top->eval();
-        // vgasim.tick(vga->VGA_CLK, vga->VGA_R, vga->VGA_G, vga->VGA_B,
-        // vga->VGA_HS, vga->VGA_VS);
+       
 
         top->clock = 0;
         top->eval();
 
-        // vgasim.tick(vga->VGA_CLK, vga->VGA_R, vga->VGA_G, vga->VGA_B,
-        // vga->VGA_HS, vga->VGA_VS);
+        
         display->refresh();
         main_time++;
     }

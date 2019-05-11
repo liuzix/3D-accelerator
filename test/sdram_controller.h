@@ -72,6 +72,8 @@ public:
             && writeRequests.front().targetTick <= tickCount) {
             
             WriteRequest &req = writeRequests.front();
+
+            cout << "sdram handle write request to addr " << hex << req.address << endl;
             memory[req.address / sizeof(Value)] = req.value;
             writeRequests.pop_front();
         }

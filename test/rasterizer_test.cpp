@@ -39,6 +39,7 @@ class VGADisplay {
         if (event.type == SDL_QUIT) exit(0);
     }
     void refresh() {
+        SDL_RenderClear(renderer);
         uint8_t *ptr = (uint8_t *)framebuffer;
 
         for (int y = 0; y < 480; y++) {
@@ -46,12 +47,14 @@ class VGADisplay {
                 uint8_t r = *ptr;
                 uint8_t g = *(ptr + 1);
                 uint8_t b = *(ptr + 2);
+                
+                ptr += 8;
 
+                if (r || g || b)
+                    printf("refresh r: %d, g: %d, b: %d\n", r, g, b);
                 SDL_SetRenderDrawColor(renderer, r, g, b, 255);
                 SDL_RenderDrawPoint(renderer, x, y);
             }
-
-            ptr += 8;
         }
         SDL_RenderPresent(renderer);
     }
@@ -132,7 +135,7 @@ int main(int argc, char **argv) {
     // initialize framebuffer
     for (int i = 0; i < 480 * 640; i++) {
         unsigned long *p = (unsigned long *)(framebuffer_base + i * 8);
-        *p = -1;
+        *p = 0xFFFFFFFFUL << 32;
     }
     VGADisplay *display = new VGADisplay(framebuffer_base);
     // Create instance

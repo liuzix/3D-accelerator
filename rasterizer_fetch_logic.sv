@@ -80,7 +80,6 @@ always_ff @(posedge clock or negedge reset) begin
         stall_out <= 1;
     end else begin
         enqueue = 0;
-        $display("depth fetch: input valid = %d", input_valid);
         case (state)
             S_IDLE: begin
                 if (full) begin
@@ -110,7 +109,7 @@ always_ff @(posedge clock or negedge reset) begin
         if (enqueue)
         begin
             // enqueue the fetch request
-            $display("enqueue fetch request addr = %x", addr_in);
+            $display("depth_fetcher: enqueue fetch request addr = %x", addr_in);
             wrreq <= 1;
             data_in[25:0] <= addr_in;
             data_in[49:26] <= color_in;

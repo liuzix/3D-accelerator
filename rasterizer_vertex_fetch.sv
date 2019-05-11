@@ -91,11 +91,11 @@ module rasterizer_vertex_fetch (
                 vertex_out_buf[10],vertex_out_buf[9],vertex_out_buf[8],vertex_out_buf[7],
                 vertex_out_buf[6],vertex_out_buf[5],vertex_out_buf[4],vertex_out_buf[3],
                 vertex_out_buf[2],vertex_out_buf[1],vertex_out_buf[0]};
-            $display("triangle:");
-            $display("[%x], [%x], [%x]", vertex_out_buf[0], vertex_out_buf[1], vertex_out_buf[2]);
-            $display("[%x], [%x], [%x]", vertex_out_buf[4], vertex_out_buf[5], vertex_out_buf[6]);
-            $display("[%x], [%x], [%x]", vertex_out_buf[8], vertex_out_buf[9], vertex_out_buf[10]);
-            $display("=====");
+            $display("vertex_fetch: triangle:");
+            $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[0], vertex_out_buf[1], vertex_out_buf[2]);
+            $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[4], vertex_out_buf[5], vertex_out_buf[6]);
+            $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[8], vertex_out_buf[9], vertex_out_buf[10]);
+            $display("vertex_fetch: =====");
             wrreq <= 1;
         end else begin
             wrreq <= 0;
@@ -127,6 +127,7 @@ module rasterizer_vertex_fetch (
             case(send_state)
                 IDLE_S: begin
                     if (input_count < tri_num && fifo_counter < fifo_size) begin
+                        $display("vertex_fetch: read addr = %d", addr);
                         master_address <= addr;
                         master_read <= 1;
                         addr <= addr + 4;
@@ -168,6 +169,7 @@ module rasterizer_vertex_fetch (
                 end
                 TRI_SEND: begin
                     if (!master_waitrequest) begin
+                        $display("vertex_fetch: tri_num read request sent");
                         master_read <= 0;
                         send_state <= IDLE_S;
                     end else begin
@@ -193,11 +195,13 @@ module rasterizer_vertex_fetch (
                     recv_valid <= 0;
                     if (master_readdatavalid && tri_num != 0) begin
                         vertex_out_buf[r_count] <= master_readdata;
+                        $display("vertex_fetch: data = %d", master_readdata >> 16);
                         r_count <= r_count + 1;
                         rec_state <= FETCH;
                     end
 
                     if (master_readdatavalid && tri_num == 0) begin
+                        $display("vertex_fetch: tri_num = %d", master_readdata);
                         tri_num = master_readdata;
                     end
                 end
@@ -206,11 +210,13 @@ module rasterizer_vertex_fetch (
                         if (r_count == 14) begin
                             r_count <= 0;
                             vertex_out_buf[r_count] <= master_readdata;
+                            $display("vertex_fetch: data = %d", master_readdata >> 16);
                             recv_valid <= 1;
                             output_count <= output_count + 1;
                             rec_state <= IDLE_R;
                         end else begin
                             vertex_out_buf[r_count] <= master_readdata;
+                            $display("vertex_fetch: data = %d", master_readdata >> 16);
                             r_count <= r_count + 1;
                         end
                     end

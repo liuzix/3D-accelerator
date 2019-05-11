@@ -3,8 +3,12 @@
 #include <verilated.h>
 #include <cassert>
 #include <fstream>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <glm/vec4.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/ext.hpp>
 #include <iostream>
 #include "SDL2/SDL.h"
 #include "Vrasterizer_unit.h"
@@ -24,7 +28,7 @@ class VGADisplay {
         framebuffer = _framebuffer;
         SDL_Init(SDL_INIT_VIDEO);
         SDL_CreateWindowAndRenderer(640, 480, 0, &window, &renderer);
-        
+
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
         SDL_RenderClear(renderer);
         SDL_RenderPresent(renderer);
@@ -73,10 +77,10 @@ inline fixed_point_t float2fixed(double input) {
 fixed_point_t *load_matrix() {
     // Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1
     // unit <-> 100 units
-    glm::mat4 Projection = glm::perspective(
-        glm::radians(45.0f), (float)640 / (float)480, 0.1f, 100.0f);
+    //glm::mat4 Projection = glm::perspective(
+    //    glm::radians(45.0f), (float)640 / (float)480, 0.1f, 100.0f);
     // Or, for an ortho camera :
-    // glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f);
+    glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f);
     // // In world coordinates
     // Camera matrix
     glm::mat4 View = glm::lookAt(
@@ -90,10 +94,13 @@ fixed_point_t *load_matrix() {
     glm::mat4 mvp =
         Projection * View *
         Model;  // Remember, matrix multiplication is the other way around
+
+    glm::vec4 test = mvp * glm::vec4(0, 0, -8, 1);
+    cout << "rasterizer: reference = " << glm::to_string(test) << endl;
     fixed_point_t *fixed_matrix = new fixed_point_t[16];
     for (int i = 0; i < 4; i++) {
         for (int j = 0; j < 4; j++) {
-            fixed_matrix[4 * i + j] = float2fixed(mvp[i][j]);
+            fixed_matrix[4 * i + j] = float2fixed(mvp[j][i]);
         }
     }
     // memcpy(matrix_base,fixed_matrix,16*4);
@@ -103,14 +110,14 @@ int main(int argc, char **argv) {
     Verilated::commandArgs(argc, argv);  // Remember args
     // simulate a 64M sdram block
     SDRAMController<uint32_t> sdramController(64 * 1024 * 1024);
-    char*framebuffer_base = (char*)sdramController.memory.data();
+    char *framebuffer_base = (char *)sdramController.memory.data();
     uint32_t vertex_buffer_offset =
         640 * 480 * 8;  // byte addressable,one pixel 8 bytes
     // load vertex in sdram
     std::ifstream file("../ply_loader/data.binary",
                        std::ios::in | std::ios::binary | std::ios::ate);
     if (!file.is_open()) {
-        cout<<"file open failed";
+        cout << "file open failed";
         std::abort();
     }
     size_t size = file.tellg();
@@ -119,15 +126,13 @@ int main(int argc, char **argv) {
     file.seekg(0, ios::beg);
     file.read(vertex_buffer_base, size);
     file.close();
-    cout<<(void*)framebuffer_base<<"\n";
-    cout<<(void*)vertex_buffer_base<<"\n";
+    cout << (void *)framebuffer_base << "\n";
+    cout << (void *)vertex_buffer_base << "\n";
     cout << "the entire binary file content is in sdram\n";
-    //initialize framebuffer
-    for(int i=0;i<480*640*4;i++){
-        char*p = framebuffer_base+i*4;
-        *p = 0x1e;     //r
-        *(p+1) = 0x90; //g
-        *(p+2) = 0xff; //b
+    // initialize framebuffer
+    for (int i = 0; i < 480 * 640; i++) {
+        unsigned long *p = (unsigned long *)(framebuffer_base + i * 8);
+        *p = -1;        // r
     }
     VGADisplay *display = new VGADisplay(framebuffer_base);
     // Create instance
@@ -141,22 +146,35 @@ int main(int argc, char **argv) {
     top->reset = 1;
 
     // configuration
-    
+
     for (int i = 0; i < 3; i++) {
         switch (i) {
             case 0:
-                top->writedata = 0x0;//frame buffer start from the address 0 of sdram
+                top->writedata =
+                    0x0;  // frame buffer start from the address 0 of sdram
                 break;
             case 1:
                 top->writedata = vertex_buffer_offset;
                 break;
             case 2:
-                top->writedata = 1;//
+                top->writedata = 1;  //
                 break;
         }
         top->address = 4 * i;
         top->write = 1;
         top->clock = 1;
+        sdramController.tick(0, top->master_address, top->master_read,
+                             top->master_write, &top->master_readdata,
+                             top->master_readdatavalid, &top->master_writedata,
+                             top->master_waitrequest);
+        sdramController.tick(
+            1, top->master_address_2, top->master_read_2, top->master_write_2,
+            &top->master_readdata_2, top->master_readdatavalid_2,
+            &top->master_writedata_2, top->master_waitrequest_2);
+        sdramController.tick(
+            2, top->master_address_3, top->master_read_3, top->master_write_3,
+            &top->master_readdata_3, top->master_readdatavalid_3,
+            &top->master_writedata_3, top->master_waitrequest_3);
         top->eval();
         top->clock = 0;
         top->eval();
@@ -174,7 +192,7 @@ int main(int argc, char **argv) {
         // MVP address 512->572 60
         else if (i >= 16 && i < 32) {
             top->writedata = matrix_base[i - 16];
-            cout<<"MVP matrix:"<<matrix_base[i - 16]<<"\n";
+            cout << "MVP matrix:" << matrix_base[i - 16] << "\n";
             top->address = config_MVPreg_addr + 4 * (i - 16);
         } else {
             // lighting address 768->176  8
@@ -183,35 +201,46 @@ int main(int argc, char **argv) {
         }
         top->write = 1;
         top->clock = 1;
+        sdramController.tick(0, top->master_address, top->master_read,
+                             top->master_write, &top->master_readdata,
+                             top->master_readdatavalid, &top->master_writedata,
+                             top->master_waitrequest);
+        sdramController.tick(
+            1, top->master_address_2, top->master_read_2, top->master_write_2,
+            &top->master_readdata_2, top->master_readdatavalid_2,
+            &top->master_writedata_2, top->master_waitrequest_2);
+        sdramController.tick(
+            2, top->master_address_3, top->master_read_3, top->master_write_3,
+            &top->master_readdata_3, top->master_readdatavalid_3,
+            &top->master_writedata_3, top->master_waitrequest_3);
         top->eval();
         top->clock = 0;
         top->eval();
     }
-    cout<<"configuration done!\n";
+    cout << "configuration done!\n";
     // begin rasterization
     for (;;) {
         top->clock = 1;
         display->poll();
         display->refresh();
+        cout << "tick\n";
         sdramController.tick(0, top->master_address, top->master_read,
                              top->master_write, &top->master_readdata,
                              top->master_readdatavalid, &top->master_writedata,
                              top->master_waitrequest);
-        sdramController.tick(1, top->master_address_2, top->master_read_2,
-                             top->master_write_2, &top->master_readdata_2,
-                             top->master_readdatavalid_2, &top->master_writedata_2,
-                             top->master_waitrequest_2);
-        sdramController.tick(2, top->master_address_2, top->master_read_2,
-                             top->master_write_2, &top->master_readdata_2,
-                             top->master_readdatavalid_2, &top->master_writedata_2,
-                             top->master_waitrequest_2);
+        sdramController.tick(
+            1, top->master_address_2, top->master_read_2, top->master_write_2,
+            &top->master_readdata_2, top->master_readdatavalid_2,
+            &top->master_writedata_2, top->master_waitrequest_2);
+        sdramController.tick(
+            2, top->master_address_3, top->master_read_3, top->master_write_3,
+            &top->master_readdata_3, top->master_readdatavalid_3,
+            &top->master_writedata_3, top->master_waitrequest_3);
         top->eval();
-       
 
         top->clock = 0;
         top->eval();
 
-        
         display->refresh();
         main_time++;
     }

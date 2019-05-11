@@ -6,7 +6,7 @@ module rasterizer_unit (
     input logic write,
     input logic read,
     input logic [15:0] address,
-    output logic [32:0] readdata,
+    output logic [31:0] readdata,
 
     output [25:0] master_address,
     output master_read,

@@ -35,7 +35,7 @@ module rasterizer_vertex_fetch (
     logic [3:0] r_count;
     int output_count;
     logic [25:0] addr;
-    int tri_num = 0;
+    int tri_num ;
     int input_count;
 
     assign master_byteenable = 4'b1111;
@@ -79,51 +79,25 @@ module rasterizer_vertex_fetch (
         data_out[319:288],data_out[287:256],data_out[255:224],
         data_out[223:192],data_out[191:160],data_out[159:128],
         data_out[127:96],data_out[95:64],data_out[63:32],data_out[31:0]};
+  logic fifo_increase;//fifo_increase=1 means we receive data and need to increase fifo counter;
+  logic fifo_decrease;//fifo_decrease means we retrieve data from fifo and need to decrease fifo counter;
 
-    always_ff @(posedge clock or negedge reset) begin
-        if (!reset) begin
-            fifo_counter = 0;
-            already_pop <= 0;
-        end
-
-        if (recv_valid && !full) begin
-            data_in <= {vertex_out_buf[14],vertex_out_buf[13],vertex_out_buf[12],vertex_out_buf[11],
-                vertex_out_buf[10],vertex_out_buf[9],vertex_out_buf[8],vertex_out_buf[7],
-                vertex_out_buf[6],vertex_out_buf[5],vertex_out_buf[4],vertex_out_buf[3],
-                vertex_out_buf[2],vertex_out_buf[1],vertex_out_buf[0]};
-            $display("vertex_fetch: triangle:");
-            $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[0], vertex_out_buf[1], vertex_out_buf[2]);
-            $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[4], vertex_out_buf[5], vertex_out_buf[6]);
-            $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[8], vertex_out_buf[9], vertex_out_buf[10]);
-            $display("vertex_fetch: =====");
-            wrreq <= 1;
-        end else begin
-            wrreq <= 0;
-            data_in <= 'hff;
-        end
-
-        if (!stall_in && !empty && !already_pop) begin
-            rdreq <= 1;
-            fifo_counter = fifo_counter - 1;
-            output_valid <= 1;
-            already_pop <= 1;
-        end else begin
-            rdreq <= 0;
-            output_valid <= 0;
-            already_pop <= 0;
-        end
-    end
-
+ //send vertices data from fifo to vertex_cal; receive vertices data from bus
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
             send_state <= IDLE_S;
             master_read <= 0;
             s_count <= 0;
-            tri_num = 0;
+            fifo_counter <= 0;
+            already_pop <= 0;
             input_count <= 0;
             fetch_tri <= 0;
         end
         else begin
+          //deal with fifo counter
+           if(fifo_increase==1&fifo_decrease==0)fifo_counter = fifo_counter + 1;
+           else if(fifo_increase==0&fifo_decrease==1)fifo_counter = fifo_counter + 1;
+           else fifo_counter = fifo_counter;
             case(send_state)
                 IDLE_S: begin
                     if (input_count < tri_num && fifo_counter < fifo_size) begin
@@ -132,7 +106,8 @@ module rasterizer_vertex_fetch (
                         master_read <= 1;
                         addr <= addr + 4;
                         input_count <= input_count + 1;
-                        fifo_counter = fifo_counter + 1;
+                        //fifo_counter = fifo_counter + 1;
+                        fifo_increase=1;
                         s_count <= s_count + 1;
                         send_state <= SEND;
                     end
@@ -143,6 +118,7 @@ module rasterizer_vertex_fetch (
                         fetch_tri <= 1;
                         addr <= vertex_buffer_base + 4;
                         send_state <= TRI_SEND;
+                        fifo_increase=0;
                     end
                 end
                 SEND: begin
@@ -179,6 +155,34 @@ module rasterizer_vertex_fetch (
                 end
                 default: begin end
             endcase
+            if (recv_valid && !full) begin
+            data_in <= {vertex_out_buf[14],vertex_out_buf[13],vertex_out_buf[12],vertex_out_buf[11],
+                vertex_out_buf[10],vertex_out_buf[9],vertex_out_buf[8],vertex_out_buf[7],
+                vertex_out_buf[6],vertex_out_buf[5],vertex_out_buf[4],vertex_out_buf[3],
+                vertex_out_buf[2],vertex_out_buf[1],vertex_out_buf[0]};
+            $display("vertex_fetch: triangle:");
+            $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[0], vertex_out_buf[1], vertex_out_buf[2]);
+            $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[4], vertex_out_buf[5], vertex_out_buf[6]);
+            $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[8], vertex_out_buf[9], vertex_out_buf[10]);
+            $display("vertex_fetch: =====");
+            wrreq <= 1;
+        end else begin
+            wrreq <= 0;
+            data_in <= 'hff;
+        end
+
+        if (!stall_in && !empty && !already_pop) begin
+            rdreq <= 1;
+            //fifo_counter = fifo_counter - 1;
+            fifo_decrease=1;
+            output_valid <= 1;
+            already_pop <= 1;
+        end else begin
+            fifo_decrease=0;
+            rdreq <= 0;
+            output_valid <= 0;
+            already_pop <= 0;
+        end
         end
     end
 
@@ -187,11 +191,12 @@ module rasterizer_vertex_fetch (
             rec_state <= IDLE_R;
             recv_valid <= 0;
             r_count <= 0;
+            tri_num <= 0;//number of total vertices
             output_count <= 0;
         end
         else begin
             case (rec_state)
-                IDLE_R: begin
+                IDLE_R: begin//fetch total number
                     recv_valid <= 0;
                     if (master_readdatavalid && tri_num != 0) begin
                         vertex_out_buf[r_count] <= master_readdata;
@@ -202,10 +207,10 @@ module rasterizer_vertex_fetch (
 
                     if (master_readdatavalid && tri_num == 0) begin
                         $display("vertex_fetch: tri_num = %d", master_readdata);
-                        tri_num = master_readdata;
+                        tri_num <= master_readdata;
                     end
                 end
-                FETCH: begin
+                FETCH: begin//fetch vertices
                     if (master_readdatavalid) begin
                         if (r_count == 14) begin
                             r_count <= 0;

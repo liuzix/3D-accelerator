@@ -37,6 +37,7 @@ module vga_master (
     logic full;
     logic empty;
     logic almost_empty;
+    logic half_full;
     logic almost_full;
 
     fifo #(.DBITS(26)) buffer(

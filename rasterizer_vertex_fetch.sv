@@ -79,9 +79,7 @@ module rasterizer_vertex_fetch (
         data_out[319:288],data_out[287:256],data_out[255:224],
         data_out[223:192],data_out[191:160],data_out[159:128],
         data_out[127:96],data_out[95:64],data_out[63:32],data_out[31:0]};
-  logic fifo_increase;//fifo_increase=1 means we receive data and need to increase fifo counter;
-  logic fifo_decrease;//fifo_decrease means we retrieve data from fifo and need to decrease fifo counter;
-
+  
  //send vertices data from fifo to vertex_cal; receive vertices data from bus
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
@@ -95,9 +93,7 @@ module rasterizer_vertex_fetch (
         end
         else begin
           //deal with fifo counter
-           if(fifo_increase==1&fifo_decrease==0)fifo_counter = fifo_counter + 1;
-           else if(fifo_increase==0&fifo_decrease==1)fifo_counter = fifo_counter + 1;
-           else fifo_counter = fifo_counter;
+           
             case(send_state)
                 IDLE_S: begin
                     if (input_count < tri_num && fifo_counter < fifo_size) begin
@@ -106,8 +102,8 @@ module rasterizer_vertex_fetch (
                         master_read <= 1;
                         addr <= addr + 4;
                         input_count <= input_count + 1;
-                        //fifo_counter = fifo_counter + 1;
-                        fifo_increase=1;
+                        fifo_counter = fifo_counter + 1;
+                        
                         s_count <= s_count + 1;
                         send_state <= SEND;
                     end
@@ -173,8 +169,7 @@ module rasterizer_vertex_fetch (
 
         if (!stall_in && !empty && !already_pop) begin
             rdreq <= 1;
-            //fifo_counter = fifo_counter - 1;
-            fifo_decrease=1;
+            fifo_counter = fifo_counter - 1;
             output_valid <= 1;
             already_pop <= 1;
         end else begin

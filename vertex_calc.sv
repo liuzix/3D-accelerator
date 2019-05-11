@@ -64,12 +64,12 @@ module vertex_calc (input clock,
 
 
     always_ff @(posedge clock or negedge reset) begin
-        if (reset) begin
+        if (!reset) begin
             done_out <= 0;
             stall_out <= 0;
             out_data_valid <= 0;
         end
-
+       else begin
         if (input_data_valid) begin
             if (!out_data_valid) begin
                 x_out[0] <= fp_m(tmp_x[0], width) + width; 
@@ -136,5 +136,6 @@ module vertex_calc (input clock,
             end
         end else
             out_data_valid <= 0;
+       end
     end
 endmodule

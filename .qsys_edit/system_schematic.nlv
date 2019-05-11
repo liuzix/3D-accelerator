@@ -59,21 +59,21 @@ preplace inst system.hps_0.dma -pg 1
 preplace inst system.hps_0.arm_a9_1 -pg 1
 preplace inst system.hps_0 -pg 1 -lvl 4 -y 460
 preplace inst system.clk_0 -pg 1 -lvl 1 -y 340
-preplace netloc FAN_IN<net_container>system</net_container>(MASTER)vga_unit_0.avalon_master,(SLAVE)new_sdram_controller_0.s1,(MASTER)hps_0.h2f_axi_master) 1 4 1 1460
+preplace netloc EXPORT<net_container>system</net_container>(SLAVE)system.test,(SLAVE)vga_unit_0.test) 1 0 4 NJ 120 NJ 120 NJ 120 NJ
+preplace netloc EXPORT<net_container>system</net_container>(SLAVE)system.reset,(SLAVE)clk_0.clk_in_reset) 1 0 1 NJ
+preplace netloc FAN_IN<net_container>system</net_container>(MASTER)vga_unit_0.avalon_master,(SLAVE)new_sdram_controller_0.s1,(MASTER)hps_0.h2f_axi_master) 1 4 1 1480
 preplace netloc EXPORT<net_container>system</net_container>(SLAVE)system.hps,(SLAVE)hps_0.hps_io) 1 0 4 NJ 480 NJ 480 NJ 470 NJ
-preplace netloc EXPORT<net_container>system</net_container>(MASTER)system.dram_clk,(MASTER)sys_sdram_pll_0.sdram_clk) 1 2 4 NJ 350 NJ 350 NJ 450 NJ
-preplace netloc POINT_TO_POINT<net_container>system</net_container>(MASTER)reset_bridge_0.out_reset,(SLAVE)vga_unit_0.reset) 1 3 1 1080
 preplace netloc EXPORT<net_container>system</net_container>(SLAVE)system.dram,(SLAVE)new_sdram_controller_0.wire) 1 0 5 NJ 460 NJ 460 NJ 410 NJ 410 NJ
+preplace netloc POINT_TO_POINT<net_container>system</net_container>(SLAVE)vga_unit_0.reset,(MASTER)reset_bridge_0.out_reset) 1 3 1 1080
 preplace netloc EXPORT<net_container>system</net_container>(SLAVE)vga_unit_0.frame_buffer,(SLAVE)system.vga_unit_0_frame_buffer) 1 0 4 NJ 80 NJ 80 NJ 80 NJ
-preplace netloc FAN_OUT<net_container>system</net_container>(SLAVE)hps_0.h2f_axi_clock,(MASTER)sys_sdram_pll_0.sys_clk,(SLAVE)reset_bridge_0.clk,(SLAVE)new_sdram_controller_0.clk,(SLAVE)vga_unit_0.clock,(SLAVE)hps_0.h2f_lw_axi_clock) 1 2 3 700 390 1060 370 NJ
-preplace netloc EXPORT<net_container>system</net_container>(SLAVE)vga_unit_0.test,(SLAVE)system.test) 1 0 4 NJ 120 NJ 120 NJ 120 NJ
+preplace netloc EXPORT<net_container>system</net_container>(MASTER)sys_sdram_pll_0.sdram_clk,(MASTER)system.dram_clk) 1 2 4 NJ 370 NJ 370 NJ 450 NJ
+preplace netloc POINT_TO_POINT<net_container>system</net_container>(MASTER)clk_0.clk,(SLAVE)sys_sdram_pll_0.ref_clk) 1 1 1 N
 preplace netloc POINT_TO_POINT<net_container>system</net_container>(MASTER)reset_bridge_0.out_reset_1,(SLAVE)new_sdram_controller_0.reset) 1 3 2 NJ 280 1500
-preplace netloc EXPORT<net_container>system</net_container>(SLAVE)system.reset_bridge_0_in_reset,(SLAVE)reset_bridge_0.in_reset) 1 0 3 NJ 280 NJ 280 NJ
-preplace netloc POINT_TO_POINT<net_container>system</net_container>(MASTER)clk_0.clk_reset,(SLAVE)sys_sdram_pll_0.ref_reset) 1 1 1 N
-preplace netloc EXPORT<net_container>system</net_container>(SLAVE)vga_unit_0.VGA_display,(SLAVE)system.vga_unit_0_vga_display) 1 0 4 NJ 40 NJ 40 NJ 40 NJ
-preplace netloc POINT_TO_POINT<net_container>system</net_container>(SLAVE)sys_sdram_pll_0.ref_clk,(MASTER)clk_0.clk) 1 1 1 N
-preplace netloc EXPORT<net_container>system</net_container>(SLAVE)clk_0.clk_in_reset,(SLAVE)system.reset) 1 0 1 NJ
-preplace netloc EXPORT<net_container>system</net_container>(SLAVE)hps_0.memory,(SLAVE)system.hps_ddr3) 1 0 4 NJ 530 NJ 530 NJ 530 NJ
+preplace netloc EXPORT<net_container>system</net_container>(SLAVE)reset_bridge_0.in_reset,(SLAVE)system.reset_bridge_0_in_reset) 1 0 3 NJ 280 NJ 280 NJ
+preplace netloc POINT_TO_POINT<net_container>system</net_container>(SLAVE)sys_sdram_pll_0.ref_reset,(MASTER)clk_0.clk_reset) 1 1 1 N
+preplace netloc FAN_OUT<net_container>system</net_container>(MASTER)sys_sdram_pll_0.sys_clk,(SLAVE)reset_bridge_0.clk,(SLAVE)vga_unit_0.clock,(SLAVE)hps_0.h2f_lw_axi_clock,(SLAVE)new_sdram_controller_0.clk,(SLAVE)hps_0.h2f_axi_clock) 1 2 3 680 350 1060 390 1460
 preplace netloc EXPORT<net_container>system</net_container>(SLAVE)clk_0.clk_in,(SLAVE)system.clock_50) 1 0 1 NJ
+preplace netloc EXPORT<net_container>system</net_container>(SLAVE)system.vga_unit_0_vga_display,(SLAVE)vga_unit_0.VGA_display) 1 0 4 NJ 40 NJ 40 NJ 40 NJ
+preplace netloc EXPORT<net_container>system</net_container>(SLAVE)system.hps_ddr3,(SLAVE)hps_0.memory) 1 0 4 NJ 530 NJ 530 NJ 530 NJ
 levelinfo -pg 1 0 150 1800
 levelinfo -hier system 160 190 520 900 1240 1590 1720

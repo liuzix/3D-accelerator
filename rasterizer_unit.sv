@@ -217,7 +217,7 @@ rasterizer_fetch_logic fetch_logic (
 ztest z_test (
     .clock(clock),
     .reset(reset),
-    .output_valid(fetch_output_valid),
+    .input_valid(fetch_output_valid),
     .addr_in(fetch_addr_out),
     .old_depth_out(old_depth_out),
     .new_depth_out(new_depth_out),

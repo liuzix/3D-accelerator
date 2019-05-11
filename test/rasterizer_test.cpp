@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
     // initialize framebuffer
     for (int i = 0; i < 480 * 640; i++) {
         unsigned long *p = (unsigned long *)(framebuffer_base + i * 8);
-        *p = -1;        // r
+        *p = -1;
     }
     VGADisplay *display = new VGADisplay(framebuffer_base);
     // Create instance

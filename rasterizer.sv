@@ -198,7 +198,7 @@ module rasterizer (
                     $display("rasterizer: input color %d, %d, %d", color1_t, color2_t, color3_t);
                     $display("rasterizer: output color %d, %d, %d", cur_color[7:0], cur_color[15:8], cur_color[23:16]);
                     output_valid <= 1;
-                    tmp_addr_out = addr_in_t + (fp_m(cur_y - (1 << 16), (640 << 16) + cur_x) >> 16);
+                    tmp_addr_out = addr_in_t + (fp_m(cur_y - (1 << 16), (640 << 16) + cur_x) >> 16) << 3;
                     
                     if (!output_valid) begin
                         addr_out <= tmp_addr_out;

@@ -4,6 +4,7 @@ module vertex_calc (input clock,
                     input reset,
                     input logic [31:0] mat[15:0],
                     input logic [31:0] v_in [14:0],
+                    input logic [31:0] lighting[2:0],
                     input logic [23:0] color_in1,
                     input logic [23:0] color_in2,
                     input logic [23:0] color_in3,
@@ -39,13 +40,50 @@ module vertex_calc (input clock,
     logic signed [31:0] tmp_y[2:0];
     logic signed [31:0] tmp_z[2:0];
     logic signed [31:0] tmp_w[2:0];
-    
+    logic [31:0] color1_r;
+    logic [31:0] color1_g;
+    logic [31:0] color1_b;
+    logic [31:0] color2_r;
+    logic [31:0] color2_g;
+    logic [31:0] color2_b;
+    logic [31:0] color3_r;
+    logic [31:0] color3_g;
+    logic [31:0] color3_b;
+    logic [31:0] color1_rnew;
+    logic [31:0] color1_gnew;
+    logic [31:0] color1_bnew;
+    logic [31:0] color2_rnew;
+    logic [31:0] color2_gnew;
+    logic [31:0] color2_bnew;
+    logic [31:0] color3_rnew;
+    logic [31:0] color3_gnew;
+    logic [31:0] color3_bnew;
+    logic [31:0]cosine;
+
     assign w = (1 << 16);
     assign width[31:16] = 16'd320;
     assign width[15:0] = 0;
     assign height[31:16] = 16'd240;
     assign height[15:0] = 0;
-
+    assign cosine = fp_m(v_in[12],lighting[0])+fp_m(v_in[13],lighting[1])+fp_m(v_in[14],lighting[2]);
+    assign color1_r = {8'b0,color_in1[23:16],16'b0};
+    assign color1_g = {8'b0,color_in1[15:8],16'b0};
+    assign color1_b = {8'b0,color_in1[7:0],16'b0};
+    assign color2_r = {8'b0,color_in2[23:16],16'b0};
+    assign color2_g = {8'b0,color_in2[15:8],16'b0};
+    assign color2_b = {8'b0,color_in2[7:0],16'b0};
+    assign color3_r = {8'b0,color_in3[23:16],16'b0};
+    assign color3_g = {8'b0,color_in3[15:8],16'b0};
+    assign color3_b = {8'b0,color_in3[7:0],16'b0};
+    assign color1_rnew=fp_m(color1_r,cosine);
+    assign color1_gnew=fp_m(color1_g,cosine);
+    assign color1_bnew=fp_m(color1_b,cosine);
+    assign color2_rnew=fp_m(color2_r,cosine);
+    assign color2_gnew=fp_m(color2_g,cosine);
+    assign color2_bnew=fp_m(color2_b,cosine);
+    assign color3_rnew=fp_m(color3_r,cosine);
+    assign color3_gnew=fp_m(color3_g,cosine);
+    assign color3_bnew=fp_m(color3_b,cosine);
     assign  tmp_x[0] = fp_m(mat[0],v_in[0]) + fp_m(mat[1],v_in[1]) + fp_m(mat[2],v_in[2]) + fp_m(mat[3], w); //w = 1
     assign  tmp_y[0] = fp_m(mat[4],v_in[0]) + fp_m(mat[5],v_in[1]) + fp_m(mat[6],v_in[2]) + fp_m(mat[7], w);
     assign  tmp_z[0] = fp_m(mat[8],v_in[0]) + fp_m(mat[9],v_in[1]) + fp_m(mat[10],v_in[2]) + fp_m(mat[11], w);
@@ -81,10 +119,10 @@ module vertex_calc (input clock,
             $signed(v_in[0]) >>> 16, $signed(v_in[1]) >>> 16, $signed(v_in[2]) >>> 16,
             $signed(v_in[4]) >>> 16, $signed(v_in[5]) >>> 16, $signed(v_in[6]) >>> 16,
             $signed(v_in[8]) >>> 16, $signed(v_in[9]) >>> 16, $signed(v_in[10]) >>> 16);
-        color_out1 <= color_in1;
-        color_out2 <= color_in2;
-        color_out3 <= color_in3;
-
+        color_out1 <= {color1_rnew[23:16],color1_gnew[23:16],color1_bnew[23:16]};
+        color_out2 <= {color2_rnew[23:16],color2_gnew[23:16],color2_bnew[23:16]};
+        color_out3 <= {color3_rnew[23:16],color3_gnew[23:16],color3_bnew[23:16]};
+        //$display("vertex_color: triangle = (%d, %d, %d), (%d, %d, %d), (%d, %d, %d)");
         done_out <= done_in;
         $display("vertex_calc: color = %d, %d, %d", color_in1, color_in2, color_in3);
     endfunction

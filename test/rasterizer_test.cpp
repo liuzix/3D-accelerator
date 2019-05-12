@@ -187,9 +187,14 @@ int main(int argc, char **argv) {
     uint16_t config_MVPreg_addr = 0x200;
     uint16_t config_lightingreg_addr = 0x300;
     fixed_point_t *matrix_base = load_matrix();
-    for (int i = 0; i < 16 + 16 + 2; i++) {
+    uint32_t lighting[3];
+    lighting[0]=0x0;
+    lighting[1]=0x0;
+    lighting[2]=0x00010000;
+    for (int i = 0; i < 16 + 16 + 3; i++) {
         // MV address 256->316  60
-        if (i > 0 && i < 16) {
+        
+        if (i >= 0 && i < 16) {
             top->writedata = 1;
             top->address = config_MVreg_addr + 0x4 * i;
         }
@@ -199,8 +204,10 @@ int main(int argc, char **argv) {
             cout << "MVP matrix:" << matrix_base[i - 16] << "\n";
             top->address = config_MVPreg_addr + 4 * (i - 16);
         } else {
-            // lighting address 768->176  8
-            top->writedata = 3;
+            // lighting address 768->176  3
+            cout<<"i="<<i;
+            cout<<lighting[i-32]<<i;
+            top->writedata = lighting[i-32];
             top->address = config_lightingreg_addr + 0x4 * (i - 32);
         }
         top->write = 1;

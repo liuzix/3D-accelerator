@@ -15,6 +15,7 @@ Vec3 calcFaceNormal(Vec3 vpos[3], Vec3 vnormal[3]) {
 
 	Vec3 vertexNormal = vnormal[0];
 	double dot = faceNormal.dotProduct(vertexNormal);
+    faceNormal.normalize();
 
 	return (dot < 0) ? -faceNormal : faceNormal;
 }

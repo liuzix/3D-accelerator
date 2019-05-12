@@ -2,6 +2,7 @@
 
 #include <array>
 #include <vector>
+#include <math.h>
 
 using namespace std;
 
@@ -44,6 +45,13 @@ public:
 	double dotProduct(const Vec3& v2) {
 		return (this->X*v2.X + this->Y*v2.Y + this->Z*v2.Z);
 	}
+
+    void normalize() {
+        double x = X, y = Y, z = Y;
+        X = X/sqrt(x*x + y*y + z*z);
+        Y = Y/sqrt(x*x + y*y + z*z);
+        Z = Z/sqrt(x*x + y*y + z*z);
+    }
 
 	double X, Y, Z;
 };

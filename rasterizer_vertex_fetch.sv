@@ -103,7 +103,6 @@ module rasterizer_vertex_fetch (
                         addr <= addr + 4;
                         input_count <= input_count + 1;
                         fifo_counter = fifo_counter + 1;
-                        
                         s_count <= s_count + 1;
                         send_state <= SEND;
                     end
@@ -150,7 +149,7 @@ module rasterizer_vertex_fetch (
                 end
                 default: begin end
             endcase
-            if (recv_valid && !full) begin
+            if (recv_valid && !almost_full) begin
             data_in <= {vertex_out_buf[14],vertex_out_buf[13],vertex_out_buf[12],vertex_out_buf[11],
                 vertex_out_buf[10],vertex_out_buf[9],vertex_out_buf[8],vertex_out_buf[7],
                 vertex_out_buf[6],vertex_out_buf[5],vertex_out_buf[4],vertex_out_buf[3],
@@ -171,10 +170,16 @@ module rasterizer_vertex_fetch (
             fifo_counter = fifo_counter - 1;
             output_valid <= 1;
             already_pop <= 1;
-        end else begin
+        end else if (already_pop) begin
             rdreq <= 0;
             output_valid <= 0;
             already_pop <= 0;
+        end else begin
+            rdreq <= 0;
+            if (!empty)
+                output_valid <= 1;
+            if (empty)
+                output_valid <= 0;
         end
         end
     end

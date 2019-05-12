@@ -154,7 +154,11 @@ vertex_calc v_calc (
     .stall_in(stall2), 
     .stall_out(stall1),
     .out_data_valid(out_data_valid));
-
+always@(x_out )begin
+   $display("vertex_cal_out x1: %d y1: %d z1 %d",x_out[0][31:16],y_out[0][31:16],z_out[0][31:16]);
+   $display("vertex_cal_out x2: %d y2: %d z2 %d",x_out[1][31:16],y_out[1][31:16],z_out[1][31:16]);
+   $display("vertex_cal_out x3: %d y3: %d z3 %d",x_out[2][31:16],y_out[2][31:16],z_out[2][31:16]);
+end
 
 rasterizer raster (
     .clock(clock),

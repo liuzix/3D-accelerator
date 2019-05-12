@@ -54,10 +54,10 @@ public:
             && readRequests.front().targetTick <= tickCount
             && readRequests.front().port == port) {
            
-            if (rand() % 3 != 0) {
+            if (rand() % 4 != 0) {
                 Value v = memory[readRequests.front().address / sizeof(Value)];
                 memcpy(readdata, &v, sizeof(Value));
-                cout << "sdram read address " << dec << readRequests.front().address << " data " << hex << *readdata << endl;
+                cout << "sdram read address " << hex << readRequests.front().address << " data " << hex << *readdata << endl;
                 readRequests.pop_front();
                 readvalid = true;
             } else {
@@ -79,9 +79,10 @@ public:
         }
 
         // check of any queue is full
-        if (rand() % 4 == 0 || readRequests.size() >= MAX_QUEUE_LENGTH
+        if (readRequests.size() >= MAX_QUEUE_LENGTH
             || writeRequests.size() >= MAX_QUEUE_LENGTH) {
             
+            cout << "sdram delay" << endl;
             waitrequest = true;
             return;
         } else {

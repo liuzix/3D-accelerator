@@ -143,12 +143,34 @@ module rasterizer (
         cur_depth = fp_m(w1, z1_t) + fp_m(w2, z2_t) + fp_m(w3, z3_t);
     end 
 
-    always_comb begin
-            e12 = (fp_m(signed'(cur_x - x1_t),signed'(y2_t - y1_t)) - fp_m(signed'(cur_y - y1_t), signed'(x2_t - x1_t))) >= 0;
-            e23 = (fp_m(signed'(cur_x - x2_t),signed'(y3_t - y2_t)) - fp_m(signed'(cur_y - y2_t), signed'(x3_t - x2_t))) >= 0; 
-            e31 = (fp_m(signed'(cur_x - x3_t),signed'(y1_t - y3_t)) - fp_m(signed'(cur_y - y3_t), signed'(x1_t - x3_t))) >= 0;
+    logic signed [31:0] cur_x_int;
+    logic signed [31:0] cur_y_int;
 
-            is_inside = e12 & e23 & e31;
+    logic signed [31:0] x1_t_int;
+    logic signed [31:0] y1_t_int;
+    logic signed [31:0] x2_t_int;
+    logic signed [31:0] y2_t_int;
+    logic signed [31:0] x3_t_int;
+    logic signed [31:0] y3_t_int;
+
+    always_comb begin
+        cur_x_int = cur_x >>> 16;
+        cur_y_int = cur_y >>> 16;
+        x1_t_int = x1_t >>> 16;
+        y1_t_int = y1_t >>> 16;
+        x2_t_int = x2_t >>> 16;
+        y2_t_int = y2_t >>> 16;
+        x3_t_int = x3_t >>> 16;
+        y3_t_int = y3_t >>> 16;
+
+        e12 = (signed'(cur_x_int - x1_t_int) * signed'(y2_t_int - y1_t_int) - signed'(cur_y_int - y1_t_int) * signed'(x2_t_int - x1_t_int)) >= 0;
+        e23 = (signed'(cur_x_int - x2_t_int) * signed'(y3_t_int - y2_t_int) - signed'(cur_y_int - y2_t_int) * signed'(x3_t_int - x2_t_int)) >= 0;
+        e31 = (signed'(cur_x_int - x3_t_int) * signed'(y1_t_int - y3_t_int) - signed'(cur_y_int - y3_t_int) * signed'(x1_t_int - x3_t_int)) >= 0;
+        
+        //e23 = (signed'(cur_x - x2_t) * signed'(y3_t - y2_t)) - signed'(cur_y - y2_t), signed'(x3_t - x2_t))) >= 0; 
+        //e31 = (fp_m(signed'(cur_x - x3_t),signed'(y1_t - y3_t)) - fp_m(signed'(cur_y - y3_t), signed'(x1_t - x3_t))) >= 0;
+
+        is_inside = e12 & e23 & e31;
     end
 
     function void  move_to_next();
@@ -180,6 +202,7 @@ module rasterizer (
             case(r_state)
                 R_IDLE: begin
                     if (in_data_valid) begin
+                        $display(" rasterizer: new triangle");
                         stall_out <= 0;
                         x1_t <= x1;
                         y1_t <= y1;
@@ -208,7 +231,8 @@ module rasterizer (
                     if (is_inside) begin
                         $display(" rasterizer: is inside");
                         if (!output_valid) begin
-                            addr_out <= addr_in_t + ((fp_m((640 << 16), cur_y)  + cur_x) >> 16) << 3;
+                            addr_out <= addr_in_t + ((cur_y >> 16) * 640 + (cur_x >> 16) << 3);
+                            $display(" rasterizer: addr_out = %x", addr_out);
                             color_out <= cur_color;
                             depth_out <= cur_depth;
                             output_valid <= 1;
@@ -237,7 +261,8 @@ module rasterizer (
                         end else begin
                             if (is_inside) begin
                                 //if (!output_valid) begin
-                                    addr_out <= addr_in_t + ((fp_m((640 << 16), cur_y)  + cur_x) >> 16) << 3;
+                                    addr_out <= addr_in_t + ((cur_y >> 16) * 640 + (cur_x >> 16) << 3);
+                                    $display(" rasterizer: addr_out = %x", addr_out);
                                     color_out <= cur_color;
                                     depth_out <= cur_depth;
                                     output_valid <= 1;

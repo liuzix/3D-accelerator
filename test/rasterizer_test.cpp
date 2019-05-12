@@ -50,8 +50,8 @@ class VGADisplay {
                 
                 ptr += 8;
 
-                if (r || g || b)
-                    printf("refresh r: %d, g: %d, b: %d\n", r, g, b);
+//                if (r || g || b)
+//                    printf("refresh r: %d, g: %d, b: %d\n", r, g, b);
                 SDL_SetRenderDrawColor(renderer, r, g, b, 255);
                 SDL_RenderDrawPoint(renderer, x, y);
             }
@@ -165,7 +165,6 @@ int main(int argc, char **argv) {
         }
         top->address = 4 * i;
         top->write = 1;
-        top->clock = 1;
         sdramController.tick(0, top->master_address, top->master_read,
                              top->master_write, &top->master_readdata,
                              top->master_readdatavalid, &top->master_writedata,
@@ -178,6 +177,8 @@ int main(int argc, char **argv) {
             2, top->master_address_3, top->master_read_3, top->master_write_3,
             &top->master_readdata_3, top->master_readdatavalid_3,
             &top->master_writedata_3, top->master_waitrequest_3);
+        top->eval();
+        top->clock = 1;
         top->eval();
         top->clock = 0;
         top->eval();
@@ -203,7 +204,6 @@ int main(int argc, char **argv) {
             top->address = config_lightingreg_addr + 0x4 * (i - 32);
         }
         top->write = 1;
-        top->clock = 1;
         sdramController.tick(0, top->master_address, top->master_read,
                              top->master_write, &top->master_readdata,
                              top->master_readdatavalid, &top->master_writedata,
@@ -217,15 +217,16 @@ int main(int argc, char **argv) {
             &top->master_readdata_3, top->master_readdatavalid_3,
             &top->master_writedata_3, top->master_waitrequest_3);
         top->eval();
+        top->clock = 1;
+        top->eval();
         top->clock = 0;
         top->eval();
     }
     cout << "configuration done!\n";
     // begin rasterization
     for (;;) {
-        top->clock = 1;
         display->poll();
-        display->refresh();
+        //display->refresh();
         cout << "tick\n";
         sdramController.tick(0, top->master_address, top->master_read,
                              top->master_write, &top->master_readdata,
@@ -240,11 +241,14 @@ int main(int argc, char **argv) {
             &top->master_readdata_3, top->master_readdatavalid_3,
             &top->master_writedata_3, top->master_waitrequest_3);
         top->eval();
+        top->clock = 1;
+        top->eval();
 
         top->clock = 0;
         top->eval();
 
-        display->refresh();
+        if (main_time % 500 == 0)
+            display->refresh();
         main_time++;
     }
 

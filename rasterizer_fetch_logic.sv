@@ -66,46 +66,61 @@ fifo fifo(
 );
 
 
-typedef enum { S_IDLE,  S_HOLD } state_t;
+typedef enum logic { S_IDLE,  S_HOLD } state_t;
 state_t state;
 state_t next_state;
 
-logic enqueue;
+reg enqueue;
+always @* begin
+    enqueue = 0;
+    case (state)
+        S_IDLE: begin
+            if (full) begin
+                next_state = S_IDLE;
+            end
+            else if (input_valid) begin
+                next_state = S_HOLD;
+                enqueue = 1;
+            end else
+                next_state = S_IDLE;
+        end
+
+        S_HOLD: begin
+            if (!master_waitrequest && !stall_in) begin
+                if (!almost_full && input_valid) begin
+                    next_state = S_HOLD;
+                    enqueue = 1;
+                end else begin
+                    enqueue = 0;
+                    next_state = S_IDLE;
+                end
+            end else begin
+                if (master_waitrequest) begin
+                    next_state = S_HOLD;
+                end else begin
+                    next_state = S_IDLE;
+                end
+                enqueue = 0;
+            end
+        end
+    endcase
+end
+
+assign stall_out = !enqueue;
 
 always_ff @(posedge clock or negedge reset) begin
     if (!reset) begin
         wrreq <= 0;
         output_valid <= 0;
         state <= S_IDLE;
-        stall_out <= 1;
+        //stall_out <= 1;
     end else begin
-        enqueue = 0;
-        case (state)
-            S_IDLE: begin
-                if (full) begin
-                    next_state = S_IDLE;
-                end
-                else if (input_valid) begin
-                    next_state = S_HOLD;
-                    enqueue = 1;
-                end
-            end
-
-            S_HOLD: begin
-                if (!master_waitrequest && !stall_in) begin
-                    if (!full && input_valid) begin
-                        next_state = S_HOLD;
-                        enqueue = 1;
-                    end else
-                        next_state = S_IDLE;
-                end else
-                    next_state = S_HOLD;
-            end
-        endcase
         if (full)
-            $display("fifo is full");
+            $display("depth_fetcher: fifo is full");
         // deal with input port
-        stall_out <= !enqueue;
+        //
+        $display("depth_fetcher: master_waitrequest = %d", master_waitrequest);
+        $display("input_valid = %d", input_valid);
         if (enqueue)
         begin
             // enqueue the fetch request
@@ -118,20 +133,30 @@ always_ff @(posedge clock or negedge reset) begin
             data_in[95:83] <= 0;
 
             master_address <= addr_in + 4;
-            master_read <= 1;
             master_write <= 0;
             master_byteenable <= 4'b11;
         end
-        else
+        else begin
             wrreq <= 0;
+            $display("depth_fetcher: not enqueuing.");
+        end
 
-        if (next_state == S_IDLE)
+        if (next_state == S_IDLE) begin
+            $display("depth_fetcher: master_read = 0");
             master_read <= 0;
+        end else begin
+            master_read <= 1;
+            $display("depth_fetcher: master_read = 1");
+        end
+
+        $display("depth_fetcher: next_state = %d", next_state);
         
         state <= next_state;
        
         // check if there is any output from sdram
         if (master_readdatavalid) begin
+            $display("depth_fetcher: got fetch request addr = %x", data_out[25:0]);
+            assert(data_out[25:0] != addr_out);
             old_depth_out <= master_readdata;
             data_out_reg <= data_out;
             output_valid <= 1;

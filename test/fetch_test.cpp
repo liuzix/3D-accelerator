@@ -44,6 +44,7 @@ int main(int argc, char** argv) {
                              top->master_readdatavalid, &top->master_writedata,
                              top->master_waitrequest);
 
+        top->eval();
         if (addr < 640 * 480 * 8) {
             if (!top->stall_out) {
                 addr += 8;
@@ -62,6 +63,9 @@ int main(int argc, char** argv) {
             top->input_valid = 0;
         }
         top->clock = 1;
+        if (top->master_waitrequest)
+            cout << "sdram asked us to wait" << endl;
+        top->eval();
         top->eval();
 
         if (top->output_valid) {
@@ -79,7 +83,6 @@ int main(int argc, char** argv) {
 
         cout << "-----------------------" << endl;
         top->clock = 0;
-        top->eval();
 
         main_time++;
     }

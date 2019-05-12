@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
     // begin rasterization
     for (;;) {
         display->poll();
-        display->refresh();
+        //display->refresh();
         cout << "tick\n";
         sdramController.tick(0, top->master_address, top->master_read,
                              top->master_write, &top->master_readdata,
@@ -247,7 +247,8 @@ int main(int argc, char **argv) {
         top->clock = 0;
         top->eval();
 
-        display->refresh();
+        if (main_time % 500 == 0)
+            display->refresh();
         main_time++;
     }
 

@@ -72,6 +72,7 @@ module vertex_calc (input clock,
        else begin
         if (input_data_valid) begin
             if (!out_data_valid) begin
+                $display("vertex_calc: stall_in = %d, out_data_valid = 0", stall_in);
                 x_out[0] <= fp_m(tmp_x[0], width) + width; 
                 y_out[0] <= fp_m(tmp_y[0], height) + height;
                 z_out[0] <= fp_m(tmp_z[0], width) + width;
@@ -101,6 +102,7 @@ module vertex_calc (input clock,
                 out_data_valid <= 1;
                 stall_out <= 0;
             end else begin 
+                $display("vertex_calc: stall_in = %d, out_data_valid = 1", stall_in);
                 if (!stall_in) begin    
                     x_out[0] <= fp_m(tmp_x[0], width) + width; 
                     y_out[0] <= fp_m(tmp_y[0], height) + height;
@@ -131,11 +133,12 @@ module vertex_calc (input clock,
                     stall_out <= 0;
                 end else begin
                     stall_out <= 1;
-                    out_data_valid <= 0;
+                    //out_data_valid <= 0;
                 end
             end
         end else
-            out_data_valid <= 0;
+            if (out_data_valid && !stall_in)   
+                out_data_valid <= 0;
        end
     end
 endmodule

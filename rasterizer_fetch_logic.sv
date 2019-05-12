@@ -71,15 +71,37 @@ state_t state;
 state_t next_state;
 
 logic enqueue;
+always_comb begin
+    case (state)
+        S_IDLE: begin
+            if (!almost_full && input_valid)
+                enqueue = 1;
+            else
+                enqueue = 0;
+        end
+
+        S_HOLD: begin
+            if (!master_waitrequest && !stall_in)
+                if (!almost_full && input_valid)
+                    enqueue = 1;
+                else
+                    enqueue = 0;
+            else
+                enqueue = 0;
+        end
+    endcase
+end
+
+assign stall_out = !enqueue;
 
 always_ff @(posedge clock or negedge reset) begin
     if (!reset) begin
         wrreq <= 0;
         output_valid <= 0;
         state <= S_IDLE;
-        stall_out <= 1;
+        //stall_out <= 1;
     end else begin
-        enqueue = 0;
+        //enqueue = 0;
         case (state)
             S_IDLE: begin
                 if (full) begin
@@ -87,15 +109,15 @@ always_ff @(posedge clock or negedge reset) begin
                 end
                 else if (input_valid) begin
                     next_state = S_HOLD;
-                    enqueue = 1;
+                    //enqueue = 1;
                 end
             end
 
             S_HOLD: begin
                 if (!master_waitrequest && !stall_in) begin
-                    if (!full && input_valid) begin
+                    if (!almost_full && input_valid) begin
                         next_state = S_HOLD;
-                        enqueue = 1;
+                        //enqueue = 1;
                     end else
                         next_state = S_IDLE;
                 end else
@@ -105,7 +127,7 @@ always_ff @(posedge clock or negedge reset) begin
         if (full)
             $display("fifo is full");
         // deal with input port
-        stall_out <= !enqueue;
+        //stall_out <= !enqueue;
         if (enqueue)
         begin
             // enqueue the fetch request
@@ -132,6 +154,7 @@ always_ff @(posedge clock or negedge reset) begin
        
         // check if there is any output from sdram
         if (master_readdatavalid) begin
+            $display("depth_fetcher: got fetch request addr = %x", addr_out);
             old_depth_out <= master_readdata;
             data_out_reg <= data_out;
             output_valid <= 1;

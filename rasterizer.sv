@@ -155,6 +155,7 @@ module rasterizer (
         cur_x = cur_x + (1 << 16);
 
         if (cur_x > maxX) begin
+            $display("newline");
             cur_x = minX;
             cur_y = cur_y + (1 << 16);
         end

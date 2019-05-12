@@ -50,8 +50,8 @@ class VGADisplay {
                 
                 ptr += 8;
 
-                if (r || g || b)
-                    printf("refresh r: %d, g: %d, b: %d\n", r, g, b);
+//                if (r || g || b)
+//                    printf("refresh r: %d, g: %d, b: %d\n", r, g, b);
                 SDL_SetRenderDrawColor(renderer, r, g, b, 255);
                 SDL_RenderDrawPoint(renderer, x, y);
             }

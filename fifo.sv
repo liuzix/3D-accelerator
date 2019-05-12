@@ -18,12 +18,12 @@ module fifo (
               SIZE = 4;
     
     //16 element fifo, each element is 26 bis
-    logic [DBITS-1:0] buffer[15:0];
+    logic [DBITS-1:0] buffer[2**SIZE - 1:0];
     //write pointer
-    logic [3:0] wr_ptr;
+    logic [SIZE - 1:0] wr_ptr;
     //read pointer
-    logic [3:0] rd_ptr;
-    logic [3:0] counter;
+    logic [SIZE - 1:0] rd_ptr;
+    logic [SIZE - 1:0] counter;
 
     //wire almost_full;
     //wire almost_empty;

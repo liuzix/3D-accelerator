@@ -86,7 +86,7 @@ module rasterizer_vertex_fetch (
             send_state <= IDLE_S;
             master_read <= 0;
             s_count <= 0;
-            fifo_counter <= 0;
+            fifo_counter = 0;
             already_pop <= 0;
             input_count <= 0;
             fetch_tri <= 0;
@@ -114,7 +114,6 @@ module rasterizer_vertex_fetch (
                         fetch_tri <= 1;
                         addr <= vertex_buffer_base + 4;
                         send_state <= TRI_SEND;
-                        fifo_increase=0;
                     end
                 end
                 SEND: begin
@@ -173,7 +172,6 @@ module rasterizer_vertex_fetch (
             output_valid <= 1;
             already_pop <= 1;
         end else begin
-            fifo_decrease=0;
             rdreq <= 0;
             output_valid <= 0;
             already_pop <= 0;

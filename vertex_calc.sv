@@ -11,16 +11,16 @@ module vertex_calc (input clock,
                     input logic input_data_valid,
                     input logic done_in,
                     input logic stall_in,
-                    output logic [31:0] x_out[3:0],
-                    output logic [31:0] y_out[3:0],
-                    output logic [31:0] z_out[3:0],
-                    output logic [31:0] w_out[3:0],
-                    output logic [23:0] color_out1,
-                    output logic [23:0] color_out2,
-                    output logic [23:0] color_out3,
-                    output logic out_data_valid,
-                    output logic done_out,
-                    output logic stall_out);
+                    output reg [31:0] x_out[3:0],
+                    output reg [31:0] y_out[3:0],
+                    output reg [31:0] z_out[3:0],
+                    output reg [31:0] w_out[3:0],
+                    output reg [23:0] color_out1,
+                    output reg [23:0] color_out2,
+                    output reg [23:0] color_out3,
+                    output reg out_data_valid,
+                    output reg done_out,
+                    output reg stall_out);
 
     //v_in 0-14 = x1 y1 z1 rgb1 x2 y2 z2 rgb2 x3 y3 z3 rgb3 nx ny nz
     
@@ -66,6 +66,7 @@ module vertex_calc (input clock,
     assign height[31:16] = 16'd240;
     assign height[15:0] = 0;
     //assign cosine = fp_m(v_in[12],lighting[0])+fp_m(v_in[13],lighting[1])+fp_m(v_in[14],lighting[2]);
+    /*
     assign color1_r = {8'b0,color_in1[23:16],16'b0};
     assign color1_g = {8'b0,color_in1[15:8],16'b0};
     assign color1_b = {8'b0,color_in1[7:0],16'b0};
@@ -75,6 +76,7 @@ module vertex_calc (input clock,
     assign color3_r = {8'b0,color_in3[23:16],16'b0};
     assign color3_g = {8'b0,color_in3[15:8],16'b0};
     assign color3_b = {8'b0,color_in3[7:0],16'b0};
+    */
     /*
     assign color1_rnew=fp_m(color1_r,cosine);
     assign color1_gnew=fp_m(color1_g,cosine);
@@ -86,6 +88,7 @@ module vertex_calc (input clock,
     assign color3_gnew=fp_m(color3_g,cosine);
     assign color3_bnew=fp_m(color3_b,cosine);
     */
+    /*
     assign  tmp_x[0] = fp_m(mat[0],v_in[0]) + fp_m(mat[1],v_in[1]) + fp_m(mat[2],v_in[2]) + fp_m(mat[3], w); //w = 1
     assign  tmp_y[0] = fp_m(mat[4],v_in[0]) + fp_m(mat[5],v_in[1]) + fp_m(mat[6],v_in[2]) + fp_m(mat[7], w);
     assign  tmp_z[0] = fp_m(mat[8],v_in[0]) + fp_m(mat[9],v_in[1]) + fp_m(mat[10],v_in[2]) + fp_m(mat[11], w);
@@ -100,7 +103,7 @@ module vertex_calc (input clock,
     assign  tmp_y[2] = fp_m(mat[4],v_in[8]) + fp_m(mat[5],v_in[9]) + fp_m(mat[6],v_in[10]) + fp_m(mat[7], w);
     assign  tmp_z[2] = fp_m(mat[8],v_in[8]) + fp_m(mat[9],v_in[9]) + fp_m(mat[10],v_in[10]) + fp_m(mat[11], w);
     assign  tmp_w[2] = fp_m(mat[12],v_in[8]) + fp_m(mat[13],v_in[9]) + fp_m(mat[14],v_in[10]) + fp_m(mat[15], w);
-    
+    */
     function void output_triangle();
         x_out[0] = fp_m(tmp_x[0], width) + width; 
         y_out[0] = fp_m(tmp_y[0], height) + height;
@@ -134,7 +137,7 @@ module vertex_calc (input clock,
         $display("vertex_calc: color = %d, %d, %d", color_in1, color_in2, color_in3);
     endfunction
 
-    typedef enum logic {S_IDLE, S_HOLD} state_t;
+    typedef enum logic {S_IDLE, S_CALC, S_HOLD} state_t;
     state_t state;
 
     always_ff @(posedge clock or negedge reset) begin
@@ -151,27 +154,51 @@ module vertex_calc (input clock,
             S_IDLE: begin
                 assert(!out_data_valid);
                 if (input_data_valid) begin
-                    output_triangle();
-                    out_data_valid <= 1;
-                    stall_out <= 0;
-                    state <= S_HOLD;
+                    stall_out <= 1;
+                    state <= S_CALC;
                 end
+            end
+            
+            S_CALC: begin
+                tmp_x[0] <= fp_m(mat[0],v_in[0]) + fp_m(mat[1],v_in[1]) + fp_m(mat[2],v_in[2]) + fp_m(mat[3], w); //w = 1
+                tmp_y[0] <= fp_m(mat[4],v_in[0]) + fp_m(mat[5],v_in[1]) + fp_m(mat[6],v_in[2]) + fp_m(mat[7], w);
+                tmp_z[0] <= fp_m(mat[8],v_in[0]) + fp_m(mat[9],v_in[1]) + fp_m(mat[10],v_in[2]) + fp_m(mat[11], w);
+                tmp_w[0] <= fp_m(mat[12],v_in[0]) + fp_m(mat[13],v_in[1]) + fp_m(mat[14],v_in[2]) + fp_m(mat[15], w);
+		     
+                tmp_x[1] <= fp_m(mat[0],v_in[4]) + fp_m(mat[1],v_in[5]) + fp_m(mat[2],v_in[6]) + fp_m(mat[3], w); //w = 1
+		tmp_y[1] <= fp_m(mat[4],v_in[4]) + fp_m(mat[5],v_in[5]) + fp_m(mat[6],v_in[6]) + fp_m(mat[7], w);
+		tmp_z[1] <= fp_m(mat[8],v_in[4]) + fp_m(mat[9],v_in[5]) + fp_m(mat[10],v_in[6]) + fp_m(mat[11], w);
+		tmp_w[1] <= fp_m(mat[12],v_in[4]) + fp_m(mat[13],v_in[5]) + fp_m(mat[14],v_in[6]) + fp_m(mat[15], w);
+			
+		tmp_x[2] <= fp_m(mat[0],v_in[8]) + fp_m(mat[1],v_in[9]) + fp_m(mat[2],v_in[10]) + fp_m(mat[3], w); //w = 1
+		tmp_y[2] <= fp_m(mat[4],v_in[8]) + fp_m(mat[5],v_in[9]) + fp_m(mat[6],v_in[10]) + fp_m(mat[7], w);
+		tmp_z[2] <= fp_m(mat[8],v_in[8]) + fp_m(mat[9],v_in[9]) + fp_m(mat[10],v_in[10]) + fp_m(mat[11], w);
+		tmp_w[2] <= fp_m(mat[12],v_in[8]) + fp_m(mat[13],v_in[9]) + fp_m(mat[14],v_in[10]) + fp_m(mat[15], w);
+                
+                color1_r <= {8'b0,color_in1[23:16],16'b0};
+                color1_g <= {8'b0,color_in1[15:8],16'b0};
+                color1_b <= {8'b0,color_in1[7:0],16'b0};
+                color2_r <= {8'b0,color_in2[23:16],16'b0};
+                color2_g <= {8'b0,color_in2[15:8],16'b0};
+                color2_b <= {8'b0,color_in2[7:0],16'b0};
+                color3_r <= {8'b0,color_in3[23:16],16'b0};
+                color3_g <= {8'b0,color_in3[15:8],16'b0};
+                color3_b <= {8'b0,color_in3[7:0],16'b0};
+                state <= S_HOLD;
+            end
+
+            S_OUTPUT: begin
+                output_triangle();
+                output_valid <= 1;
+                done_out <= done_in;
+                state <= S_HOLD;
             end
 
             S_HOLD: begin
-                assert(out_data_valid);
                 if (!stall_in) begin
-                    if (input_data_valid) begin
-                        output_triangle();
-                        out_data_valid <= 1;
-                        stall_out <= 0;
-                    end else begin
-                        out_data_valid <= 0;
-                        stall_out <= 0;
-                        state <= S_IDLE;
-                    end
-                end else begin
-                    stall_out <= 1;
+                    output_valid <= 0;
+                    state <= S_IDLE;
+                    stall_out <= 0;
                 end
             end
 

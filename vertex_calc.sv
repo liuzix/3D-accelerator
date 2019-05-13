@@ -137,7 +137,7 @@ module vertex_calc (input clock,
         $display("vertex_calc: color = %d, %d, %d", color_in1, color_in2, color_in3);
     endfunction
 
-    typedef enum logic {S_IDLE, S_CALC, S_HOLD} state_t;
+    typedef enum logic {S_IDLE, S_CALC, S_OUTPUT, S_HOLD} state_t;
     state_t state;
 
     always_ff @(posedge clock or negedge reset) begin
@@ -166,14 +166,14 @@ module vertex_calc (input clock,
                 tmp_w[0] <= fp_m(mat[12],v_in[0]) + fp_m(mat[13],v_in[1]) + fp_m(mat[14],v_in[2]) + fp_m(mat[15], w);
 		     
                 tmp_x[1] <= fp_m(mat[0],v_in[4]) + fp_m(mat[1],v_in[5]) + fp_m(mat[2],v_in[6]) + fp_m(mat[3], w); //w = 1
-		tmp_y[1] <= fp_m(mat[4],v_in[4]) + fp_m(mat[5],v_in[5]) + fp_m(mat[6],v_in[6]) + fp_m(mat[7], w);
-		tmp_z[1] <= fp_m(mat[8],v_in[4]) + fp_m(mat[9],v_in[5]) + fp_m(mat[10],v_in[6]) + fp_m(mat[11], w);
-		tmp_w[1] <= fp_m(mat[12],v_in[4]) + fp_m(mat[13],v_in[5]) + fp_m(mat[14],v_in[6]) + fp_m(mat[15], w);
+                tmp_y[1] <= fp_m(mat[4],v_in[4]) + fp_m(mat[5],v_in[5]) + fp_m(mat[6],v_in[6]) + fp_m(mat[7], w);
+                
+                tmp_z[1] <= fp_m(mat[8],v_in[4]) + fp_m(mat[9],v_in[5]) + fp_m(mat[10],v_in[6]) + fp_m(mat[11], w);
+                tmp_w[1] <= fp_m(mat[12],v_in[4]) + fp_m(mat[13],v_in[5]) + fp_m(mat[14],v_in[6]) + fp_m(mat[15], w);
 			
-		tmp_x[2] <= fp_m(mat[0],v_in[8]) + fp_m(mat[1],v_in[9]) + fp_m(mat[2],v_in[10]) + fp_m(mat[3], w); //w = 1
-		tmp_y[2] <= fp_m(mat[4],v_in[8]) + fp_m(mat[5],v_in[9]) + fp_m(mat[6],v_in[10]) + fp_m(mat[7], w);
-		tmp_z[2] <= fp_m(mat[8],v_in[8]) + fp_m(mat[9],v_in[9]) + fp_m(mat[10],v_in[10]) + fp_m(mat[11], w);
-		tmp_w[2] <= fp_m(mat[12],v_in[8]) + fp_m(mat[13],v_in[9]) + fp_m(mat[14],v_in[10]) + fp_m(mat[15], w);
+                tmp_x[2] <= fp_m(mat[0],v_in[8]) + fp_m(mat[1],v_in[9]) + fp_m(mat[2],v_in[10]) + fp_m(mat[3], w); //w = 1
+                tmp_y[2] <= fp_m(mat[4],v_in[8]) + fp_m(mat[5],v_in[9]) + fp_m(mat[6],v_in[10]) + fp_m(mat[7], w);                tmp_z[2] <= fp_m(mat[8],v_in[8]) + fp_m(mat[9],v_in[9]) + fp_m(mat[10],v_in[10]) + fp_m(mat[11], w);
+                tmp_w[2] <= fp_m(mat[12],v_in[8]) + fp_m(mat[13],v_in[9]) + fp_m(mat[14],v_in[10]) + fp_m(mat[15], w);
                 
                 color1_r <= {8'b0,color_in1[23:16],16'b0};
                 color1_g <= {8'b0,color_in1[15:8],16'b0};

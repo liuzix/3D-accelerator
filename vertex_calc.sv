@@ -137,7 +137,7 @@ module vertex_calc (input clock,
         $display("vertex_calc: color = %d, %d, %d", color_in1, color_in2, color_in3);
     endfunction
 
-    typedef enum logic {S_IDLE, S_CALC, S_OUTPUT, S_HOLD} state_t;
+    typedef enum logic [1:0] {S_IDLE, S_CALC, S_OUTPUT, S_HOLD} state_t;
     state_t state;
 
     always_ff @(posedge clock or negedge reset) begin
@@ -184,21 +184,22 @@ module vertex_calc (input clock,
                 color3_r <= {8'b0,color_in3[23:16],16'b0};
                 color3_g <= {8'b0,color_in3[15:8],16'b0};
                 color3_b <= {8'b0,color_in3[7:0],16'b0};
-                state <= S_HOLD;
+                state <= S_OUTPUT;
             end
 
             S_OUTPUT: begin
                 output_triangle();
-                output_valid <= 1;
-                done_out <= done_in;
+                out_data_valid <= 1;
+                done_out = done_in;
+                stall_out <= 0;
                 state <= S_HOLD;
             end
 
             S_HOLD: begin
+                stall_out <= 1;
                 if (!stall_in) begin
-                    output_valid <= 0;
+                    out_data_valid <= 0;
                     state <= S_IDLE;
-                    stall_out <= 0;
                 end
             end
 

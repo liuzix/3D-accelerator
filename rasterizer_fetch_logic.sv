@@ -22,7 +22,13 @@ module rasterizer_fetch_logic (
     /* data input */
     input input_valid,
     input [25:0] addr_in,
-    input [23:0] color_in,
+    //input [23:0] color_in,
+    input [23:0] color_in_1,
+    input [23:0] color_in_2,
+    input [23:0] color_in_3,
+
+    input signed [31:0] w1,
+    input signed [31:0] w2,
     input [31:0] depth_in,
     
     /* data output */
@@ -33,6 +39,7 @@ module rasterizer_fetch_logic (
     output [23:0] color_out
 );
 
+wire [23:0] color_in;
 logic [95:0] data_in;
 logic [95:0] data_out;
 logic rdreq;
@@ -64,6 +71,35 @@ fifo fifo(
     .almost_full(almost_full),
     .almost_empty(almost_empty)
 );
+
+//fixed point multiplication
+function logic signed [31:0] fp_m(
+    input logic signed [31:0] a,
+    input logic signed [31:0] b
+);
+    fp_m = (32'(a) * 64'(b)) >>> 16;
+endfunction 
+
+function logic signed [31:0] byte_to_fp(
+    input logic [7:0] b
+);
+    
+    byte_to_fp = {8'b0, b, 16'b0};
+endfunction
+
+function logic [7:0] fp_to_byte(
+    input logic signed [31:0] f
+);
+    fp_to_byte = f[23:16]; 
+endfunction
+
+logic signed [31:0] w3;
+always_comb begin 
+    w3 = (32'b1 << 16) - w1 - w2;
+    color_in[7:0] = fp_to_byte(fp_m(w1, byte_to_fp(color_in_1[7:0])) + fp_m(w2, byte_to_fp(color_in_2[7:0])) + fp_m(w3, byte_to_fp(color_in_3[7:0])));
+    color_in[15:8] = fp_to_byte(fp_m(w1, byte_to_fp(color_in_1[15:8])) + fp_m(w2, byte_to_fp(color_in_2[15:8])) + fp_m(w3, byte_to_fp(color_in_3[15:8])));
+    color_in[23:16] = fp_to_byte(fp_m(w1, byte_to_fp(color_in_1[23:16])) + fp_m(w2, byte_to_fp(color_in_2[23:16])) + fp_m(w3, byte_to_fp(color_in_3[23:16])));
+end
 
 
 typedef enum logic { S_IDLE,  S_HOLD } state_t;

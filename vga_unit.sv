@@ -37,7 +37,8 @@ module vga_unit(
    //logic [15:0] master_readdata;
    //------------------------//
 	logic [3:0] tmp_state;
-   
+
+   assign master_byteenable = 3'b111;
 
    vga_master master (.clk(clk),
    .reset(reset),

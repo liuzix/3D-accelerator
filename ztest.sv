@@ -50,23 +50,21 @@ fifo #(.DBITS(115), .SIZE(6))fifo(
 
 assign stall_out = half_full;
 
-always_ff @(posedge clock or negedge reset) begin
-    if (reset) begin
-        if (!almost_full && input_valid) begin
-            $display("ztest: receive data from addr = %d", addr_in);
-            wrreq <= 1;
-            data_in[25:0] <= addr_in;
-            data_in[49:26] <= color_in;
-            data_in[81:50] <= old_depth_out;
-            data_in[113:82] <= new_depth_out;
-            data_in[114] <= done_in;
-        end
+always_ff @(posedge clock) begin
+    if (!almost_full && input_valid) begin
+        $display("ztest: receive data from addr = %d", addr_in);
+        wrreq <= 1;
+        data_in[25:0] <= addr_in;
+        data_in[49:26] <= color_in;
+        data_in[81:50] <= old_depth_out;
+        data_in[113:82] <= new_depth_out;
+        data_in[114] <= done_in;
+    end
 
-        else begin
-            if (almost_full)
-                $display("ztest: almost full!");
-            wrreq <= 0;
-        end
+    else begin
+        if (almost_full)
+            $display("ztest: almost full!");
+        wrreq <= 0;
     end
 end
 

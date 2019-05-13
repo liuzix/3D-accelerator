@@ -10,7 +10,7 @@
   </columns>
  </systemtable>
  <library expandedCategories="Project,Library" />
- <window width="1391" height="1150" x="1718" y="40" />
+ <window width="2889" height="2669" x="208" y="211" />
  <generation path="system" block_symbol_file="1" greybox="1" simulation="VERILOG" />
  <hdlexample language="VERILOG" />
 </preferences>

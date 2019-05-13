@@ -1,6 +1,8 @@
 #include "happly.h"
 #include "loader.h"
+#include <string.h>
 #include <tgmath.h>
+#include <bitset>
 #include <fstream>
 
 typedef uint32_t fixed_point_t;

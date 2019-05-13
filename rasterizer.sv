@@ -19,7 +19,14 @@ module rasterizer (
     input done_in,//
     input stall_in,//
     output [25:0] addr_out,
-    output [23:0] color_out,
+    //output [23:0] color_out,
+    output logic [23:0] color_out_1,
+    output logic [23:0] color_out_2,
+    output logic [23:0] color_out_3,
+    output logic [31:0] w1_out,
+    output logic [31:0] w2_out,
+    output logic [31:0] w3_out,
+
     output [31:0] depth_out,
     output output_valid,
     output stall_out,//
@@ -60,14 +67,7 @@ module rasterizer (
         input logic signed [31:0] a,
         input logic signed [31:0] b
     );
-        fp_m = (64'(a) * 64'(b)) >>> 16;
-    endfunction 
-    //fixed point division
-    function logic signed [31:0] fp_d(
-        input logic signed [31:0] a,
-        input logic signed [31:0] b
-    );
-        fp_d = (64'(a) << 16) / 64'(b);
+        fp_m = (32'(a) * 64'(b)) >>> 16;
     endfunction 
 
     function logic signed [31:0] byte_to_fp(
@@ -128,19 +128,21 @@ module rasterizer (
     logic [25:0] tmp_addr_out;
     logic [23:0] tmp_color_out;
 
+    reg signed [31:0] denom_inv;
+    reg signed [31:0] denom_inv_reg;
     //color interpolation using Barycentric Coordinates
     always_comb begin
         w1_tmp = fp_m(y2_t - y3_t, cur_x - x3_t) + fp_m(x3_t - x2_t, cur_y - y3_t); 
         w2_tmp = fp_m(y3_t - y1_t, cur_x - x3_t) + fp_m(x1_t - x3_t, cur_y - y3_t);
         denom = fp_m(y2_t - y3_t, x1_t - x3_t) + fp_m(x3_t - x2_t, y1_t - y3_t);
-        w1 = fp_d(w1_tmp, denom);
-        w2 = fp_d(w1_tmp, denom);
-        w3 = (1 << 16) - w1 - w2;
-        cur_color[7:0] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[7:0])) + fp_m(w2, byte_to_fp(color2_t[7:0])) + fp_m(w3, byte_to_fp(color3_t[7:0])));
-        cur_color[15:8] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[15:8])) + fp_m(w2, byte_to_fp(color2_t[15:8])) + fp_m(w3, byte_to_fp(color3_t[15:8])));
-        cur_color[23:16] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[23:16])) + fp_m(w2, byte_to_fp(color2_t[23:16])) + fp_m(w3, byte_to_fp(color3_t[23:16])));
+        w1 = fp_m(w1_tmp, denom_inv_reg);
+        w2 = fp_m(w2_tmp, denom_inv_reg);
+        //w3 = (1 << 16) - w1 - w2;
+        //cur_color[7:0] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[7:0])) + fp_m(w2, byte_to_fp(color2_t[7:0])) + fp_m(w3, byte_to_fp(color3_t[7:0])));
+        //cur_color[15:8] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[15:8])) + fp_m(w2, byte_to_fp(color2_t[15:8])) + fp_m(w3, byte_to_fp(color3_t[15:8])));
+        //cur_color[23:16] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[23:16])) + fp_m(w2, byte_to_fp(color2_t[23:16])) + fp_m(w3, byte_to_fp(color3_t[23:16])));
         //cur_color = -1;
-        cur_depth = fp_m(w1, z1_t) + fp_m(w2, z2_t) + fp_m(w3, z3_t);
+        //cur_depth = fp_m(w1, z1_t) + fp_m(w2, z2_t) + fp_m(w3, z3_t);
     end 
 
     logic signed [31:0] cur_x_int;
@@ -186,13 +188,38 @@ module rasterizer (
     typedef enum logic[1:0] {R_IDLE, R_START_NEW_TRI, R_RASTERIZE, R_WAIT} r_state_t;
     r_state_t r_state;
 
+
+    lpm_divide
+`ifdef VERILATOR
+        #(.lpm_widthn(64),
+          .lpm_widthd(32),
+          .lpm_nrepresentation("SIGNED"),
+          .lpm_drepresentation("SIGNED"),
+          .lpm_pipeline(12)) area_divider(
+`else
+        #(.LPM_WIDTHN(64),
+          .LPM_WIDTHD(32),
+          .LPM_NREPRESENTATION("SIGNED"),
+          .LPM_DREPRESENTATION("SIGNED"),
+          .LPM_PIPELINE(12)) area_divider(
+`endif
+            .clock(clock),
+            .clken(1'b1),
+            .numer(64'b1 << 32),
+            .denom(denom),
+            .quotient(denom_inv)
+    );
+
+    logic [3:0] div_counter;
+
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin 
             cur_x = 0;
             cur_y = 0;
             output_valid <= 0;
-            done_out <= 0;
+            done_out = 0;
             stall_out <= 1;
+            div_counter <= 0;
             r_state <= R_IDLE;
         end else begin
             $display(" rasterizer: [%d]==x[%d]==y[%d]", r_state, cur_x >> 16, cur_y >> 16);
@@ -218,6 +245,7 @@ module rasterizer (
                         color2_t <= color2;
                         color3_t <= color3;
                         addr_in_t <= addr_in;
+                        div_counter <= 0;
                         r_state <= R_START_NEW_TRI;
                     end
                     output_valid <= 0;
@@ -226,7 +254,18 @@ module rasterizer (
                     stall_out <= 1;
                     cur_x = minX;
                     cur_y = minY;
-                    r_state <= R_RASTERIZE;
+
+                    if (div_counter == 12) begin
+                        div_counter <= 0;
+                        denom_inv_reg <= denom_inv;
+                        $display(" rasaterizer: denom = %f, denom_inv = %f",
+                            $itor(denom) / $itor(1 << 16),
+                            $itor(denom_inv) / $itor(1 << 16)
+                        );
+                        r_state <= R_RASTERIZE;
+                    end else begin
+                        div_counter <= div_counter + 1;
+                    end
                 end
                 R_RASTERIZE: begin
                     if (is_inside) begin
@@ -234,12 +273,17 @@ module rasterizer (
                         if (!output_valid) begin
                             addr_out <= addr_in_t + ((cur_y >> 16) * 640 + (cur_x >> 16) << 3);
                             $display(" rasterizer: addr_out = %x", addr_out);
-                            color_out <= cur_color;
-                            depth_out <= cur_depth;
+                            color_out_1 <= color1_t;
+                            color_out_2 <= color2_t;
+                            color_out_3 <= color3_t;
+
+                            w1_out <= w1;
+                            w2_out <= w2;
+                            depth_out <= fp_m(w1, z1_t) + fp_m(w2, z2_t) + fp_m((1 << 16) - w1 - w2, z3_t);
                             output_valid <= 1;
                             move_to_next();
                             if (cur_y > maxY) begin
-                                done_out <= done_in;
+                                done_out = done_in;
                                 r_state <= R_IDLE;
                             end else
                                 r_state <= R_WAIT;
@@ -248,7 +292,7 @@ module rasterizer (
                         output_valid <= 0;
                         move_to_next();
                         if (cur_y > maxY) begin
-                            done_out <= done_in;
+                            done_out = done_in;
                             r_state <= R_IDLE;
                         end
                     end
@@ -257,27 +301,32 @@ module rasterizer (
                     $display(" rasterizer: STALL_IN[%d]", stall_in);
                     if (!stall_in) begin
                         if (cur_y > maxY) begin
-                            done_out <= done_in;
+                            done_out = done_in;
                             r_state <= R_IDLE;
                         end else begin
                             if (is_inside) begin
                                 //if (!output_valid) begin
                                     addr_out <= addr_in_t + ((cur_y >> 16) * 640 + (cur_x >> 16) << 3);
                                     $display(" rasterizer: addr_out = %x", addr_out);
-                                    color_out <= cur_color;
-                                    depth_out <= cur_depth;
+                                    color_out_1 <= color1_t;
+                                    color_out_2 <= color2_t;
+                                    color_out_3 <= color3_t;
+
+                                    w1_out <= w1;
+                                    w2_out <= w2;
+                                    depth_out <= fp_m(w1, z1_t) + fp_m(w2, z2_t) + fp_m((1 << 16) - w1 - w2, z3_t);
                                     output_valid <= 1;
                                     move_to_next();
                                     if (cur_y > maxY) begin
                                         r_state <= R_IDLE;
-                                        done_out <= done_in;
+                                        done_out = done_in;
                                     end
                                 //end
                             end else begin
                                 output_valid <= 0;
                                 move_to_next();
                                 if (cur_y > maxY) begin
-                                    done_out <= done_in;
+                                    done_out = done_in;
                                     r_state <= R_IDLE;
                                 end else 
                                     r_state <= R_RASTERIZE;
@@ -288,98 +337,4 @@ module rasterizer (
             endcase
         end
     end
-
-//            if (counter == 0) begin
-//                if (in_data_valid) begin
-//                    x1_t <= x1;
-//                    y1_t <= y1;
-//                    z1_t <= z1;
-//                    x2_t <= x2;
-//                    y2_t <= y2;
-//                    z2_t <= z2;
-//                    x3_t <= x3;
-//                    y3_t <= y3;
-//                    z3_t <= z3;
-//                    color1_t <= color1;
-//                    color2_t <= color2;
-//                    color3_t <= color3;
-//                    addr_in_t <= addr_in;
-//                    stall_out = 0;
-//                    counter = counter + 1;
-//                    
-//                    $display("rasterizer: triangle = (%d, %d, %d), (%d, %d, %d), (%d, %d, %d)",
-//                        $signed(x1) >>> 16, $signed(y1) >>> 16, $signed(z1) >>> 16,
-//                        $signed(x2) >>> 16, $signed(y2) >>> 16, $signed(z2) >>> 16,
-//                        $signed(x3) >>> 16, $signed(y3) >>> 16, $signed(z3) >>> 16);
-//                end
-//                output_valid <= 0;
-//            end else begin
-//                if (counter == 1) begin
-//                    cur_x = minX;
-//                    cur_y = minY;
-//                    counter = counter + 1;
-//                end
-//
-//
-//                $display("rasterizer: cur_point = (%d, %d)", cur_x >> 16, cur_y >> 16);
-//                stall_out = 1;
-//                e12 = (fp_m(signed'(cur_x - x1_t),signed'(y2_t - y1_t)) - fp_m(signed'(cur_y - y1_t), signed'(x2_t - x1_t))) >= 0;
-//                e23 = (fp_m(signed'(cur_x - x2_t),signed'(y3_t - y2_t)) - fp_m(signed'(cur_y - y2_t), signed'(x3_t - x2_t))) >= 0; 
-//                e31 = (fp_m(signed'(cur_x - x3_t),signed'(y1_t - y3_t)) - fp_m(signed'(cur_y - y3_t), signed'(x1_t - x3_t))) >= 0;
-//
-//                is_inside = e12 & e23 & e31;
-//    
-//                if (is_inside) begin
-//                    $display("rasterizer: w1 = %f, w2 = %f, w3 = %f",
-//                        $itor(w1) / $itor(1 << 16), $itor(w2) / $itor(1 << 16), $itor(w3) / $itor(1 << 16)); 
-//                    $display("rasterizer: input color %d, %d, %d", color1_t, color2_t, color3_t);
-//                    $display("rasterizer: output color %d, %d, %d", cur_color[7:0], cur_color[15:8], cur_color[23:16]);
-//                    output_valid <= 1;
-//                    tmp_addr_out = addr_in_t + ((fp_m((640 << 16), cur_y)  + cur_x) >> 16) << 3;
-//                    
-//                    if (!output_valid) begin
-//                        addr_out <= tmp_addr_out;
-//                        color_out <= cur_color;
-//                        depth_out <= cur_depth;
-//
-//                    end else begin
-//                        if (!stall_in) begin
-//                            addr_out <= tmp_addr_out;
-//                            color_out <= cur_color;
-//                            depth_out <= cur_depth;
-//
-//                            cur_x = cur_x + (1 << 16);
-//                
-//                            if (cur_x > maxX) begin
-//                                cur_x = minX;
-//                                cur_y = cur_y + (1 << 16);
-//                            end
-//
-//                            if (cur_y > maxY) begin
-//                                done_out <= done_in;
-//                                counter = 0;
-//                            end
-//                        end
-//                    end
-//                end else begin
-//                    output_valid <= 0;
-//                    cur_x = cur_x + (1 << 16);
-//        
-//                    if (cur_x > maxX) begin
-//                        cur_x = minX;
-//                        cur_y = cur_y + (1 << 16);
-//                    end
-//
-//                    if (cur_y > maxY) begin
-//                        done_out <= done_in;
-//                        counter = 0;
-//                    end
-//                end
-//
-//
-//            end
-//        end
-//    end
-
 endmodule
-

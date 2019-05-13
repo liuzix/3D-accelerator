@@ -77,7 +77,12 @@ logic out_data_valid;
 
 //output of rasterizer
 logic [25:0] addr_out;
-logic [23:0] color_out;
+logic [23:0] color_out_1;
+logic [23:0] color_out_2;
+logic [23:0] color_out_3;
+logic signed [31:0] w1;
+logic signed [31:0] w2;
+logic signed [31:0] w3;
 logic rasterizer_output_valid;
 
 //fetch logic
@@ -179,10 +184,16 @@ rasterizer raster (
     .addr_in(frame_buffer_base), //from config_reg
     .in_data_valid(out_data_valid),
 
+    .color_out_1(color_out_1),
+    .color_out_2(color_out_2),
+    .color_out_3(color_out_3),
+    .w1_out(w1),
+    .w2_out(w2),
+    //.w3_out(w3),
+
     .done_in(done2),
     .stall_in(stall3),
     .addr_out(addr_out),
-    .color_out(color_out),
     .depth_out(depth_in),
     .output_valid(rasterizer_output_valid),
    
@@ -206,7 +217,13 @@ rasterizer_fetch_logic fetch_logic (
 
     .input_valid(rasterizer_output_valid), //from rasterizer
     .addr_in(addr_out), //from rasterizer
-    .color_in(color_out), //from rasterizer
+    //.color_in(color_out), //from rasterizer
+    .color_in_1(color_out_1),
+    .color_in_2(color_out_2),
+    .color_in_3(color_out_3),
+    .w1(w1),
+    .w2(w2),
+    //.w3(w3),
     .depth_in(depth_in), /// from bus...
     
     .output_valid(fetch_output_valid),

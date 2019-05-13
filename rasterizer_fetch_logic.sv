@@ -39,7 +39,12 @@ module rasterizer_fetch_logic (
     output [23:0] color_out
 );
 
-wire [23:0] color_in;
+reg [25:0] addr_in_r;
+reg [23:0] color_in_r;
+reg [31:0] depth_in_r;
+reg input_valid_r;
+reg done_in_r;
+
 logic [95:0] data_in;
 logic [95:0] data_out;
 logic rdreq;
@@ -94,11 +99,20 @@ function logic [7:0] fp_to_byte(
 endfunction
 
 logic signed [31:0] w3;
-always_comb begin 
-    w3 = (32'b1 << 16) - w1 - w2;
-    color_in[7:0] = fp_to_byte(fp_m(w1, byte_to_fp(color_in_1[7:0])) + fp_m(w2, byte_to_fp(color_in_2[7:0])) + fp_m(w3, byte_to_fp(color_in_3[7:0])));
-    color_in[15:8] = fp_to_byte(fp_m(w1, byte_to_fp(color_in_1[15:8])) + fp_m(w2, byte_to_fp(color_in_2[15:8])) + fp_m(w3, byte_to_fp(color_in_3[15:8])));
-    color_in[23:16] = fp_to_byte(fp_m(w1, byte_to_fp(color_in_1[23:16])) + fp_m(w2, byte_to_fp(color_in_2[23:16])) + fp_m(w3, byte_to_fp(color_in_3[23:16])));
+always_ff @(posedge clock or negedge reset) begin 
+    if (!reset) begin
+
+    end else begin
+        if (enqueue || !input_valid_r) begin
+            w3 = (32'b1 << 16) - w1 - w2;
+            color_in_r[7:0] = fp_to_byte(fp_m(w1, byte_to_fp(color_in_1[7:0])) + fp_m(w2, byte_to_fp(color_in_2[7:0])) + fp_m(w3, byte_to_fp(color_in_3[7:0])));
+            color_in_r[15:8] = fp_to_byte(fp_m(w1, byte_to_fp(color_in_1[15:8])) + fp_m(w2, byte_to_fp(color_in_2[15:8])) + fp_m(w3, byte_to_fp(color_in_3[15:8])));
+            color_in_r[23:16] = fp_to_byte(fp_m(w1, byte_to_fp(color_in_1[23:16])) + fp_m(w2, byte_to_fp(color_in_2[23:16])) + fp_m(w3, byte_to_fp(color_in_3[23:16])));
+            addr_in_r <= addr_in;
+            depth_in_r <= depth_in;
+            input_valid_r <= input_valid;
+        end
+    end
 end
 
 
@@ -114,7 +128,7 @@ always @* begin
             if (full) begin
                 next_state = S_IDLE;
             end
-            else if (input_valid) begin
+            else if (input_valid_r) begin
                 next_state = S_HOLD;
                 enqueue = 1;
             end else
@@ -123,7 +137,7 @@ always @* begin
 
         S_HOLD: begin
             if (!master_waitrequest && !stall_in) begin
-                if (!almost_full && input_valid) begin
+                if (!almost_full && input_valid_r) begin
                     next_state = S_HOLD;
                     enqueue = 1;
                 end else begin
@@ -162,13 +176,13 @@ always_ff @(posedge clock or negedge reset) begin
             // enqueue the fetch request
             $display("depth_fetcher: enqueue fetch request addr = %x", addr_in);
             wrreq <= 1;
-            data_in[25:0] <= addr_in;
-            data_in[49:26] <= color_in;
-            data_in[81:50] <= depth_in;
-            data_in[82] <= done_in;
+            data_in[25:0] <= addr_in_r;
+            data_in[49:26] <= color_in_r;
+            data_in[81:50] <= depth_in_r;
+            data_in[82] <= done_in_r;
             data_in[95:83] <= 0;
 
-            master_address <= addr_in + 4;
+            master_address <= addr_in_r + 4;
             master_write <= 0;
             master_byteenable <= 4'b11;
         end

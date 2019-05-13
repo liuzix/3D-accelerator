@@ -99,15 +99,28 @@ function logic [7:0] fp_to_byte(
 endfunction
 
 logic signed [31:0] w3;
+reg signed [31:0] color_step [8:0];
 always_ff @(posedge clock or negedge reset) begin 
     if (!reset) begin
 
     end else begin
         if (enqueue || !input_valid_r) begin
             w3 = (32'b1 << 16) - w1 - w2;
-            color_in_r[7:0] = fp_to_byte(fp_m(w1, byte_to_fp(color_in_1[7:0])) + fp_m(w2, byte_to_fp(color_in_2[7:0])) + fp_m(w3, byte_to_fp(color_in_3[7:0])));
-            color_in_r[15:8] = fp_to_byte(fp_m(w1, byte_to_fp(color_in_1[15:8])) + fp_m(w2, byte_to_fp(color_in_2[15:8])) + fp_m(w3, byte_to_fp(color_in_3[15:8])));
-            color_in_r[23:16] = fp_to_byte(fp_m(w1, byte_to_fp(color_in_1[23:16])) + fp_m(w2, byte_to_fp(color_in_2[23:16])) + fp_m(w3, byte_to_fp(color_in_3[23:16])));
+            //color_in_r[7:0] = fp_to_byte(w1 * color_in_1[7:0] + w2 * color_in_2[7:0] + w3 * color_in_3[7:0]);
+            //color_in_r[15:8] = fp_to_byte(w1 * color_in_1[15:8] + w2 * color_in_2[15:8] + w3 * color_in_3[15:8]);
+            //color_in_r[23:16] = fp_to_byte(w1 * color_in_1[23:16] + w2 * color_in_2[23:16] + w3 * color_in_3[23:16]);
+            
+            color_step[0] <= w1 * color_in_1[7:0];
+            color_step[1] <= w2 * color_in_2[7:0];
+            color_step[2] <= w3 * color_in_3[7:0];
+            color_step[3] <= w1 * color_in_1[15:8];
+            color_step[4] <= w2 * color_in_2[15:8];
+            color_step[5] <= w3 * color_in_3[15:8];
+            color_step[6] <= w1 * color_in_1[23:16];
+            color_step[7] <= w2 * color_in_2[23:16];
+            color_step[8] <= w3 * color_in_3[23:16];
+//color_in_r[15:8] = fp_to_byte(fp_m(w1, byte_to_fp(color_in_1[15:8])) + fp_m(w2, byte_to_fp(color_in_2[15:8])) + fp_m(w3, byte_to_fp(color_in_3[15:8])));
+//            color_in_r[23:16] = fp_to_byte(fp_m(w1, byte_to_fp(color_in_1[23:16])) + fp_m(w2, byte_to_fp(color_in_2[23:16])) + fp_m(w3, byte_to_fp(color_in_3[23:16])));
             addr_in_r <= addr_in;
             depth_in_r <= depth_in;
             input_valid_r <= input_valid;
@@ -115,6 +128,9 @@ always_ff @(posedge clock or negedge reset) begin
     end
 end
 
+assign color_in_r[7:0] = fp_to_byte(color_step[0] + color_step[1] + color_step[2]);
+assign color_in_r[15:8] = fp_to_byte(color_step[3] + color_step[4] + color_step[5]);
+assign color_in_r[23:16] = fp_to_byte(color_step[6] + color_step[7] + color_step[8]);
 
 typedef enum logic { S_IDLE,  S_HOLD } state_t;
 state_t state;

@@ -12,11 +12,7 @@ module vga_unit(
     output [25:0] master_address,
     output logic [7:0] VGA_R, VGA_G, VGA_B,
     output logic 	   VGA_CLK, VGA_HS, VGA_VS,VGA_BLANK_n,
-    output logic	   VGA_SYNC_n,
-    output test_master_read,
-    output test_slave_read,
-	output test_waitrequest,
-	output [6:0] read_state);
+    output logic	   VGA_SYNC_n);
 
    logic pixel_read;
    logic [25:0] cur_vga_addr;
@@ -37,7 +33,8 @@ module vga_unit(
    //logic [15:0] master_readdata;
    //------------------------//
 	logic [3:0] tmp_state;
-   
+   assign master_write = 0;	
+   assign master_byteenable = 4'b1111;
 
    vga_master master (.clk(clk),
    .reset(reset),
@@ -60,10 +57,5 @@ module vga_unit(
    .pixel_read(pixel_read),
    .cur_vga_addr(cur_vga_addr),
    .*);
-
-	hex7seg hex(
-	.a(tmp_state),
-	.y(read_state)
-	);
 
 endmodule

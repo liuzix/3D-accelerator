@@ -33,9 +33,14 @@ module rasterizer_unit (
     input [31:0] master_readdata_3,
     input master_readdatavalid_3,
     output [31:0]master_writedata_3,
-    input master_waitrequest_3
+    input master_waitrequest_3,
+	 
+	 output logic [6:0] test,
+	 output logic [6:0] hex0,
+	 output logic [6:0] hex1,
+	 output logic [6:0] hex2,
+	 output logic [6:0] hex3
 );
-
 
 wire stall1;
 wire stall2;
@@ -93,6 +98,11 @@ logic wait_request;
 logic [25:0] final_addr_out;
 logic [23:0] final_color_out;
 
+logic [6:0] hex[3:0];
+assign hex0 = hex[0];
+assign hex1 = hex[1];
+assign hex2 = hex[2];
+assign hex3 = hex[3];
 
 config_reg c_reg (
     .clk(clock),
@@ -108,7 +118,9 @@ config_reg c_reg (
     .frame_buffer_base(frame_buffer_base),
     .vertex_buffer_base(vertex_buffer_base),
     .start_render(do_render),
-    .done_in(done5));
+    .done_in(done5),
+	 .test(test),
+	 .hex(hex));
 
 
 rasterizer_vertex_fetch vertex_fetch (
@@ -155,11 +167,11 @@ vertex_calc v_calc (
     .stall_in(stall2), 
     .stall_out(stall1),
     .out_data_valid(out_data_valid));
-always@(x_out )begin
-   $display("vertex_cal_out x1:%d y1:%d z1:%d",x_out[0][31:16],y_out[0][31:16],z_out[0][31:16]);
-   $display("vertex_cal_out x2:%d y2:%d z2:%d",x_out[1][31:16],y_out[1][31:16],z_out[1][31:16]);
-   $display("vertex_cal_out x3:%d y3:%d z3:%d",x_out[2][31:16],y_out[2][31:16],z_out[2][31:16]);
-end
+//always@(x_out )begin
+//   $display("vertex_cal_out x1:%d y1:%d z1:%d",x_out[0][31:16],y_out[0][31:16],z_out[0][31:16]);
+//   $display("vertex_cal_out x2:%d y2:%d z2:%d",x_out[1][31:16],y_out[1][31:16],z_out[1][31:16]);
+//   $display("vertex_cal_out x3:%d y3:%d z3:%d",x_out[2][31:16],y_out[2][31:16],z_out[2][31:16]);
+//end
 
 rasterizer raster (
     .clock(clock),

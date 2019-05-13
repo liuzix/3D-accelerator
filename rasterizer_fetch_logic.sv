@@ -43,6 +43,7 @@ logic full;
 logic empty;
 logic half_full;
 
+assign master_byteenable = 4'b1111;
 reg [95:0] data_out_reg;
 assign addr_out = data_out_reg[25:0];
 assign color_out = data_out_reg[49:26];
@@ -115,8 +116,6 @@ always_ff @(posedge clock or negedge reset) begin
         state <= S_IDLE;
         //stall_out <= 1;
     end else begin
-        if (full)
-            $display("depth_fetcher: fifo is full");
         // deal with input port
         //
         $display("depth_fetcher: master_waitrequest = %d", master_waitrequest);
@@ -134,7 +133,6 @@ always_ff @(posedge clock or negedge reset) begin
 
             master_address <= addr_in + 4;
             master_write <= 0;
-            master_byteenable <= 4'b11;
         end
         else begin
             wrreq <= 0;

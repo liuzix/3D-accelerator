@@ -35,6 +35,11 @@
    }
    element new_sdram_controller_0.s1
    {
+      datum _lockedAddress
+      {
+         value = "0";
+         type = "boolean";
+      }
       datum baseAddress
       {
          value = "0";
@@ -47,6 +52,19 @@
       {
          value = "6";
          type = "int";
+      }
+      datum sopceditor_expanded
+      {
+         value = "1";
+         type = "boolean";
+      }
+   }
+   element rasterizer_unit_0.avalon_slave
+   {
+      datum baseAddress
+      {
+         value = "67108864";
+         type = "String";
       }
    }
    element reset_bridge_0
@@ -63,6 +81,30 @@
       {
          value = "3";
          type = "int";
+      }
+   }
+   element system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
+      }
+   }
+   element system
+   {
+      datum _originalDeviceFamily
+      {
+         value = "Cyclone V";
+         type = "String";
       }
    }
    element system
@@ -209,7 +251,11 @@ proc compose {} {
    type="reset"
    dir="end" />
  <interface name="s_read" internal="vga_unit_0.s_read" />
- <interface name="test" internal="vga_unit_0.test" type="conduit" dir="end" />
+ <interface
+   name="test"
+   internal="rasterizer_unit_0.test"
+   type="conduit"
+   dir="end" />
  <interface
    name="vga_unit_0_frame_buffer"
    internal="vga_unit_0.frame_buffer"
@@ -858,25 +904,20 @@ proc compose {} {
    kind="avalon"
    version="18.1"
    start="hps_0.h2f_axi_master"
-   end="new_sdram_controller_0.s1">
+   end="rasterizer_unit_0.avalon_slave">
   <parameter name="arbitrationPriority" value="1" />
-  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="baseAddress" value="0x04000000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
  <connection
    kind="avalon"
    version="18.1"
-   start="hps_0.h2f_lw_axi_master"
-   end="rasterizer_unit_0.avalon_slave">
+   start="hps_0.h2f_axi_master"
+   end="new_sdram_controller_0.s1">
   <parameter name="arbitrationPriority" value="1" />
   <parameter name="baseAddress" value="0x0000" />
   <parameter name="defaultConnection" value="false" />
  </connection>
- <connection
-   kind="clock"
-   version="18.1"
-   start="clk_0.clk"
-   end="rasterizer_unit_0.clock" />
  <connection
    kind="clock"
    version="18.1"
@@ -901,6 +942,11 @@ proc compose {} {
    kind="clock"
    version="18.1"
    start="sys_sdram_pll_0.sys_clk"
+   end="rasterizer_unit_0.clock" />
+ <connection
+   kind="clock"
+   version="18.1"
+   start="sys_sdram_pll_0.sys_clk"
    end="hps_0.h2f_axi_clock" />
  <connection
    kind="clock"
@@ -915,13 +961,13 @@ proc compose {} {
  <connection
    kind="reset"
    version="18.1"
-   start="clk_0.clk_reset"
-   end="rasterizer_unit_0.reset" />
+   start="reset_bridge_0.out_reset"
+   end="vga_unit_0.reset" />
  <connection
    kind="reset"
    version="18.1"
    start="reset_bridge_0.out_reset"
-   end="vga_unit_0.reset" />
+   end="rasterizer_unit_0.reset" />
  <connection
    kind="reset"
    version="18.1"

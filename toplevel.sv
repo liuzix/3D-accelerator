@@ -232,11 +232,12 @@ system system0 (
    .vga_unit_0_vga_display_vga_r              (VGA_R),                           
    .vga_unit_0_vga_display_vga_sync           (VGA_SYNC_N),          
    .vga_unit_0_vga_display_vga_vs             (VGA_VS),
-   .reset_bridge_0_in_reset_reset_n			    (KEY[0]),
-	.test_master_read (LEDR[0]),                   
-   .test_slave_read (LEDR[1]),
-	.test_waitrequest (LEDR[2]),
-	.test_hexout (HEX1)
+	.test_test                     (LEDR[0]),
+	.test_hex0(HEX1),
+	.test_hex1(HEX2),
+	.test_hex2(HEX3),
+	.test_hex3(HEX4),
+   .reset_bridge_0_in_reset_reset_n			    (KEY[0])
 );
 
     assign HEX0[0] = KEY[0];

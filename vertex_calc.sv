@@ -100,30 +100,30 @@ module vertex_calc (input clock,
     assign  tmp_w[2] = fp_m(mat[12],v_in[8]) + fp_m(mat[13],v_in[9]) + fp_m(mat[14],v_in[10]) + fp_m(mat[15], w);
     
     function void output_triangle();
-        x_out[0] <= fp_m(tmp_x[0], width) + width; 
-        y_out[0] <= fp_m(tmp_y[0], height) + height;
-        z_out[0] <= fp_m(tmp_z[0], width) + width;
-        w_out[0] <= fp_m(tmp_w[0], height) + height;
+        x_out[0] = fp_m(tmp_x[0], width) + width; 
+        y_out[0] = fp_m(tmp_y[0], height) + height;
+        z_out[0] = fp_m(tmp_z[0], width) + width;
+        w_out[0] = fp_m(tmp_w[0], height) + height;
     
-        x_out[1] <= fp_m(tmp_x[1], width) + width; 
-        y_out[1] <= fp_m(tmp_y[1], height) + height;
-        z_out[1] <= fp_m(tmp_z[1], width) + width;
-        w_out[1] <= fp_m(tmp_w[1], height) + height;
+        x_out[1] = fp_m(tmp_x[1], width) + width; 
+        y_out[1] = fp_m(tmp_y[1], height) + height;
+        z_out[1] = fp_m(tmp_z[1], width) + width;
+        w_out[1] = fp_m(tmp_w[1], height) + height;
 
-        x_out[2] <= fp_m(tmp_x[2], width) + width; 
-        y_out[2] <= fp_m(tmp_y[2], height) + height;
-        z_out[2] <= fp_m(tmp_z[2], width) + width;
-        w_out[2] <= fp_m(tmp_w[2], height) + height;
+        x_out[2] = fp_m(tmp_x[2], width) + width; 
+        y_out[2] = fp_m(tmp_y[2], height) + height;
+        z_out[2] = fp_m(tmp_z[2], width) + width;
+        w_out[2] = fp_m(tmp_w[2], height) + height;
 
         $display("vertex_calc: triangle = (%d, %d, %d), (%d, %d, %d), (%d, %d, %d)",
             $signed(v_in[0]) >>> 16, $signed(v_in[1]) >>> 16, $signed(v_in[2]) >>> 16,
             $signed(v_in[4]) >>> 16, $signed(v_in[5]) >>> 16, $signed(v_in[6]) >>> 16,
             $signed(v_in[8]) >>> 16, $signed(v_in[9]) >>> 16, $signed(v_in[10]) >>> 16);
-        color_out1 <= {color1_rnew[23:16],color1_gnew[23:16],color1_bnew[23:16]};
-        color_out2 <= {color2_rnew[23:16],color2_gnew[23:16],color2_bnew[23:16]};
-        color_out3 <= {color3_rnew[23:16],color3_gnew[23:16],color3_bnew[23:16]};
+        color_out1 = {color1_rnew[23:16],color1_gnew[23:16],color1_bnew[23:16]};
+        color_out2 = {color2_rnew[23:16],color2_gnew[23:16],color2_bnew[23:16]};
+        color_out3 = {color3_rnew[23:16],color3_gnew[23:16],color3_bnew[23:16]};
         //$display("vertex_color: triangle = (%d, %d, %d), (%d, %d, %d), (%d, %d, %d)");
-        done_out <= done_in;
+        done_out = done_in;
         $display("vertex_calc: color = %d, %d, %d", color_in1, color_in2, color_in3);
     endfunction
 
@@ -132,7 +132,7 @@ module vertex_calc (input clock,
 
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
-            done_out <= 0;
+            done_out = 0;
             stall_out <= 0;
             out_data_valid <= 0;
         end

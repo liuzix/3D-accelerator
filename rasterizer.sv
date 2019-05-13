@@ -136,10 +136,10 @@ module rasterizer (
         w1 = fp_d(w1_tmp, denom);
         w2 = fp_d(w1_tmp, denom);
         w3 = (1 << 16) - w1 - w2;
-        cur_color[7:0] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[7:0])) + fp_m(w2, byte_to_fp(color2_t[7:0])) + fp_m(w3, byte_to_fp(color3_t[7:0])));
-        cur_color[15:8] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[15:8])) + fp_m(w2, byte_to_fp(color2_t[15:8])) + fp_m(w3, byte_to_fp(color3_t[15:8])));
-        cur_color[23:16] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[23:16])) + fp_m(w2, byte_to_fp(color2_t[23:16])) + fp_m(w3, byte_to_fp(color3_t[23:16])));
-        //cur_color = -1;
+//        cur_color[7:0] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[7:0])) + fp_m(w2, byte_to_fp(color2_t[7:0])) + fp_m(w3, byte_to_fp(color3_t[7:0])));
+//        cur_color[15:8] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[15:8])) + fp_m(w2, byte_to_fp(color2_t[15:8])) + fp_m(w3, byte_to_fp(color3_t[15:8])));
+//        cur_color[23:16] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[23:16])) + fp_m(w2, byte_to_fp(color2_t[23:16])) + fp_m(w3, byte_to_fp(color3_t[23:16])));
+		  cur_color = -1;
         cur_depth = fp_m(w1, z1_t) + fp_m(w2, z2_t) + fp_m(w3, z3_t);
     end 
 
@@ -288,98 +288,6 @@ module rasterizer (
             endcase
         end
     end
-
-//            if (counter == 0) begin
-//                if (in_data_valid) begin
-//                    x1_t <= x1;
-//                    y1_t <= y1;
-//                    z1_t <= z1;
-//                    x2_t <= x2;
-//                    y2_t <= y2;
-//                    z2_t <= z2;
-//                    x3_t <= x3;
-//                    y3_t <= y3;
-//                    z3_t <= z3;
-//                    color1_t <= color1;
-//                    color2_t <= color2;
-//                    color3_t <= color3;
-//                    addr_in_t <= addr_in;
-//                    stall_out = 0;
-//                    counter = counter + 1;
-//                    
-//                    $display("rasterizer: triangle = (%d, %d, %d), (%d, %d, %d), (%d, %d, %d)",
-//                        $signed(x1) >>> 16, $signed(y1) >>> 16, $signed(z1) >>> 16,
-//                        $signed(x2) >>> 16, $signed(y2) >>> 16, $signed(z2) >>> 16,
-//                        $signed(x3) >>> 16, $signed(y3) >>> 16, $signed(z3) >>> 16);
-//                end
-//                output_valid <= 0;
-//            end else begin
-//                if (counter == 1) begin
-//                    cur_x = minX;
-//                    cur_y = minY;
-//                    counter = counter + 1;
-//                end
-//
-//
-//                $display("rasterizer: cur_point = (%d, %d)", cur_x >> 16, cur_y >> 16);
-//                stall_out = 1;
-//                e12 = (fp_m(signed'(cur_x - x1_t),signed'(y2_t - y1_t)) - fp_m(signed'(cur_y - y1_t), signed'(x2_t - x1_t))) >= 0;
-//                e23 = (fp_m(signed'(cur_x - x2_t),signed'(y3_t - y2_t)) - fp_m(signed'(cur_y - y2_t), signed'(x3_t - x2_t))) >= 0; 
-//                e31 = (fp_m(signed'(cur_x - x3_t),signed'(y1_t - y3_t)) - fp_m(signed'(cur_y - y3_t), signed'(x1_t - x3_t))) >= 0;
-//
-//                is_inside = e12 & e23 & e31;
-//    
-//                if (is_inside) begin
-//                    $display("rasterizer: w1 = %f, w2 = %f, w3 = %f",
-//                        $itor(w1) / $itor(1 << 16), $itor(w2) / $itor(1 << 16), $itor(w3) / $itor(1 << 16)); 
-//                    $display("rasterizer: input color %d, %d, %d", color1_t, color2_t, color3_t);
-//                    $display("rasterizer: output color %d, %d, %d", cur_color[7:0], cur_color[15:8], cur_color[23:16]);
-//                    output_valid <= 1;
-//                    tmp_addr_out = addr_in_t + ((fp_m((640 << 16), cur_y)  + cur_x) >> 16) << 3;
-//                    
-//                    if (!output_valid) begin
-//                        addr_out <= tmp_addr_out;
-//                        color_out <= cur_color;
-//                        depth_out <= cur_depth;
-//
-//                    end else begin
-//                        if (!stall_in) begin
-//                            addr_out <= tmp_addr_out;
-//                            color_out <= cur_color;
-//                            depth_out <= cur_depth;
-//
-//                            cur_x = cur_x + (1 << 16);
-//                
-//                            if (cur_x > maxX) begin
-//                                cur_x = minX;
-//                                cur_y = cur_y + (1 << 16);
-//                            end
-//
-//                            if (cur_y > maxY) begin
-//                                done_out <= done_in;
-//                                counter = 0;
-//                            end
-//                        end
-//                    end
-//                end else begin
-//                    output_valid <= 0;
-//                    cur_x = cur_x + (1 << 16);
-//        
-//                    if (cur_x > maxX) begin
-//                        cur_x = minX;
-//                        cur_y = cur_y + (1 << 16);
-//                    end
-//
-//                    if (cur_y > maxY) begin
-//                        done_out <= done_in;
-//                        counter = 0;
-//                    end
-//                end
-//
-//
-//            end
-//        end
-//    end
 
 endmodule
 

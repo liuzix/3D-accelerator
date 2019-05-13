@@ -24,6 +24,7 @@ module ztest (
     input master_waitrequest
 );
 
+assign master_byteenable = 4'b1111;
 logic [114:0] data_in;
 logic [114:0] data_out;
 logic wrreq;
@@ -51,7 +52,8 @@ fifo #(.DBITS(115), .SIZE(6))fifo(
 assign stall_out = half_full;
 
 always_ff @(posedge clock or negedge reset) begin
-    if (reset) begin
+    if (!reset) begin
+	 end else begin
         if (!almost_full && input_valid) begin
             $display("ztest: receive data from addr = %d", addr_in);
             wrreq <= 1;

@@ -7,6 +7,8 @@ module rasterizer_unit (
     input logic read,
     input logic [15:0] address,
     output logic [31:0] readdata,
+	 
+	 output logic test,
 
     output [25:0] master_address,
     output master_read,
@@ -113,6 +115,7 @@ config_reg c_reg (
     .frame_buffer_base(frame_buffer_base),
     .vertex_buffer_base(vertex_buffer_base),
     .start_render(do_render),
+	 .test(test),
     .done_in(done5));
 
 

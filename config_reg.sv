@@ -1,11 +1,11 @@
 module config_reg(
     input logic clk,
     input logic reset_n,
-    input logic [32:0] writedata,
+    input logic [31:0] writedata,
     input logic write,
     input logic read,
     input logic [15:0] address,
-    output logic [32:0] readdata,
+    output logic [31:0] readdata,
     
     output logic [31:0] MV [15:0],
     output logic [31:0] MVP [15:0],
@@ -14,6 +14,7 @@ module config_reg(
     output logic [25:0] vertex_buffer_base,
 
     input logic done_in,
+	 output logic test,
     output logic start_render
 );
 
@@ -32,6 +33,7 @@ always_ff @(posedge clk or negedge reset_n)begin
         start_render <= 0;
         frame_buffer_base <= 0;
         vertex_buffer_base <= 26'h300000;
+		  test <= 1;
     end
     else if (write) begin
         case (address)
@@ -45,6 +47,7 @@ always_ff @(posedge clk or negedge reset_n)begin
             end
             'h8: begin
                 start_render <= writedata;
+					 test <= 0;
                 $display("start_render: %d", writedata);
             end
             default:
@@ -58,5 +61,9 @@ always_ff @(posedge clk or negedge reset_n)begin
       end
     else if (read && address == 'h8)
         readdata <= done_latch;
+	 else if (read && address == 'h500) begin
+		  readdata <= 'hdeadbeef;
+		  test <= 1;
+		  end
    end
 endmodule // config_reg

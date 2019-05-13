@@ -41,7 +41,7 @@ set_global_assignment -name DEVICE 5CSEMA5F31C6
 set_global_assignment -name TOP_LEVEL_ENTITY toplevel
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 18.1.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "17:56:39  APRIL 04, 2019"
-set_global_assignment -name LAST_QUARTUS_VERSION "18.1.0 Lite Edition"
+set_global_assignment -name LAST_QUARTUS_VERSION "18.1.0 Standard Edition"
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (Verilog)"
 set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
@@ -443,6 +443,23 @@ set_global_assignment -name OPTIMIZE_MULTI_CORNER_TIMING ON
 set_global_assignment -name ECO_REGENERATE_REPORT ON
 set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_location_assignment PIN_AA14 -to KEY[0]
+set_location_assignment PIN_V16 -to LEDR[0]
+set_location_assignment PIN_W16 -to LEDR[1]
+set_location_assignment PIN_V17 -to LEDR[2]
+set_global_assignment -name SYSTEMVERILOG_FILE ztest.sv
+set_global_assignment -name SYSTEMVERILOG_FILE vertex_calc.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rasterizer_vertex_fetch.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rasterizer_unit.sv
+set_global_assignment -name QIP_FILE rasterizer_fifo_bb.qip
+set_global_assignment -name SYSTEMVERILOG_FILE rasterizer_fetch_logic.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rasterizer.sv
+set_global_assignment -name VERILOG_FILE LPM_HINT_EVALUATION.v
+set_global_assignment -name VERILOG_FILE lpm_divide.v
+set_global_assignment -name QIP_FILE divider.qip
+set_global_assignment -name SYSTEMVERILOG_FILE config_reg.sv
 set_global_assignment -name SYSTEMVERILOG_FILE vga_unit_modules.sv
 set_global_assignment -name SYSTEMVERILOG_FILE vga_unit.sv
 set_global_assignment -name SYSTEMVERILOG_FILE fifo.sv
@@ -453,10 +470,6 @@ set_global_assignment -name SDC_FILE 3D.sdc
 set_global_assignment -name SYSTEMVERILOG_FILE toplevel.sv
 set_global_assignment -name SYSTEMVERILOG_FILE sdram_master.sv
 set_global_assignment -name QIP_FILE rasterizer_fifo.qip
-set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
-set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
-set_location_assignment PIN_AA14 -to KEY[0]
-set_location_assignment PIN_V16 -to LEDR[0]
-set_location_assignment PIN_W16 -to LEDR[1]
-set_location_assignment PIN_V17 -to LEDR[2]
+set_global_assignment -name QIP_FILE adder_mul.qip
+set_global_assignment -name SIP_FILE adder_mul.sip
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

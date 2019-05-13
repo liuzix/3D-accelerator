@@ -34,6 +34,8 @@ logic full;
 logic empty;
 logic half_full;
 
+assign master_byteenable = 4'b1111;
+
 fifo #(.DBITS(115), .SIZE(6))fifo(
     .din(data_in),
     .dout(data_out),

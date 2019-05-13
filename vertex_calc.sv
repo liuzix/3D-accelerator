@@ -143,17 +143,6 @@ module vertex_calc (input clock,
     typedef enum logic [1:0] {S_IDLE, S_CALC, S_OUTPUT, S_HOLD} state_t;
     state_t state;
 
-	 function void send_data(int i, int j);
-		dataa_0 = mat[j];
-		dataa_1 = mat[j+1];
-		dataa_2 = mat[j+2];
-		dataa_3 = mat[j+3];
-		datab_0 = v_in[i];
-		datab_1 = v_in[i+1];
-		datab_2 = v_in[i+2];
-		datab_3 = w;
-	 endfunction
-	 
 	 int calc_counter;
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
@@ -176,7 +165,7 @@ module vertex_calc (input clock,
             end
             
             S_CALC: begin
-					calc_counter <= calc_counter + 1;
+                    calc_counter <= calc_counter + 1;
                   case(calc_counter)
                     0: begin
                         tmp_x[0] <= fp_m(mat[0],v_in[0]) + fp_m(mat[1], v_in[1]);
@@ -189,27 +178,27 @@ module vertex_calc (input clock,
                         tmp_z[1] <= fp_m(mat[8],v_in[4]) + fp_m(mat[9], v_in[5]);
                         tmp_w[1] <= fp_m(mat[12],v_in[4]) + fp_m(mat[13], v_in[5]);
 
-                        tmp_x[2] <= fp_m(mat[0],v_in[8]) + fp_m(mat[1], v_in[8]);
-                        tmp_y[2] <= fp_m(mat[4],v_in[8]) + fp_m(mat[5], v_in[8]);
-                        tmp_z[2] <= fp_m(mat[8],v_in[8]) + fp_m(mat[9], v_in[8]);
-                        tmp_w[2] <= fp_m(mat[12],v_in[8]) + fp_m(mat[13], v_in[8]);
+                        tmp_x[2] <= fp_m(mat[0],v_in[8]) + fp_m(mat[1], v_in[9]);
+                        tmp_y[2] <= fp_m(mat[4],v_in[8]) + fp_m(mat[5], v_in[9]);
+                        tmp_z[2] <= fp_m(mat[8],v_in[8]) + fp_m(mat[9], v_in[9]);
+                        tmp_w[2] <= fp_m(mat[12],v_in[8]) + fp_m(mat[13], v_in[9]);
                     end
 
                     1: begin
                         tmp_x[0] <= tmp_x[0] + fp_m(mat[2],v_in[2]) + fp_m(mat[3], w);
                         tmp_y[0] <= tmp_y[0] + fp_m(mat[6],v_in[2]) + fp_m(mat[7], w);
-                        tmp_y[0] <= tmp_z[0] + fp_m(mat[10],v_in[2]) + fp_m(mat[11], w);
-                        tmp_y[0] <= tmp_w[0] + fp_m(mat[14],v_in[2]) + fp_m(mat[15], w);
+                        tmp_z[0] <= tmp_z[0] + fp_m(mat[10],v_in[2]) + fp_m(mat[11], w);
+                        tmp_w[0] <= tmp_w[0] + fp_m(mat[14],v_in[2]) + fp_m(mat[15], w);
 
                         tmp_x[1] <= tmp_x[1] + fp_m(mat[2],v_in[6]) + fp_m(mat[3], w);
                         tmp_y[1] <= tmp_y[1] + fp_m(mat[6],v_in[6]) + fp_m(mat[7], w);
-                        tmp_y[1] <= tmp_z[1] + fp_m(mat[10],v_in[6]) + fp_m(mat[11], w);
-                        tmp_y[1] <= tmp_w[1] + fp_m(mat[14],v_in[6]) + fp_m(mat[15], w);
+                        tmp_z[1] <= tmp_z[1] + fp_m(mat[10],v_in[6]) + fp_m(mat[11], w);
+                        tmp_w[1] <= tmp_w[1] + fp_m(mat[14],v_in[6]) + fp_m(mat[15], w);
 
                         tmp_x[2] <= tmp_x[2] + fp_m(mat[2],v_in[10]) + fp_m(mat[3], w);
                         tmp_y[2] <= tmp_y[2] + fp_m(mat[6],v_in[10]) + fp_m(mat[7], w);
-                        tmp_y[2] <= tmp_z[2] + fp_m(mat[10],v_in[10]) + fp_m(mat[11], w);
-                        tmp_y[2] <= tmp_w[2] + fp_m(mat[14],v_in[10]) + fp_m(mat[15], w);
+                        tmp_z[2] <= tmp_z[2] + fp_m(mat[10],v_in[10]) + fp_m(mat[11], w);
+                        tmp_w[2] <= tmp_w[2] + fp_m(mat[14],v_in[10]) + fp_m(mat[15], w);
                         state <= S_OUTPUT;
                     end
 

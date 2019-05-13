@@ -211,6 +211,11 @@ proc compose {} {
  <interface name="s_read" internal="vga_unit_0.s_read" />
  <interface name="test" internal="vga_unit_0.test" type="conduit" dir="end" />
  <interface
+   name="test_1"
+   internal="rasterizer_unit_0.test"
+   type="conduit"
+   dir="end" />
+ <interface
    name="vga_unit_0_frame_buffer"
    internal="vga_unit_0.frame_buffer"
    type="conduit"
@@ -876,11 +881,6 @@ proc compose {} {
    kind="clock"
    version="18.1"
    start="clk_0.clk"
-   end="rasterizer_unit_0.clock" />
- <connection
-   kind="clock"
-   version="18.1"
-   start="clk_0.clk"
    end="sys_sdram_pll_0.ref_clk" />
  <connection
    kind="clock"
@@ -901,6 +901,11 @@ proc compose {} {
    kind="clock"
    version="18.1"
    start="sys_sdram_pll_0.sys_clk"
+   end="rasterizer_unit_0.clock" />
+ <connection
+   kind="clock"
+   version="18.1"
+   start="sys_sdram_pll_0.sys_clk"
    end="hps_0.h2f_axi_clock" />
  <connection
    kind="clock"
@@ -915,13 +920,13 @@ proc compose {} {
  <connection
    kind="reset"
    version="18.1"
-   start="clk_0.clk_reset"
-   end="rasterizer_unit_0.reset" />
+   start="reset_bridge_0.out_reset"
+   end="vga_unit_0.reset" />
  <connection
    kind="reset"
    version="18.1"
    start="reset_bridge_0.out_reset"
-   end="vga_unit_0.reset" />
+   end="rasterizer_unit_0.reset" />
  <connection
    kind="reset"
    version="18.1"

@@ -116,7 +116,7 @@ module rasterizer_vertex_fetch (
                         fetch_tri <= 1;
                         addr <= vertex_buffer_base + 4;
                         send_state <= TRI_SEND;
-                    end else if (ccounter == tri_num)
+                    end else if (done_out)
                         fetch_tri <= 0;
                 end
                 SEND: begin
@@ -213,7 +213,7 @@ module rasterizer_vertex_fetch (
                         $display("vertex_fetch: tri_num = %d", master_readdata);
                         tri_num <= master_readdata;
                     end
-                    else if (ccounter == tri_num)
+                    else if (done_out)
                         tri_num <= 0; 
                 end
                 FETCH: begin//fetch vertices

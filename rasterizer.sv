@@ -52,15 +52,22 @@ module rasterizer (
 
     logic signed [31:0] cur_x;
     logic signed [31:0] cur_y;
-    logic e12, e23, e31;
+    logic signed [31:0] e12;
+    logic signed [31:0] e23;
+    logic signed [31:0] e31;
     logic is_inside;
 
     //640 x 480
     
-    logic [31:0] minX;
-    logic [31:0] minY;
-    logic [31:0] maxX;
-    logic [31:0] maxY;
+    logic [31:0] minX_tmp;
+    logic [31:0] minY_tmp;
+    logic [31:0] maxX_tmp;
+    logic [31:0] maxY_tmp;
+    
+    reg [31:0] minX;
+    reg [31:0] minY;
+    reg [31:0] maxX;
+    reg [31:0] maxY;
     
     //fixed point multiplication
     function logic signed [31:0] fp_m(
@@ -84,43 +91,45 @@ module rasterizer (
     endfunction
 
     always_comb begin
-        if (x1_t < x2_t) begin
-            maxX = x2_t;
-            minX = x1_t;
+        if (x1 < x2) begin
+            maxX_tmp = x2;
+            minX_tmp = x1;
         end else begin
-            maxX = x1_t;
-            minX = x2_t;
+            maxX_tmp = x1;
+            minX_tmp = x2;
         end
 
-        if (minX > x3_t)
-            minX = x3_t;
+        if (minX_tmp > x3)
+            minX_tmp = x3;
 
-        if (maxX < x3_t)
-            maxX = x3_t;
+        if (maxX_tmp < x3)
+            maxX_tmp= x3;
     end
         
 
     always_comb begin
-        if (y1_t < y2_t) begin
-            maxY = y2_t;
-            minY = y1_t;
+        if (y1 < y2) begin
+            maxY_tmp = y2;
+            minY_tmp = y1;
         end else begin
-            maxY = y1_t;
-            minY = y2_t;
+            maxY_tmp = y1;
+            minY_tmp = y2;
         end
 
-        if (minY > y3_t)
-            minY = y3_t;
+        if (minY_tmp > y3)
+            minY_tmp = y3;
 
-        if (maxY < y3_t)
-            maxY = y3_t;
+        if (maxY_tmp < y3)
+            maxY_tmp = y3;
     end
     
     logic signed [31:0] w1;
     logic signed [31:0] w2;
     logic signed [31:0] w3;
     logic signed [31:0] w1_tmp;
+    logic signed [31:0] w1_tmp2;
     logic signed [31:0] w2_tmp;
+    logic signed [31:0] w2_tmp2;
     logic signed [31:0] denom;
     logic [23:0] cur_color;
     logic signed[31:0] cur_depth;
@@ -132,17 +141,7 @@ module rasterizer (
     reg signed [31:0] denom_inv_reg;
     //color interpolation using Barycentric Coordinates
     always_comb begin
-        w1_tmp = fp_m(y2_t - y3_t, cur_x - x3_t) + fp_m(x3_t - x2_t, cur_y - y3_t); 
-        w2_tmp = fp_m(y3_t - y1_t, cur_x - x3_t) + fp_m(x1_t - x3_t, cur_y - y3_t);
         denom = fp_m(y2_t - y3_t, x1_t - x3_t) + fp_m(x3_t - x2_t, y1_t - y3_t);
-        w1 = fp_m(w1_tmp, denom_inv_reg);
-        w2 = fp_m(w2_tmp, denom_inv_reg);
-        //w3 = (1 << 16) - w1 - w2;
-        //cur_color[7:0] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[7:0])) + fp_m(w2, byte_to_fp(color2_t[7:0])) + fp_m(w3, byte_to_fp(color3_t[7:0])));
-        //cur_color[15:8] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[15:8])) + fp_m(w2, byte_to_fp(color2_t[15:8])) + fp_m(w3, byte_to_fp(color3_t[15:8])));
-        //cur_color[23:16] = fp_to_byte(fp_m(w1, byte_to_fp(color1_t[23:16])) + fp_m(w2, byte_to_fp(color2_t[23:16])) + fp_m(w3, byte_to_fp(color3_t[23:16])));
-        //cur_color = -1;
-        //cur_depth = fp_m(w1, z1_t) + fp_m(w2, z2_t) + fp_m(w3, z3_t);
     end 
 
     logic signed [31:0] cur_x_int;
@@ -165,14 +164,15 @@ module rasterizer (
         x3_t_int = x3_t >>> 16;
         y3_t_int = y3_t >>> 16;
 
+        /*
         e12 = (signed'(cur_x_int - x1_t_int) * signed'(y2_t_int - y1_t_int) - signed'(cur_y_int - y1_t_int) * signed'(x2_t_int - x1_t_int)) >= 0;
         e23 = (signed'(cur_x_int - x2_t_int) * signed'(y3_t_int - y2_t_int) - signed'(cur_y_int - y2_t_int) * signed'(x3_t_int - x2_t_int)) >= 0;
         e31 = (signed'(cur_x_int - x3_t_int) * signed'(y1_t_int - y3_t_int) - signed'(cur_y_int - y3_t_int) * signed'(x1_t_int - x3_t_int)) >= 0;
-        
+        */
         //e23 = (signed'(cur_x - x2_t) * signed'(y3_t - y2_t)) - signed'(cur_y - y2_t), signed'(x3_t - x2_t))) >= 0; 
         //e31 = (fp_m(signed'(cur_x - x3_t),signed'(y1_t - y3_t)) - fp_m(signed'(cur_y - y3_t), signed'(x1_t - x3_t))) >= 0;
 
-        is_inside = e12 & e23 & e31;
+        is_inside = e12 >= 0 && e23 >= 0 && e31 >= 0;
     end
 
     function void  move_to_next();
@@ -185,27 +185,28 @@ module rasterizer (
         end
     endfunction
 
-    typedef enum logic[1:0] {R_IDLE, R_START_NEW_TRI, R_RASTERIZE, R_WAIT} r_state_t;
+    typedef enum logic[2:0] {R_IDLE, R_START_NEW_TRI, R_PIXEL_CALC, R_PIXEL_CALC2, R_RASTERIZE, R_WAIT} r_state_t;
     r_state_t r_state;
 
 
     lpm_divide
 `ifdef VERILATOR
-        #(.lpm_widthn(64),
+        #(.lpm_widthn(40),
           .lpm_widthd(32),
           .lpm_nrepresentation("SIGNED"),
           .lpm_drepresentation("SIGNED"),
           .lpm_pipeline(12)) area_divider(
 `else
-        #(.LPM_WIDTHN(64),
+        #(.LPM_WIDTHN(40),
           .LPM_WIDTHD(32),
           .LPM_NREPRESENTATION("SIGNED"),
           .LPM_DREPRESENTATION("SIGNED"),
+          .MAXIMIZE_SPEED(9),
           .LPM_PIPELINE(12)) area_divider(
 `endif
             .clock(clock),
             .clken(1'b1),
-            .numer(64'b1 << 32),
+            .numer(32'b1 << 32),
             .denom(denom),
             .quotient(denom_inv)
     );
@@ -246,14 +247,20 @@ module rasterizer (
                         color3_t <= color3;
                         addr_in_t <= addr_in;
                         div_counter <= 0;
+
+                        maxX <= maxX_tmp;
+                        maxY <= maxY_tmp;
+                        minX <= minX_tmp;
+                        minY <= minY_tmp;
+
+                        cur_x = minX_tmp;
+                        cur_y = minY_tmp;
                         r_state <= R_START_NEW_TRI;
                     end
                     output_valid <= 0;
                 end
                 R_START_NEW_TRI: begin
                     stall_out <= 1;
-                    cur_x = minX;
-                    cur_y = minY;
 
                     if (div_counter == 12) begin
                         div_counter <= 0;
@@ -262,13 +269,40 @@ module rasterizer (
                             $itor(denom) / $itor(1 << 16),
                             $itor(denom_inv) / $itor(1 << 16)
                         );
-                        r_state <= R_RASTERIZE;
+                        e12 <= signed'(cur_x_int - x1_t_int) * signed'(y2_t_int - y1_t_int);
+                        e23 <= signed'(cur_x_int - x2_t_int) * signed'(y3_t_int - y2_t_int);
+                        e31 <= signed'(cur_x_int - x3_t_int) * signed'(y1_t_int - y3_t_int);
+        
+                        w1_tmp <= fp_m(y2_t - y3_t, cur_x - x3_t); // + fp_m(x3_t - x2_t, cur_y - y3_t); 
+                        w2_tmp <= fp_m(y3_t - y1_t, cur_x - x3_t); // + fp_m(x1_t - x3_t, cur_y - y3_t);
+                        r_state <= R_PIXEL_CALC;
                     end else begin
                         div_counter <= div_counter + 1;
                     end
                 end
+
+                R_PIXEL_CALC: begin
+                    e12 <= e12 - signed'(cur_y_int - y1_t_int) * signed'(x2_t_int - x1_t_int);
+                    e23 <= e23 - signed'(cur_y_int - y2_t_int) * signed'(x3_t_int - x2_t_int);
+                    e31 <= e31 - signed'(cur_y_int - y3_t_int) * signed'(x1_t_int - x3_t_int);
+                    //e12 <= signed'(cur_x_int - x1_t_int) * signed'(y2_t_int - y1_t_int) - signed'(cur_y_int - y1_t_int) * signed'(x2_t_int - x1_t_int);
+                    //e23 <= signed'(cur_x_int - x2_t_int) * signed'(y3_t_int - y2_t_int) - signed'(cur_y_int - y2_t_int) * signed'(x3_t_int - x2_t_int);
+                    //e31 <= signed'(cur_x_int - x3_t_int) * signed'(y1_t_int - y3_t_int) - signed'(cur_y_int - y3_t_int) * signed'(x1_t_int - x3_t_int);
+                    //w1 <= fp_m(w1_tmp, denom_inv_reg);
+                    //w2 <= fp_m(w2_tmp, denom_inv_reg);
+                    w1_tmp2 <= fp_m(x3_t - x2_t, cur_y - y3_t);
+                    w2_tmp2 <= fp_m(x1_t - x3_t, cur_y - y3_t);
+                    r_state <= R_PIXEL_CALC2;
+                end
+
+                R_PIXEL_CALC2: begin
+
+                    w1_out <= fp_m(w1_tmp + w1_tmp2, denom_inv_reg);
+                    w2_out <= fp_m(w2_tmp + w2_tmp2, denom_inv_reg);
+                    r_state <= R_RASTERIZE;
+                end
                 R_RASTERIZE: begin
-                    if (is_inside) begin
+                    if (e12 >= 0 && e23 >= 0 && e31 >= 0) begin
                         $display(" rasterizer: is inside");
                         if (!output_valid) begin
                             addr_out <= addr_in_t + ((cur_y >> 16) * 640 + (cur_x >> 16) << 3);
@@ -277,9 +311,7 @@ module rasterizer (
                             color_out_2 <= color2_t;
                             color_out_3 <= color3_t;
 
-                            w1_out <= w1;
-                            w2_out <= w2;
-                            depth_out <= fp_m(w1, z1_t) + fp_m(w2, z2_t) + fp_m((1 << 16) - w1 - w2, z3_t);
+                            depth_out <= fp_m(w1_out, z1_t) + fp_m(w2_out, z2_t) + fp_m((1 << 16) - w1_out - w2_out, z3_t);
                             output_valid <= 1;
                             move_to_next();
                             if (cur_y > maxY) begin
@@ -291,6 +323,7 @@ module rasterizer (
                     end else begin
                         output_valid <= 0;
                         move_to_next();
+                        r_state <= R_WAIT;
                         if (cur_y > maxY) begin
                             done_out = done_in;
                             r_state <= R_IDLE;
@@ -299,38 +332,27 @@ module rasterizer (
                 end
                 R_WAIT: begin
                     $display(" rasterizer: STALL_IN[%d]", stall_in);
+                    if (!is_inside) begin
+                        e12 <= signed'(cur_x_int - x1_t_int) * signed'(y2_t_int - y1_t_int);
+                        e23 <= signed'(cur_x_int - x2_t_int) * signed'(y3_t_int - y2_t_int);
+                        e31 <= signed'(cur_x_int - x3_t_int) * signed'(y1_t_int - y3_t_int);
+                        w1_tmp <= fp_m(y2_t - y3_t, cur_x - x3_t); // + fp_m(x3_t - x2_t, cur_y - y3_t); 
+                        w2_tmp <= fp_m(y3_t - y1_t, cur_x - x3_t); // + fp_m(x1_t - x3_t, cur_y - y3_t);
+                        r_state <= R_PIXEL_CALC;
+                    end
                     if (!stall_in) begin
                         if (cur_y > maxY) begin
                             done_out = done_in;
                             r_state <= R_IDLE;
                         end else begin
-                            if (is_inside) begin
-                                //if (!output_valid) begin
-                                    addr_out <= addr_in_t + ((cur_y >> 16) * 640 + (cur_x >> 16) << 3);
-                                    $display(" rasterizer: addr_out = %x", addr_out);
-                                    color_out_1 <= color1_t;
-                                    color_out_2 <= color2_t;
-                                    color_out_3 <= color3_t;
-
-                                    w1_out <= w1;
-                                    w2_out <= w2;
-                                    depth_out <= fp_m(w1, z1_t) + fp_m(w2, z2_t) + fp_m((1 << 16) - w1 - w2, z3_t);
-                                    output_valid <= 1;
-                                    move_to_next();
-                                    if (cur_y > maxY) begin
-                                        r_state <= R_IDLE;
-                                        done_out = done_in;
-                                    end
-                                //end
-                            end else begin
-                                output_valid <= 0;
-                                move_to_next();
-                                if (cur_y > maxY) begin
-                                    done_out = done_in;
-                                    r_state <= R_IDLE;
-                                end else 
-                                    r_state <= R_RASTERIZE;
-                            end
+                            //move_to_next();
+                            e12 <= signed'(cur_x_int - x1_t_int) * signed'(y2_t_int - y1_t_int);
+                            e23 <= signed'(cur_x_int - x2_t_int) * signed'(y3_t_int - y2_t_int);
+                            e31 <= signed'(cur_x_int - x3_t_int) * signed'(y1_t_int - y3_t_int);
+                            w1_tmp <= fp_m(y2_t - y3_t, cur_x - x3_t); // + fp_m(x3_t - x2_t, cur_y - y3_t); 
+                            w2_tmp <= fp_m(y3_t - y1_t, cur_x - x3_t); // + fp_m(x1_t - x3_t, cur_y - y3_t);
+                            output_valid <= 0;
+                            r_state <= R_PIXEL_CALC;
                         end
                     end
                 end

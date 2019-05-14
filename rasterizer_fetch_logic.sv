@@ -99,7 +99,6 @@ function logic [7:0] fp_to_byte(
     fp_to_byte = f[23:16]; 
 endfunction
 
-logic signed [31:0] w3;
 reg signed [31:0] color_step [8:0];
 always_ff @(posedge clock or negedge reset) begin 
     if (!reset) begin

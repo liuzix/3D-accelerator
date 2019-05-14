@@ -254,7 +254,7 @@ int main(int argc, char **argv) {
         top->clock = 0;
         top->eval();
 
-        if (main_time % 500 == 0)
+        if (main_time % 2000 == 0)
             display->refresh();
         main_time++;
     }

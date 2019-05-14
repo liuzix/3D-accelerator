@@ -40,7 +40,7 @@ module rasterizer_vertex_fetch (
 
     assign master_byteenable = 4'b1111;
 
-    assign done_out = (tri_num != 0) && (output_count == tri_num);
+    assign done_out = (tri_num != 0) && (ccounter == tri_num);
 
     logic [3:0] s_count;
 
@@ -80,6 +80,7 @@ module rasterizer_vertex_fetch (
         data_out[223:192],data_out[191:160],data_out[159:128],
         data_out[127:96],data_out[95:64],data_out[63:32],data_out[31:0]};
   
+    int ccounter;
  //send vertices data from fifo to vertex_cal; receive vertices data from bus
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
@@ -90,6 +91,8 @@ module rasterizer_vertex_fetch (
             already_pop <= 0;
             input_count <= 0;
             fetch_tri <= 0;
+            ccounter <= 0;
+            output_valid <= 0;
         end
         else begin
           //deal with fifo counter
@@ -149,7 +152,7 @@ module rasterizer_vertex_fetch (
                 end
                 default: begin end
             endcase
-            if (recv_valid && !almost_full) begin
+            if (recv_valid && !full) begin
             data_in <= {vertex_out_buf[14],vertex_out_buf[13],vertex_out_buf[12],vertex_out_buf[11],
                 vertex_out_buf[10],vertex_out_buf[9],vertex_out_buf[8],vertex_out_buf[7],
                 vertex_out_buf[6],vertex_out_buf[5],vertex_out_buf[4],vertex_out_buf[3],
@@ -168,6 +171,8 @@ module rasterizer_vertex_fetch (
         if (!stall_in && !empty && !already_pop) begin
             rdreq <= 1;
             fifo_counter = fifo_counter - 1;
+            ccounter <= ccounter + 1;
+            $display("ccalc:[%d]",ccounter);
             output_valid <= 1;
             already_pop <= 1;
         end else if (already_pop) begin

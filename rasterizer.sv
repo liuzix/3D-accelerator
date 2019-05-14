@@ -205,14 +205,14 @@ module rasterizer (
           .lpm_widthd(32),
           .lpm_nrepresentation("SIGNED"),
           .lpm_drepresentation("SIGNED"),
-          .lpm_pipeline(12)) area_divider(
+          .lpm_pipeline(16)) area_divider(
 `else
         #(.LPM_WIDTHN(40),
           .LPM_WIDTHD(32),
           .LPM_NREPRESENTATION("SIGNED"),
           .LPM_DREPRESENTATION("SIGNED"),
           .MAXIMIZE_SPEED(9),
-          .LPM_PIPELINE(12)) area_divider(
+          .LPM_PIPELINE(16)) area_divider(
 `endif
             .clock(clock),
             .clken(1'b1),
@@ -221,7 +221,7 @@ module rasterizer (
             .quotient(denom_inv)
     );
 
-    logic [3:0] div_counter;
+    logic [4:0] div_counter;
 
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin 
@@ -277,7 +277,7 @@ module rasterizer (
                     if (div_counter == 0) begin
                         denom <= denom1 + denom2;
                         div_counter <= div_counter + 1;
-                    end else if (div_counter == 13) begin
+                    end else if (div_counter == 17) begin
                         div_counter <= 0;
                         denom_inv_reg <= denom_inv;
                         $display(" rasaterizer: denom = %f, denom_inv = %f",

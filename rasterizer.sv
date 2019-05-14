@@ -318,8 +318,6 @@ module rasterizer (
 
                 R_PIXEL_CALC2: begin
 
-                    w1_out <= fp_m(w1_tmp + w1_tmp2, denom_inv_reg);
-                    w2_out <= fp_m(w2_tmp + w2_tmp2, denom_inv_reg);
                     r_state <= R_RASTERIZE;
                 end
                 R_RASTERIZE: begin
@@ -332,6 +330,8 @@ module rasterizer (
                             color_out_2 <= color2_t;
                             color_out_3 <= color3_t;
 
+                            w1_out <= fp_m(w1_tmp + w1_tmp2, denom_inv_reg);
+                            w2_out <= fp_m(w2_tmp + w2_tmp2, denom_inv_reg);
                             depth_out <= fp_m(w1_out, z1_t) + fp_m(w2_out, z2_t) + fp_m((1 << 16) - w1_out - w2_out, z3_t);
                             output_valid <= 1;
                             move_to_next();

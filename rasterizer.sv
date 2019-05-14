@@ -146,9 +146,12 @@ module rasterizer (
 
     reg signed [31:0] denom_inv;
     reg signed [31:0] denom_inv_reg;
+
+    reg signed [31:0] denom1;
+    reg signed [31:0] denom2;
     //color interpolation using Barycentric Coordinates
     always_comb begin
-        denom = fp_m(y2_t - y3_t, x1_t - x3_t) + fp_m(x3_t - x2_t, y1_t - y3_t);
+        //denom = fp_m(y2_t - y3_t, x1_t - x3_t) + fp_m(x3_t - x2_t, y1_t - y3_t);
     end 
 
     logic signed [31:0] cur_x_int;
@@ -262,14 +265,19 @@ module rasterizer (
 
                         cur_x = minX_tmp;
                         cur_y = minY_tmp;
+                        
+                        denom1 <= fp_m(y2 - y3, x1 - x3);
+                        denom2 <= fp_m(x3 - x2, y1 - y3);
                         r_state <= R_START_NEW_TRI;
                     end
                     output_valid <= 0;
                 end
                 R_START_NEW_TRI: begin
                     stall_out <= 1;
-
-                    if (div_counter == 12) begin
+                    if (div_counter == 0) begin
+                        denom <= denom1 + denom2;
+                        div_counter <= div_counter + 1;
+                    end else if (div_counter == 13) begin
                         div_counter <= 0;
                         denom_inv_reg <= denom_inv;
                         $display(" rasaterizer: denom = %f, denom_inv = %f",

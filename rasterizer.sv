@@ -55,6 +55,9 @@ module rasterizer (
     logic signed [31:0] e12;
     logic signed [31:0] e23;
     logic signed [31:0] e31;
+    logic signed [31:0] e12_2;
+    logic signed [31:0] e23_2;
+    logic signed [31:0] e31_2;
     logic is_inside;
 
     //640 x 480
@@ -288,6 +291,9 @@ module rasterizer (
                         e23 <= signed'(cur_x_int - x2_t_int) * signed'(y3_t_int - y2_t_int);
                         e31 <= signed'(cur_x_int - x3_t_int) * signed'(y1_t_int - y3_t_int);
         
+                        e12_2 <= signed'(cur_y_int - y1_t_int) * signed'(x2_t_int - x1_t_int);
+                        e23_2 <= signed'(cur_y_int - y2_t_int) * signed'(x3_t_int - x2_t_int);
+                        e31_2 <= signed'(cur_y_int - y3_t_int) * signed'(x1_t_int - x3_t_int);
                         w1_tmp <= fp_m(y2_t - y3_t, cur_x - x3_t); // + fp_m(x3_t - x2_t, cur_y - y3_t); 
                         w2_tmp <= fp_m(y3_t - y1_t, cur_x - x3_t); // + fp_m(x1_t - x3_t, cur_y - y3_t);
                         r_state <= R_PIXEL_CALC;
@@ -297,9 +303,9 @@ module rasterizer (
                 end
 
                 R_PIXEL_CALC: begin
-                    e12 <= e12 - signed'(cur_y_int - y1_t_int) * signed'(x2_t_int - x1_t_int);
-                    e23 <= e23 - signed'(cur_y_int - y2_t_int) * signed'(x3_t_int - x2_t_int);
-                    e31 <= e31 - signed'(cur_y_int - y3_t_int) * signed'(x1_t_int - x3_t_int);
+                        e12 <= e12 - e12_2;
+                        e23 <= e23 - e23_2;
+                        e31 <= e31 - e31_2;
                     //e12 <= signed'(cur_x_int - x1_t_int) * signed'(y2_t_int - y1_t_int) - signed'(cur_y_int - y1_t_int) * signed'(x2_t_int - x1_t_int);
                     //e23 <= signed'(cur_x_int - x2_t_int) * signed'(y3_t_int - y2_t_int) - signed'(cur_y_int - y2_t_int) * signed'(x3_t_int - x2_t_int);
                     //e31 <= signed'(cur_x_int - x3_t_int) * signed'(y1_t_int - y3_t_int) - signed'(cur_y_int - y3_t_int) * signed'(x1_t_int - x3_t_int);
@@ -338,23 +344,29 @@ module rasterizer (
                     end else begin
                         output_valid <= 0;
                         move_to_next();
-                        r_state <= R_WAIT;
                         if (cur_y > maxY) begin
                             done_out = done_in;
                             r_state <= R_IDLE;
+                        end else
+                        begin
+                            r_state <= R_WAIT;
                         end
                     end
                 end
                 R_WAIT: begin
                     $display(" rasterizer: STALL_IN[%d]", stall_in);
-                    if (!is_inside) begin
+                    if (output_valid <= 0) begin
                         e12 <= signed'(cur_x_int - x1_t_int) * signed'(y2_t_int - y1_t_int);
                         e23 <= signed'(cur_x_int - x2_t_int) * signed'(y3_t_int - y2_t_int);
                         e31 <= signed'(cur_x_int - x3_t_int) * signed'(y1_t_int - y3_t_int);
+                        e12_2 <= signed'(cur_y_int - y1_t_int) * signed'(x2_t_int - x1_t_int);
+                        e23_2 <= signed'(cur_y_int - y2_t_int) * signed'(x3_t_int - x2_t_int);
+                        e31_2 <= signed'(cur_y_int - y3_t_int) * signed'(x1_t_int - x3_t_int);
                         w1_tmp <= fp_m(y2_t - y3_t, cur_x - x3_t); // + fp_m(x3_t - x2_t, cur_y - y3_t); 
                         w2_tmp <= fp_m(y3_t - y1_t, cur_x - x3_t); // + fp_m(x1_t - x3_t, cur_y - y3_t);
+                        output_valid <= 0;
                         r_state <= R_PIXEL_CALC;
-                    end
+                    end else
                     if (!stall_in) begin
                         if (cur_y > maxY) begin
                             done_out = done_in;
@@ -364,6 +376,9 @@ module rasterizer (
                             e12 <= signed'(cur_x_int - x1_t_int) * signed'(y2_t_int - y1_t_int);
                             e23 <= signed'(cur_x_int - x2_t_int) * signed'(y3_t_int - y2_t_int);
                             e31 <= signed'(cur_x_int - x3_t_int) * signed'(y1_t_int - y3_t_int);
+                            e12_2 <= signed'(cur_y_int - y1_t_int) * signed'(x2_t_int - x1_t_int);
+                            e23_2 <= signed'(cur_y_int - y2_t_int) * signed'(x3_t_int - x2_t_int);
+                            e31_2 <= signed'(cur_y_int - y3_t_int) * signed'(x1_t_int - x3_t_int);
                             w1_tmp <= fp_m(y2_t - y3_t, cur_x - x3_t); // + fp_m(x3_t - x2_t, cur_y - y3_t); 
                             w2_tmp <= fp_m(y3_t - y1_t, cur_x - x3_t); // + fp_m(x1_t - x3_t, cur_y - y3_t);
                             output_valid <= 0;

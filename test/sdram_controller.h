@@ -9,7 +9,7 @@
 
 using namespace std;
 
-#define MEMORY_LATENCY 5
+#define MEMORY_LATENCY 10
 #define MAX_QUEUE_LENGTH 8
 
 template<typename Value>
@@ -54,7 +54,7 @@ public:
             && readRequests.front().targetTick <= tickCount
             && readRequests.front().port == port) {
            
-            if (rand() % 4 != 0) {
+            if (rand() % 2 != 0) {
                 Value v = memory[readRequests.front().address / sizeof(Value)];
                 memcpy(readdata, &v, sizeof(Value));
                 cout << "sdram read address " << hex << readRequests.front().address << " data " << hex << *readdata << endl;

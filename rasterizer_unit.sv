@@ -192,7 +192,7 @@ rasterizer raster (
     .color_out_3(color_out_3),
     .w1_out(w1),
     .w2_out(w2),
-    //.w3_out(w3),
+    .w3_out(w3),
 
     .done_in(done2),
     .stall_in(stall3),
@@ -226,7 +226,7 @@ rasterizer_fetch_logic fetch_logic (
     .color_in_3(color_out_3),
     .w1(w1),
     .w2(w2),
-    //.w3(w3),
+    .w3(w3),
     .depth_in(depth_in), /// from bus...
     
     .output_valid(fetch_output_valid),

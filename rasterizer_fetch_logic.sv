@@ -29,6 +29,7 @@ module rasterizer_fetch_logic (
 
     input signed [31:0] w1,
     input signed [31:0] w2,
+    input signed [31:0] w3,
     input [31:0] depth_in,
     
     /* data output */
@@ -105,7 +106,6 @@ always_ff @(posedge clock or negedge reset) begin
 
     end else begin
         if (enqueue || !input_valid_r) begin
-            w3 = (32'b1 << 16) - w1 - w2;
             //color_in_r[7:0] = fp_to_byte(w1 * color_in_1[7:0] + w2 * color_in_2[7:0] + w3 * color_in_3[7:0]);
             //color_in_r[15:8] = fp_to_byte(w1 * color_in_1[15:8] + w2 * color_in_2[15:8] + w3 * color_in_3[15:8]);
             //color_in_r[23:16] = fp_to_byte(w1 * color_in_1[23:16] + w2 * color_in_2[23:16] + w3 * color_in_3[23:16]);

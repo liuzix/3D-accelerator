@@ -91,38 +91,45 @@ module rasterizer (
     endfunction
 
     always_comb begin
-        if (x1 < x2) begin
+        if (x1[31:16] < x2[31:16])
             maxX_tmp = x2;
-            minX_tmp = x1;
-        end else begin
+        else
             maxX_tmp = x1;
-            minX_tmp = x2;
-        end
 
-        if (minX_tmp > x3)
-            minX_tmp = x3;
-
-        if (maxX_tmp < x3)
-            maxX_tmp= x3;
+        if (maxX_tmp[31:16] < x3[31:16])
+            maxX_tmp = x3;
     end
         
+    always_comb begin
+        if (x1[31:16] < x2[31:16])
+            minX_tmp = x1;
+        else
+            minX_tmp = x2;
+
+        if (minX_tmp[31:16] > x3[31:16])
+            minX_tmp = x3;
+    end
 
     always_comb begin
-        if (y1 < y2) begin
+        if (y1[31:16] < y2[31:16])
             maxY_tmp = y2;
-            minY_tmp = y1;
-        end else begin
+        else
             maxY_tmp = y1;
-            minY_tmp = y2;
-        end
 
-        if (minY_tmp > y3)
-            minY_tmp = y3;
-
-        if (maxY_tmp < y3)
+        if (maxY_tmp[31:16] < y3[31:16])
             maxY_tmp = y3;
     end
-    
+        
+    always_comb begin
+        if (y1[31:16] < y2[31:16])
+            minY_tmp = y1;
+        else
+            minY_tmp = y2;
+
+        if (minY_tmp[31:16] > y3[31:16])
+            minY_tmp = y3;
+    end
+
     logic signed [31:0] w1;
     logic signed [31:0] w2;
     logic signed [31:0] w3;

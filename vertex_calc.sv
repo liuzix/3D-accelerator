@@ -3,11 +3,11 @@
 module vertex_calc (input clock,
                     input reset,
                     input logic [31:0] mat[15:0],
-                    input logic [31:0] v_in [14:0],
+                    input logic [31:0] vertex_in [14:0],
                     input logic [31:0] lighting[2:0],
-                    input logic [23:0] color_in1,
-                    input logic [23:0] color_in2,
-                    input logic [23:0] color_in3,
+                    input logic [23:0] color_input1,
+                    input logic [23:0] color_input2,
+                    input logic [23:0] color_input3,
                     input logic input_data_valid,
                     input logic done_in,
                     input logic stall_in,
@@ -59,6 +59,12 @@ module vertex_calc (input clock,
     logic [31:0] color3_gnew;
     logic [31:0] color3_bnew;
     logic [31:0]cosine;
+    logic [31:0] v_in [14:0];
+
+    logic [23:0] color_in1;
+    logic [23:0] color_in2;
+    logic [23:0] color_in3;
+
 
     assign w = (1 << 16);
     assign width[31:16] = 16'd320;
@@ -161,6 +167,10 @@ module vertex_calc (input clock,
                 if (input_data_valid) begin
                     stall_out <= 1;
                     state <= S_CALC;
+                    v_in <= vertex_in;
+                    color_in1 <= color_input1;
+                    color_in2 <= color_input2;
+                    color_in3 <= color_input3;
                 end
             end
             

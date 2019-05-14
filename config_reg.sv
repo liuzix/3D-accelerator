@@ -61,9 +61,11 @@ always_ff @(posedge clk or negedge reset_n)begin
       end
     else if (read && address == 'h8)
         readdata <= done_latch;
-	 else if (read && address == 'h500) begin
+	else if (read && address == 'h500) begin
 		  readdata <= 'hdeadbeef;
 		  test <= 1;
-		  end
+    end
+    else if (start_render == 1)
+        start_render <= 0;
    end
 endmodule // config_reg

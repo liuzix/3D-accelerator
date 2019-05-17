@@ -1,0 +1,12 @@
+# DESCRIPTION: Verilator output: Timestamp data for --skip-identical.  Delete at will.
+C "--cc ../bus_adapter.sv adapter_test.cpp --exe -I../ -CFLAGS -g"
+S      8679 8607017208  1555614216           0  1555614216           0 "../bus_adapter.sv"
+S   4608404 8606809828  1554920318           0  1548678579           0 "/usr/local/Cellar/verilator/4.010/bin/verilator_bin"
+T     17055 8607006826  1556048429           0  1556048429           0 "obj_dir/Vbus_adapter.cpp"
+T      3876 8607006825  1556048429           0  1556048429           0 "obj_dir/Vbus_adapter.h"
+T      1842 8607006828  1556048429           0  1556048429           0 "obj_dir/Vbus_adapter.mk"
+T       555 8607006824  1556048429           0  1556048429           0 "obj_dir/Vbus_adapter__Syms.cpp"
+T       746 8607006823  1556048429           0  1556048429           0 "obj_dir/Vbus_adapter__Syms.h"
+T       320 8607006829  1556048429           0  1556048429           0 "obj_dir/Vbus_adapter__ver.d"
+T         0        0  1556048429           0  1556048429           0 "obj_dir/Vbus_adapter__verFiles.dat"
+T      1174 8607006827  1556048429           0  1556048429           0 "obj_dir/Vbus_adapter_classes.mk"

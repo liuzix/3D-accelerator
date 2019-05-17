@@ -1,1 +1,0 @@
-obj_dir/Vbus_adapter.cpp obj_dir/Vbus_adapter.h obj_dir/Vbus_adapter.mk obj_dir/Vbus_adapter__Syms.cpp obj_dir/Vbus_adapter__Syms.h obj_dir/Vbus_adapter__ver.d obj_dir/Vbus_adapter_classes.mk  : /usr/local/Cellar/verilator/4.010/bin/verilator_bin   ../bus_adapter.sv /usr/local/Cellar/verilator/4.010/bin/verilator_bin 

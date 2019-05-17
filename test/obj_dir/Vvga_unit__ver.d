@@ -1,1 +1,0 @@
-obj_dir/Vvga_unit.cpp obj_dir/Vvga_unit.h obj_dir/Vvga_unit.mk obj_dir/Vvga_unit__Syms.cpp obj_dir/Vvga_unit__Syms.h obj_dir/Vvga_unit__ver.d obj_dir/Vvga_unit_classes.mk  : /usr/local/Cellar/verilator/4.010/bin/verilator_bin   ..//fifo.sv ../bus_adapter.sv ../vga_unit.sv ../vga_unit_modules.sv /usr/local/Cellar/verilator/4.010/bin/verilator_bin 

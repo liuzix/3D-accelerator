@@ -194,10 +194,10 @@ module vga_master (
                         down_addr_next = up_addr_next;
                         addr_invalid <= 0;
                     end else
-                        if (dout == up_addr) begin
-                            pixel_buffer[(up_addr / 8) % 32] <= bus_data;
-                            up_addr_next = offset8_dout;
-                        end
+                    if (dout == up_addr) begin
+                        pixel_buffer[(up_addr / 8) % 32] <= bus_data;
+                        up_addr_next = offset8_dout;
+                    end
                 end
 
                 pixel_in_progress <= pixel_in_progress_next;
@@ -227,8 +227,8 @@ module vga_buffer (
     logic [9:0]     vcount, vcount_t;
 
     logic clk50;
-	 logic clk100;
-	 logic clk100_c;
+    logic clk100;
+    logic clk100_c;
     logic clk50_c;
 
     wire VGA_CLK_PRE;
@@ -238,17 +238,17 @@ module vga_buffer (
     always_ff @(posedge clk or negedge reset)
         if (!reset) begin
             clk50_c <= 0;
-				clk100_c <= 0;
-		  end
+            clk100_c <= 0;
+        end
         else begin
             clk100_c <= clk100_c + 1;
-				clk50_c <= clk50_c + 1;
-		  end
+            clk50_c <= clk50_c + 1;
+        end
 
 
     //assign pixel_read = (clk_counter == 4);
-    assign clk100        = (clk100_c == 0);
-	 assign clk50         = (clk50_c == 0);
+    assign clk100       = (clk100_c == 0);
+    assign clk50        = (clk50_c == 0);
     assign cur_vga_addr = frame_buffer_ptr + (hcount_t[10:1] + 640 * vcount_t) * 8;
 
     vga_counters counters(.clk50(clk50), .reset(reset),.VGA_CLK(VGA_CLK_PRE), .clk100(clk), .clk(clk), .*);
@@ -266,8 +266,8 @@ module vga_buffer (
             case (read_state)
                 R_IDLE: begin
                     if (VGA_CLK_PRE) begin
-								hcount_t <= hcount;
-								vcount_t <= vcount;
+                        hcount_t <= hcount;
+                        vcount_t <= vcount;
                         $display("vga_buffer: hcount = %d", hcount[10:1]);
                         if (hcount[10:1] < 640 && vcount < 480)
                             pixel_read <= 1;
@@ -276,15 +276,15 @@ module vga_buffer (
                 end
 
                 R_WAIT: begin
-	            VGA_CLK <= 0;
+                    VGA_CLK <= 0;
                     read_state <= R_OUTPUT;
                     pixel_read <= 0;
                 end
 
                 R_OUTPUT: begin
                     if (pixel_valid)
-                       {VGA_B, VGA_G, VGA_R} <= {pixel_data[23:16], pixel_data[15:8], pixel_data[7:0]};
-			//{VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'h0, 8'h0};
+                        {VGA_B, VGA_G, VGA_R} <= {pixel_data[23:16], pixel_data[15:8], pixel_data[7:0]};
+                    //{VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'h0, 8'h0};
                     else begin
                         {VGA_B, VGA_G, VGA_R} <= {8'hFF, 8'hFF, 8'hFF};
                         $display("vga_buffer: no pixel");
@@ -294,7 +294,7 @@ module vga_buffer (
                 end
 
                 R_CLOCK: begin
-               	    VGA_CLK <= 1;
+                    VGA_CLK <= 1;
                     read_state <= R_IDLE;
                 end
             endcase

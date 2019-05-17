@@ -1,7 +1,6 @@
 module rasterizer_vertex_fetch (
     input clock,
     input reset,
-
     output [25:0] master_address,
     output master_read,
     output master_write,
@@ -10,7 +9,6 @@ module rasterizer_vertex_fetch (
     input master_readdatavalid,
     output [31:0]master_writedata,
     input master_waitrequest,
-
     input fetch_enable,
     input [25:0] vertex_buffer_base,
     /* tasterizer_unit pipeling interface*/
@@ -18,7 +16,6 @@ module rasterizer_vertex_fetch (
     //output stall_out,
     //input done_in,
     output done_out,
-
     output output_valid,
     output [31:0] vertex_out[14:0]
 );
@@ -59,7 +56,7 @@ module rasterizer_vertex_fetch (
     int fifo_size = 2**FIFO_SIZE;
     int fifo_counter;
     logic already_pop;
-    
+
     fifo #(.DBITS(480), .SIZE(FIFO_SIZE))fifo(
         .clk(clock),
         .reset(reset),
@@ -71,7 +68,7 @@ module rasterizer_vertex_fetch (
         .almost_full(almost_full),
         .half_full(half_full),
         .almost_empty(almost_empty),
-        .dout(data_out)   
+        .dout(data_out)
     );
 
     assign vertex_out = '{data_out[479:448],data_out[447:416],
@@ -79,9 +76,9 @@ module rasterizer_vertex_fetch (
         data_out[319:288],data_out[287:256],data_out[255:224],
         data_out[223:192],data_out[191:160],data_out[159:128],
         data_out[127:96],data_out[95:64],data_out[63:32],data_out[31:0]};
-  
+
     int ccounter;
- //send vertices data from fifo to vertex_cal; receive vertices data from bus
+    //send vertices data from fifo to vertex_cal; receive vertices data from bus
     always_ff @(posedge clock or negedge reset) begin
         if (!reset) begin
             send_state <= IDLE_S;
@@ -95,8 +92,8 @@ module rasterizer_vertex_fetch (
             output_valid <= 0;
         end
         else begin
-          //deal with fifo counter
-           
+            //deal with fifo counter
+
             case(send_state)
                 IDLE_S: begin
                     if (input_count < tri_num && fifo_counter < fifo_size) begin
@@ -117,7 +114,7 @@ module rasterizer_vertex_fetch (
                         addr <= vertex_buffer_base + 4;
                         send_state <= TRI_SEND;
                     end else if (done_out)
-                        fetch_tri <= 0;
+                    fetch_tri <= 0;
                 end
                 SEND: begin
                     if (s_count < 15) begin
@@ -154,39 +151,39 @@ module rasterizer_vertex_fetch (
                 default: begin end
             endcase
             if (recv_valid && !full) begin
-            data_in <= {vertex_out_buf[14],vertex_out_buf[13],vertex_out_buf[12],vertex_out_buf[11],
-                vertex_out_buf[10],vertex_out_buf[9],vertex_out_buf[8],vertex_out_buf[7],
-                vertex_out_buf[6],vertex_out_buf[5],vertex_out_buf[4],vertex_out_buf[3],
-                vertex_out_buf[2],vertex_out_buf[1],vertex_out_buf[0]};
-            $display("vertex_fetch: triangle:");
-            $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[0], vertex_out_buf[1], vertex_out_buf[2]);
-            $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[4], vertex_out_buf[5], vertex_out_buf[6]);
-            $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[8], vertex_out_buf[9], vertex_out_buf[10]);
-            $display("vertex_fetch: =====");
-            wrreq <= 1;
-        end else begin
-            wrreq <= 0;
-            data_in <= 'hff;
-        end
+                data_in <= {vertex_out_buf[14],vertex_out_buf[13],vertex_out_buf[12],vertex_out_buf[11],
+                    vertex_out_buf[10],vertex_out_buf[9],vertex_out_buf[8],vertex_out_buf[7],
+                    vertex_out_buf[6],vertex_out_buf[5],vertex_out_buf[4],vertex_out_buf[3],
+                    vertex_out_buf[2],vertex_out_buf[1],vertex_out_buf[0]};
+                $display("vertex_fetch: triangle:");
+                $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[0], vertex_out_buf[1], vertex_out_buf[2]);
+                $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[4], vertex_out_buf[5], vertex_out_buf[6]);
+                $display("vertex_fetch: [%x], [%x], [%x]", vertex_out_buf[8], vertex_out_buf[9], vertex_out_buf[10]);
+                $display("vertex_fetch: =====");
+                wrreq <= 1;
+            end else begin
+                wrreq <= 0;
+                data_in <= 'hff;
+            end
 
-        if (!stall_in && !empty && !already_pop) begin
-            rdreq <= 1;
-            fifo_counter = fifo_counter - 1;
-            ccounter <= ccounter + 1;
-            $display("ccalc:[%d]",ccounter);
-            output_valid <= 1;
-            already_pop <= 1;
-        end else if (already_pop) begin
-            rdreq <= 0;
-            output_valid <= 0;
-            already_pop <= 0;
-        end else begin
-            rdreq <= 0;
-            if (!empty)
+            if (!stall_in && !empty && !already_pop) begin
+                rdreq <= 1;
+                fifo_counter = fifo_counter - 1;
+                ccounter <= ccounter + 1;
+                $display("ccalc:[%d]",ccounter);
                 output_valid <= 1;
-            if (empty)
+                already_pop <= 1;
+            end else if (already_pop) begin
+                rdreq <= 0;
                 output_valid <= 0;
-        end
+                already_pop <= 0;
+            end else begin
+                rdreq <= 0;
+                if (!empty)
+                    output_valid <= 1;
+                if (empty)
+                    output_valid <= 0;
+            end
         end
     end
 
@@ -214,7 +211,7 @@ module rasterizer_vertex_fetch (
                         tri_num <= master_readdata;
                     end
                     else if (done_out)
-                        tri_num <= 0; 
+                        tri_num <= 0;
                 end
                 FETCH: begin//fetch vertices
                     if (master_readdatavalid) begin
